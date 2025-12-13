@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": false,
+    "outDir": "../dist-electron",
+    "strict": true,
+    "target": "ESNext",
+    "types": ["node", "electron"]
+  },
+  "include": ["**/*.ts"]
+}
