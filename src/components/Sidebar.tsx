@@ -11,11 +11,11 @@ interface SidebarProps {
 
 // Helper to extract ID from URL or return as is
 const parseId = (input: string) => {
-    // Matches 32 hex chars (with optional dashes)
-    const uuidPattern = /[a-f0-9]{32}/;
-    // Tries to find UUID in the input (works for URL or raw ID)
-    const match = input.replace(/-/g, '').match(uuidPattern);
-    return match ? match[0] : input; // Fallback to input if no match
+  // Matches 32 hex chars (with optional dashes)
+  const uuidPattern = /[a-f0-9]{32}/;
+  // Tries to find UUID in the input (works for URL or raw ID)
+  const match = input.replace(/-/g, '').match(uuidPattern);
+  return match ? match[0] : input; // Fallback to input if no match
 };
 
 export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
@@ -28,15 +28,15 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
   useEffect(() => {
     const savedIds = localStorage.getItem('notion_db_ids');
     if (savedIds) {
-        try {
-            setDbIds(JSON.parse(savedIds));
-        } catch {
-            // Fallback for old single ID format
-             const oldId = localStorage.getItem('notion_db_id');
-             if(oldId) setDbIds([oldId]);
-        }
+      try {
+        setDbIds(JSON.parse(savedIds));
+      } catch {
+        // Fallback for old single ID format
+        const oldId = localStorage.getItem('notion_db_id');
+        if (oldId) setDbIds([oldId]);
+      }
     }
-    
+
     api.hasSecret('notion_token').then(setHasToken);
   }, []);
 
@@ -44,7 +44,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     if (token) {
       await api.saveSecret('notion_token', token);
       setHasToken(true);
-      setToken(''); 
+      setToken('');
       showNotification('Token saved securely.');
     }
     // ... cleanIDs ...
@@ -57,52 +57,55 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const handleFetch = async () => {
     setIsLoading(true);
     try {
-        const cleanIds = dbIds.map(parseId).filter(id => id.length > 0);
-        console.log('Building Graph from DBs:', cleanIds);
-        
-        const builder = new GraphBuilder(cleanIds);
-        const data = await builder.buildGraph();
-        
-        console.log('Graph Built:', data);
-        setGraphData(data);
-        showNotification(`Graph built: ${data.nodes.length} nodes, ${data.edges.length} edges.`);
-        
-        onViewChange('graph');
+      const cleanIds = dbIds.map(parseId).filter(id => id.length > 0);
+      console.log('Building Graph from DBs:', cleanIds);
+
+      const builder = new GraphBuilder(cleanIds);
+      const data = await builder.buildGraph();
+
+      console.log('Graph Built:', data);
+      setGraphData(data);
+      showNotification(`Graph built: ${data.nodes.length} nodes, ${data.edges.length} edges.`);
+
+      onViewChange('graph');
     } catch (e: any) {
-        console.error(e);
-        // Errors still good to alert or maybe show persistent error
-        alert('Fetch failed: ' + e.message);
+      console.error(e);
+      // Errors still good to alert or maybe show persistent error
+      alert('Fetch failed: ' + e.message);
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleDownload = () => {
-      if (!graphData) return;
-      import('../lib/generator').then(m => {
-          const generated = m.Generator.generate(graphData);
-          const blob = new Blob([generated], { type: 'text/javascript' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'armillaris_output.js';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-      });
+    if (!graphData) return;
+    import('../lib/generator').then(async m => {
+      // Logic: If user clicks download, maybe we assume they want the minified production build?
+      // Or we can default to unminified if they haven't chosen options?
+      // For now, let's default to minified (options={} -> pretty: false) since it's "Generate & Download"
+      const generated = await m.Generator.generate(graphData, { pretty: false });
+      const blob = new Blob([generated], { type: 'text/javascript' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'armillaris_output.js';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
   };
 
   const addDbInput = () => setDbIds([...dbIds, '']);
   const removeDbInput = (index: number) => {
-      const newIds = [...dbIds];
-      newIds.splice(index, 1);
-      setDbIds(newIds.length ? newIds : ['']);
+    const newIds = [...dbIds];
+    newIds.splice(index, 1);
+    setDbIds(newIds.length ? newIds : ['']);
   };
   const updateDbId = (index: number, val: string) => {
-      const newIds = [...dbIds];
-      newIds[index] = val;
-      setDbIds(newIds);
+    const newIds = [...dbIds];
+    newIds[index] = val;
+    setDbIds(newIds);
   };
 
   return (
@@ -117,18 +120,18 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     }}>
       <div className="branding">
         <h1 style={{ fontSize: '1.2rem', color: 'var(--accent-color)' }}>Armillaris</h1>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Lorebook Graph Engine</p>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Lorebook Graph Editor</p>
       </div>
 
       <nav className="view-switcher" style={{ display: 'flex', gap: '10px' }}>
-        <button 
+        <button
           className={currentView === 'graph' ? 'primary' : ''}
           onClick={() => onViewChange('graph')}
           style={{ flex: 1 }}
         >
           Graph
         </button>
-        <button 
+        <button
           className={currentView === 'code' ? 'primary' : ''}
           onClick={() => onViewChange('code')}
           style={{ flex: 1 }}
@@ -139,66 +142,66 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
 
       <div className="config-section" style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Configuration</h3>
-            <button onClick={handleSaveConfig} style={{ padding: '4px 8px', fontSize: '0.7rem' }}>Save</button>
+          <h3 style={{ fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Configuration</h3>
+          <button onClick={handleSaveConfig} style={{ padding: '4px 8px', fontSize: '0.7rem' }}>Save</button>
         </div>
-        
+
         <div className="input-group">
           <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>
             Notion Token {hasToken && <span style={{ color: 'var(--accent-color)' }}>(Set)</span>}
           </label>
-          <input 
-            type="password" 
+          <input
+            type="password"
             placeholder={hasToken ? "********" : "secret_..."}
             value={token}
             onChange={(e) => setToken(e.target.value)}
-            style={{ width: '100%', boxSizing: 'border-box' }} 
+            style={{ width: '100%', boxSizing: 'border-box' }}
           />
         </div>
 
         <div className="input-group">
           <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Databases</label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {dbIds.map((id, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '4px' }}>
-                      <input 
-                        type="text" 
-                        placeholder="ID or URL" 
-                        value={id}
-                        onChange={(e) => updateDbId(idx, e.target.value)}
-                        style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', fontSize: '0.8rem' }} 
-                      />
-                      <button 
-                        onClick={() => removeDbInput(idx)}
-                        style={{ padding: '4px 8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#ff6b6b' }}
-                        title="Remove"
-                      >
-                          &times;
-                      </button>
-                  </div>
-              ))}
-              <button 
-                onClick={addDbInput}
-                style={{ 
-                    padding: '8px', 
-                    background: 'var(--bg-primary)', 
-                    border: '1px dashed var(--border-color)', 
-                    color: 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem'
-                }}
-              >
-                  + Add Database
-              </button>
+            {dbIds.map((id, idx) => (
+              <div key={idx} style={{ display: 'flex', gap: '4px' }}>
+                <input
+                  type="text"
+                  placeholder="ID or URL"
+                  value={id}
+                  onChange={(e) => updateDbId(idx, e.target.value)}
+                  style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', fontSize: '0.8rem' }}
+                />
+                <button
+                  onClick={() => removeDbInput(idx)}
+                  style={{ padding: '4px 8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#ff6b6b' }}
+                  title="Remove"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={addDbInput}
+              style={{
+                padding: '8px',
+                background: 'var(--bg-primary)',
+                border: '1px dashed var(--border-color)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontSize: '0.8rem'
+              }}
+            >
+              + Add Database
+            </button>
           </div>
         </div>
       </div>
 
       <div className="actions" style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-         <button className="primary" onClick={handleFetch} disabled={isLoading}>
-            {isLoading ? 'Fetching...' : 'Fetch Data'}
-         </button>
-         <button onClick={handleDownload} disabled={!graphData}>Generate & Download</button>
+        <button className="primary" onClick={handleFetch} disabled={isLoading}>
+          {isLoading ? 'Fetching...' : 'Fetch Data'}
+        </button>
+        <button onClick={handleDownload} disabled={!graphData}>Generate & Download</button>
       </div>
     </aside>
   );

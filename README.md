@@ -1,6 +1,6 @@
 # Armillaris
 
-Lorebook Graph Engine
+Lorebook Graph Editor
 
 ## what do
 turns your notion databases into a lorebook for janitor.ai, using a graph to determine what entries to include in the prompt

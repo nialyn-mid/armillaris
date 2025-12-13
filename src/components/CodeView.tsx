@@ -16,10 +16,22 @@ export default function CodeView() {
     useEffect(() => localStorage.setItem('codeview_wordwrap', String(wordWrap)), [wordWrap]);
     useEffect(() => localStorage.setItem('codeview_pretty', String(pretty)), [pretty]);
 
+    const [code, setCode] = useState<string>('// Loading...');
+
     // Initial code generation
-    const code = useMemo(() => {
-        if (!graphData) return '// No Graph Data Loaded';
-        return Generator.generate(graphData, { pretty });
+    useEffect(() => {
+        if (!graphData) {
+            setCode('// No Graph Data Loaded');
+            return;
+        }
+
+        // Debounce or just run? React effect cleanup helps a bit
+        let active = true;
+        Generator.generate(graphData, { pretty }).then(result => {
+            if (active) setCode(result);
+        });
+
+        return () => { active = false; };
     }, [graphData, pretty]);
 
     const sizeInBytes = useMemo(() => new Blob([code]).size, [code]);
