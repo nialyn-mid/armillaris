@@ -109,7 +109,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
   };
 
   return (
-    <aside style={{
+    <aside className="unselectable" style={{
       width: '300px',
       backgroundColor: 'var(--bg-secondary)',
       borderRight: '1px solid var(--border-color)',

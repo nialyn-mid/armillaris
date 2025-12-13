@@ -37,6 +37,30 @@ export class Engine {
         return keywords.some(kw => lowerInput.includes(kw.toLowerCase()));
     };
 
+    // Helper to find matches in string for highlighting
+    private findMatches(input: string, keywords: string[], type: 'specific' | 'meta'): Array<{ text: string, index: number, length: number, type: 'specific' | 'meta' }> {
+        const found: Array<{ text: string, index: number, length: number, type: 'specific' | 'meta' }> = [];
+        if (!keywords || !keywords.length) return found;
+        const lowerInput = input.toLowerCase();
+
+        for (const keyword of keywords) {
+            const kw = keyword.toLowerCase();
+            if (!kw) continue;
+
+            let idx = lowerInput.indexOf(kw);
+            while (idx !== -1) {
+                found.push({
+                    text: input.substring(idx, idx + kw.length), // Original case
+                    index: idx,
+                    length: kw.length,
+                    type: type
+                });
+                idx = lowerInput.indexOf(kw, idx + 1);
+            }
+        }
+        return found;
+    }
+
     private getNeighbors(nodeIds: Set<string>): Set<string> {
         const neighbors = new Set<string>();
         // console.log(`[Engine] getNeighbors called for ${nodeIds.size} nodes.`);
@@ -47,10 +71,11 @@ export class Engine {
         return neighbors;
     }
 
-    process(input: string): string[] {
+    process(input: string): { activated: string[], matches: any[] } {
         const lowerInput = input.toLowerCase();
         const specificMatches = new Set<string>();
         const detectedMetaTypes = new Set<string>();
+        const allHighlights: any[] = [];
 
         console.log(`[Engine] Processing: "${input}"`);
 
@@ -76,6 +101,8 @@ export class Engine {
                     if (Array.isArray(keywords) && this.hasKeyword(lowerInput, keywords)) {
                         console.log(`[Engine] Specific Match: "${node.label}"`);
                         specificMatches.add(node.id);
+                        // Record highlights
+                        allHighlights.push(...this.findMatches(input, keywords, 'specific'));
                     }
                 } catch (e) {
                     // console.warn(`[Engine] Failed to parse Keywords for node ${node.id}`, e);
@@ -88,6 +115,8 @@ export class Engine {
             if (this.hasKeyword(lowerInput, keywords)) {
                 console.log(`[Engine] Meta Detected: ${type}`);
                 detectedMetaTypes.add(type); // type is already lowercase from object keys
+                // Record highlights
+                allHighlights.push(...this.findMatches(input, keywords, 'meta'));
             }
         }
 
@@ -131,6 +160,28 @@ export class Engine {
         }
 
         console.log(`[Engine] Total Activated: ${finalActivated.size}`);
-        return Array.from(finalActivated);
+
+        return {
+            activated: Array.from(finalActivated),
+            matches: allHighlights
+        };
+    }
+
+    generateOutput(activatedIds: string[]): { personality: string, scenario: string } {
+        let personality = "";
+        const scenario = "";
+        const delimiter = "\n\n";
+
+        for (const id of activatedIds) {
+            const node = this.graph.nodes.find(n => n.id === id);
+            if (node && node.data) {
+                const desc = (node.data.Description || node.data.description || "") as string;
+                if (desc) {
+                    if (personality.length > 0) personality += delimiter;
+                    personality += desc;
+                }
+            }
+        }
+        return { personality, scenario };
     }
 }

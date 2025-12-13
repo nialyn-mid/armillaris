@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import Store from 'electron-store';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -13,35 +14,58 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // │ └── preload.js
 // 
 process.env.DIST = path.join(__dirname, '../dist');
-process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(process.env.DIST, '../public');
+process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, '../public');
 
 let win: BrowserWindow | null;
-// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
-const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL'];
+// Initialize store
+// Note: In some versions of electron-store/electron, we might need to handle init differently, 
+// but standard usage is new Store();
+const store = new Store();
 
 function createWindow() {
+  const defaultBounds = { width: 1980, height: 1080 };
+  const bounds = store.get('windowBounds', defaultBounds) as { width: number, height: number, x?: number, y?: number };
+
   win = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: bounds.width,
+    height: bounds.height,
+    x: bounds.x,
+    y: bounds.y,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      sandbox: false, // We'll need node integration for some parts, or use preload contextBridge which is better.
-      // For now, let's stick to contextBridge (preload) but we might need unsafe access if we want to run local node scripts easily?
-      // No, let's do it right. ContextIsolation is true by default.
+      sandbox: false,
+      contextIsolation: true, // Enable context isolation for contextBridge to work
     },
   });
 
-  // Test active push message to Renderer-process.
+  // Test active push message to renderer 
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', (new Date).toLocaleString());
   });
 
-  if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL);
+  if (process.env.VITE_DEV_SERVER_URL) {
+    win.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
     // win.loadFile('dist/index.html')
     win.loadFile(path.join(process.env.DIST as string, 'index.html'));
   }
+
+  // Save window state on close
+  // Using 'close' event to save final state
+  win.on('close', () => {
+    if (win) {
+      store.set('windowBounds', win.getBounds());
+    }
+  });
+  // Also save on move/resize periodically or debounce could be better, 
+  // but 'close' is usually sufficient for restoring next session.
+  // Although if it crashes, 'close' might not fire. 
+  // Let's add 'resized' and 'moved' for robustness active state
+  const saveState = () => {
+    if (win) store.set('windowBounds', win.getBounds());
+  };
+  win.on('resized', saveState);
+  win.on('moved', saveState);
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -114,17 +138,17 @@ ipcMain.handle('notion-request', async (_, method: string, endpoint: string, bod
     throw new Error('Failed to decrypt Notion token.');
   }
 
-  const notion = new Client({ 
+  const notion = new Client({
     auth: token,
     notionVersion: '2025-09-03'
   });
-  
+
   // We can use the generic request method or map specific ones. 
   // For flexibility, let's use the explicit request method if available, or just map 'databases.query' etc.
   // The Notion Client has a `request` method but it's for low-level.
   // Let's implement a simple dispatcher or just use `request`.
   console.log(`[Notion Proxy] ${method} ${endpoint}`);
-  
+
   try {
     const response = await notion.request({
       path: endpoint,

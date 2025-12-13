@@ -39,6 +39,10 @@
         'location': { activateOnLone: true }
     };
 
+    var CONFIG = {
+        outputDelimiter: '\n\n'
+    };
+
     var Engine = {
         data: DATA,
         nodes: DATA.nodes, // Array of { id, label, data: { Keywords, Meta... } }
@@ -71,10 +75,37 @@
             return neighbors;
         },
 
+        // Helper to find matches in string for highlighting
+        // Returns array of { text, index, type }
+        findMatches: function (input, keywords, type) {
+            var found = [];
+            if (!keywords || !keywords.length) return found;
+            var lowerInput = input.toLowerCase();
+
+            for (var i = 0; i < keywords.length; i++) {
+                var kw = keywords[i].toLowerCase();
+                if (!kw) continue;
+
+                var idx = lowerInput.indexOf(kw);
+                while (idx !== -1) {
+                    // Check word boundary? For now simple inclusion
+                    found.push({
+                        text: input.substr(idx, kw.length), // Original case text
+                        index: idx,
+                        length: kw.length,
+                        type: type
+                    });
+                    idx = lowerInput.indexOf(kw, idx + 1);
+                }
+            }
+            return found;
+        },
+
         process: function (input) {
             var lowerInput = input.toLowerCase();
             var specificMatches = [];
             var detectedMetaTypes = [];
+            var allHighlights = [];
 
             // 1. Detection Phase
             // Detect Meta Keywords
@@ -82,6 +113,9 @@
                 if (META_KEYWORDS.hasOwnProperty(type)) {
                     if (hasKeyword(lowerInput, META_KEYWORDS[type])) {
                         detectedMetaTypes.push(type);
+                        // Record highlights
+                        var h = this.findMatches(input, META_KEYWORDS[type], 'meta');
+                        for (var m = 0; m < h.length; m++) allHighlights.push(h[m]);
                     }
                 }
             }
@@ -106,6 +140,9 @@
 
                     if (keywords.length && hasKeyword(lowerInput, keywords)) {
                         specificMatches.push(node.id);
+                        // Record highlights
+                        var h = this.findMatches(input, keywords, 'specific');
+                        for (var m = 0; m < h.length; m++) allHighlights.push(h[m]);
                     }
                 }
             }
@@ -148,12 +185,39 @@
                 }
             }
 
-            // Return array of keys
+            // Return Object
             var results = [];
             for (var k in finalActivated) {
                 if (finalActivated.hasOwnProperty(k)) results.push(k);
             }
-            return results;
+
+            return {
+                activated: results,
+                matches: allHighlights
+            };
+        },
+
+        generateOutput: function (activatedIds) {
+            var personality = "";
+            var scenario = "";
+
+            for (var i = 0; i < activatedIds.length; i++) {
+                var node = this.find(activatedIds[i]);
+                if (node && node.data) {
+                    // Try to find description field (Description, description, or Content?)
+                    // Adjust key as needed based on Notion Property Name
+                    var desc = node.data.Description || node.data.description || "";
+                    if (desc) {
+                        if (personality.length > 0) personality += CONFIG.outputDelimiter;
+                        personality += desc;
+                    }
+                }
+            }
+
+            return {
+                personality: personality,
+                scenario: scenario
+            };
         }
     };
 
