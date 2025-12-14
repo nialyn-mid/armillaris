@@ -173,18 +173,12 @@ export default function TemplateView({ onDirtyChange }: TemplateViewProps) {
         <div ref={containerRef} style={{ display: 'flex', height: '100%', overflow: 'hidden', flexDirection: 'column', flex: 1 }}>
 
             {/* Toolbar for Save (since sidebar is gone) */}
-            <div style={{ padding: '8px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'flex-end' }}>
+            <div className="panel-toolbar" style={{ justifyContent: 'flex-end' }}>
                 <button
                     onClick={handleSave}
                     disabled={engineCode === originalEngineCode.current && specCode === originalSpecCode.current}
+                    className="btn-primary btn-toolbar"
                     style={{
-                        padding: '6px 12px',
-                        background: (engineCode !== originalEngineCode.current || specCode !== originalSpecCode.current) ? '#2ea043' : 'transparent',
-                        border: '1px solid var(--border-color)',
-                        color: '#fff',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '0.8rem',
                         opacity: (engineCode !== originalEngineCode.current || specCode !== originalSpecCode.current) ? 1 : 0.5
                     }}
                 >

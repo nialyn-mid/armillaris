@@ -233,8 +233,8 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
-            {/* Top Area: Graph + Right Panel */}
-            <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+            {/* Top Area: Graph + Chat Overlay + Right Panel */}
+            <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
                 {/* Main Graph Area */}
                 <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
                     <ReactFlow
@@ -253,19 +253,56 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
                             {nodes.length} nodes, {edges.length} edges
                         </Panel>
                     </ReactFlow>
+
+                    {/* Floating Chat Island */}
+                    <div className="floating-island" style={{
+                        bottom: '30px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '70%',
+                        maxWidth: '800px',
+                        minWidth: '400px',
+                        height: '140px'
+                    }}>
+                        <div style={{
+                            fontSize: '0.75rem',
+                            color: 'var(--text-secondary)',
+                            padding: '6px 12px',
+                            background: 'rgba(37, 37, 38, 0.4)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            borderBottom: '1px solid rgba(48, 54, 61, 0.5)'
+                        }}>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <span className="unselectable" style={{ fontWeight: 600 }}>Chat Sandbox</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <span className="unselectable">Matches: {matches.length}</span>
+                                {chatInput.length > 0 && (
+                                    <button onClick={handleClearChat} className="btn-icon" style={{ fontSize: '1rem', padding: '2px' }} title="Clear Chat">
+                                        ×
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        <div style={{ flex: 1, position: 'relative' }}>
+                            <HighlightedTextarea
+                                value={chatInput}
+                                onChange={handleChatChange}
+                                matches={matches}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Right Panel (Output) */}
                 {showOutput && (
                     <div style={{
                         width: rightPanelWidth,
-                        borderLeft: '1px solid var(--border-color)',
-                        backgroundColor: 'var(--bg-secondary)',
-                        display: 'flex',
-                        flexDirection: 'column',
                         position: 'relative',
                         zIndex: 20
-                    }}>
+                    }} className="panel right">
                         {/* Width Resize Handle (Left Edge) */}
                         <div
                             style={{
@@ -296,21 +333,21 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
                             }}
                         />
 
-                        <div style={{ padding: '10px', borderBottom: '1px solid var(--border-color)', background: '#252526', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span className="unselectable" style={{ fontWeight: 600, color: '#e0e0e0' }}>Activation Outputs</span>
+                        <div className="panel-header">
+                            <span className="unselectable">Activation Outputs</span>
                         </div>
 
                         <div style={{ flex: splitRatio, display: 'flex', flexDirection: 'column', minHeight: '50px' }}>
-                            <div className="unselectable" style={{ padding: '5px 10px', fontSize: '0.8rem', color: '#8b949e', background: '#1e1e1e' }}>Personality</div>
+                            <div className="panel-subheader">Personality</div>
                             <textarea
                                 readOnly
                                 value={outputs.personality}
-                                style={{ flex: 1, resize: 'none', background: '#0d1117', color: '#e0e0e0', border: 'none', padding: '10px', fontSize: '0.9rem' }}
+                                style={{ flex: 1, resize: 'none', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: 'none', padding: '10px', fontSize: '0.9rem' }}
                             />
                         </div>
 
                         <div
-                            style={{ height: '4px', background: '#30363d', cursor: 'ns-resize' }}
+                            style={{ height: '4px', background: 'var(--border-color)', cursor: 'ns-resize' }}
                             onMouseDown={(e) => {
                                 const startY = e.clientY;
                                 const startRatio = splitRatio;
@@ -333,11 +370,11 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
                         />
 
                         <div style={{ flex: 1 - splitRatio, display: 'flex', flexDirection: 'column', minHeight: '50px' }}>
-                            <div className="unselectable" style={{ padding: '5px 10px', fontSize: '0.8rem', color: '#8b949e', background: '#1e1e1e' }}>Scenario</div>
+                            <div className="panel-subheader">Scenario</div>
                             <textarea
                                 readOnly
                                 value={outputs.scenario}
-                                style={{ flex: 1, resize: 'none', background: '#0d1117', color: '#e0e0e0', border: 'none', padding: '10px', fontSize: '0.9rem' }}
+                                style={{ flex: 1, resize: 'none', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: 'none', padding: '10px', fontSize: '0.9rem' }}
                             />
                         </div>
                     </div>
@@ -348,13 +385,9 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
             {showSpecEditor && (
                 <div style={{
                     height: bottomPanelHeight,
-                    borderTop: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--bg-secondary)',
-                    display: 'flex',
-                    flexDirection: 'column',
                     position: 'relative',
                     zIndex: 20
-                }}>
+                }} className="panel bottom">
                     {/* Height Resize Handle (Top Edge) */}
                     <div
                         style={{
@@ -387,37 +420,6 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
                     <SpecNodeEditor />
                 </div>
             )}
-
-            {/* Chat Sandbox (Always Visible at Bottom) */}
-            <div style={{
-                height: '150px', // Fixed height as per "always visible" baseline
-                borderTop: '1px solid var(--border-color)',
-                backgroundColor: 'var(--bg-secondary)',
-                display: 'flex',
-                flexDirection: 'column',
-                zIndex: 10,
-                position: 'relative',
-                flexShrink: 0
-            }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', padding: '5px 10px', background: '#252526', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <span className="unselectable" style={{ fontWeight: 600 }}>Chat Sandbox</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        <span className="unselectable">Matches: {matches.length}</span>
-                        {chatInput.length > 0 && (
-                            <button onClick={handleClearChat} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '0.7rem' }}>Clear</button>
-                        )}
-                    </div>
-                </div>
-                <div style={{ flex: 1, position: 'relative' }}>
-                    <HighlightedTextarea
-                        value={chatInput}
-                        onChange={handleChatChange}
-                        matches={matches}
-                    />
-                </div>
-            </div>
 
         </div>
     );

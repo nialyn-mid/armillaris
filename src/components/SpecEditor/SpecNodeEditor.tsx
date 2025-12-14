@@ -109,14 +109,14 @@ export default function SpecNodeEditor() {
     return (
         <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
             {/* Toolbar */}
-            <div style={{ padding: '8px', background: '#252526', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#e0e0e0', fontWeight: 600, fontSize: '0.8rem' }}>
+            <div className="panel-toolbar">
+                <span style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.8rem' }}>
                     {activeEngine} / {activeSpec}
                 </span>
                 <div style={{ display: 'flex', gap: '10px' }}>
                     <button
                         onClick={handleSave}
-                        style={{ padding: '4px 8px', background: '#2ea043', border: 'none', color: '#fff', borderRadius: '3px', cursor: 'pointer', fontSize: '0.8rem' }}
+                        className="btn-secondary btn-toolbar"
                     >
                         Save Spec
                     </button>
@@ -125,8 +125,8 @@ export default function SpecNodeEditor() {
 
             <div style={{ flex: 1, position: 'relative', display: 'flex' }}>
                 {/* Node Palette */}
-                <div style={{ width: '200px', background: '#1e1e1e', borderRight: '1px solid #333', overflowY: 'auto', padding: '10px' }}>
-                    <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#888', marginBottom: '10px' }}>AVAILABLE NODES</div>
+                <div style={{ width: '200px', background: 'var(--bg-secondary)', borderRight: '1px solid var(--border-color)', overflowY: 'auto', padding: '10px' }}>
+                    <div className="panel-section-title" style={{ marginBottom: '10px' }}>AVAILABLE NODES</div>
                     {engineSpec ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {engineSpec.nodes.map(nodeDef => (
@@ -134,9 +134,9 @@ export default function SpecNodeEditor() {
                                     key={nodeDef.type}
                                     onClick={() => handleAddNode(nodeDef)}
                                     style={{
-                                        background: '#333',
-                                        border: '1px solid #444',
-                                        color: '#e0e0e0',
+                                        background: 'var(--bg-tertiary)',
+                                        border: '1px solid var(--border-color)',
+                                        color: 'var(--text-primary)',
                                         padding: '8px',
                                         textAlign: 'left',
                                         borderRadius: '4px',
@@ -149,7 +149,7 @@ export default function SpecNodeEditor() {
                             ))}
                         </div>
                     ) : (
-                        <div style={{ padding: '10px', color: '#666', fontSize: '0.8rem' }}>
+                        <div style={{ padding: '10px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
                             No Engine Spec loaded.
                         </div>
                     )}
@@ -166,7 +166,7 @@ export default function SpecNodeEditor() {
                         nodeTypes={nodeTypes}
                         fitView
                         className="dark-theme"
-                        style={{ background: '#181818' }}
+                        style={{ background: 'var(--bg-primary)' }}
                     >
                         <Background color="#30363d" gap={20} />
                         <Controls />

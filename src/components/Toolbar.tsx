@@ -40,7 +40,6 @@ export default function Toolbar({ activePane, onTogglePane }: ToolbarProps) {
             >
                 <MdSettingsApplications />
             </button>
-            <div style={{ width: '30px', height: '1px', background: '#333', margin: '5px 0' }}></div>
             <button
                 style={btnStyle(activePane === 'import')}
                 onClick={() => onTogglePane('import')}
@@ -48,6 +47,7 @@ export default function Toolbar({ activePane, onTogglePane }: ToolbarProps) {
             >
                 <MdDownload />
             </button>
+            <div style={{ width: '30px', height: '1px', background: '#333', margin: '5px 0' }}></div>
             <button
                 style={btnStyle(activePane === 'export')}
                 onClick={() => onTogglePane('export')}

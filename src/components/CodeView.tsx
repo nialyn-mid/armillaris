@@ -92,62 +92,33 @@ export default function CodeView() {
         showNotification('Code copied to clipboard!');
     };
 
-    const toggleStyle = (active: boolean) => ({
-        background: active ? '#0e639c' : 'transparent',
-        color: active ? '#fff' : '#cccccc',
-        border: '1px solid #333',
-        padding: '4px 8px',
-        cursor: 'pointer',
-        fontSize: '0.75rem',
-        borderRadius: '3px',
-        userSelect: 'none' as const, // Fix for TS
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px'
-    });
+
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#1e1e1e', flex: 1 }}>
             {/* Toolbar */}
-            <div className="unselectable" style={{
-                height: '40px',
-                backgroundColor: '#252526',
-                borderBottom: '1px solid #333',
-                display: 'flex',
-                alignItems: 'center',
-                padding: '0 10px',
-                gap: '15px',
-                color: '#cccccc',
-                fontSize: '0.8rem'
-            }}>
-                <div style={{ fontWeight: 600, color: '#fff', marginRight: '10px' }}>JS Output</div>
+            <div className="panel-toolbar">
+                <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginRight: '10px', fontSize: '0.8rem' }}>JS Output</div>
 
                 <button
                     onClick={() => setWordWrap(!wordWrap)}
-                    style={toggleStyle(wordWrap)}
+                    className={`btn-secondary btn-toolbar ${wordWrap ? 'active' : ''}`}
                 >
                     Word Wrap
                 </button>
 
                 <button
                     onClick={() => setPretty(!pretty)}
-                    style={toggleStyle(pretty)}
+                    className={`btn-secondary btn-toolbar ${pretty ? 'active' : ''}`}
                 >
                     Pretty Print
                 </button>
 
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <span style={{ color: '#888' }}>Size: {sizeDisplay}</span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Size: {sizeDisplay}</span>
                     <button
                         onClick={handleCopy}
-                        style={{
-                            background: '#0e639c',
-                            color: '#fff',
-                            border: 'none',
-                            padding: '4px 8px',
-                            cursor: 'pointer',
-                            fontSize: '0.75rem'
-                        }}
+                        className="btn-secondary btn-toolbar"
                     >
                         Copy to Clipboard
                     </button>
