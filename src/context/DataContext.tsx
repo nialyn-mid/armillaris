@@ -13,8 +13,8 @@ interface DataContextType {
   deleteEntry: (id: string) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
-  notification: string | null;
-  showNotification: (msg: string) => void;
+  notification: { message: string; type: 'success' | 'error' | 'info' } | null;
+  showNotification: (msg: string, type?: 'success' | 'error' | 'info') => void;
   metaDefinitions: MetaDefinition[];
   updateMetaDefinitions: (defs: MetaDefinition[]) => void;
 }
@@ -26,11 +26,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [originalEntries, setOriginalEntries] = useState<LoreEntry[]>([]);
   const [entries, setEditableEntries] = useState<LoreEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [notification, setNotification] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [metaDefinitions, setMetaDefinitions] = useState<MetaDefinition[]>([]);
 
-  const showNotification = (msg: string) => {
-    setNotification(msg);
+  const showNotification = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setNotification({ message: msg, type });
     setTimeout(() => setNotification(null), 5000);
   };
 

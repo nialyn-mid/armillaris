@@ -1,7 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
-import Editor from '@monaco-editor/react';
+import Editor, { type OnMount } from '@monaco-editor/react';
+import { useData } from '../context/DataContext';
 
-export default function TemplateView() {
+interface TemplateViewProps {
+    onDirtyChange?: (isDirty: boolean) => void;
+}
+
+export default function TemplateView({ onDirtyChange }: TemplateViewProps) {
+    const { showNotification } = useData();
+
     // ---- Layout State ----
     const [sidebarWidth, setSidebarWidth] = useState(() => {
         const saved = localStorage.getItem('template_sidebar_width');
@@ -27,8 +34,48 @@ export default function TemplateView() {
     const [engineCode, setEngineCode] = useState<string>('');
     const [specCode, setSpecCode] = useState<string>('');
 
-    // Status Feedback
-    const [status, setStatus] = useState<string>('');
+    // Dirty Tracking
+    const originalEngineCode = useRef<string>('');
+    const originalSpecCode = useRef<string>('');
+
+    // Editor Instances for Scroll Persistence
+    const engineEditorRef = useRef<any>(null);
+    const specEditorRef = useRef<any>(null);
+
+    const saveEditorState = (type: 'engine' | 'spec', filename: string) => {
+        const editor = type === 'engine' ? engineEditorRef.current : specEditorRef.current;
+        if (editor && filename) {
+            const viewState = editor.saveViewState();
+            if (viewState) {
+                localStorage.setItem(`template_viewstate_${type}_${filename} `, JSON.stringify(viewState));
+            }
+        }
+    };
+
+    const restoreEditorState = (type: 'engine' | 'spec', filename: string) => {
+        const editor = type === 'engine' ? engineEditorRef.current : specEditorRef.current;
+        if (editor && filename) {
+            const savedJson = localStorage.getItem(`template_viewstate_${type}_${filename} `);
+            if (savedJson) {
+                try {
+                    const viewState = JSON.parse(savedJson);
+                    editor.restoreViewState(viewState);
+                } catch (e) {
+                    console.warn("Failed to restore view state", e);
+                }
+            }
+        }
+    };
+
+    const handleEngineMount: OnMount = (editor) => {
+        engineEditorRef.current = editor;
+        restoreEditorState('engine', activeEngineFile);
+    };
+
+    const handleSpecMount: OnMount = (editor) => {
+        specEditorRef.current = editor;
+        restoreEditorState('spec', activeSpecFile);
+    };
 
     // Persistence Effects (Layout)
     useEffect(() => localStorage.setItem('template_sidebar_width', String(sidebarWidth)), [sidebarWidth]);
@@ -38,6 +85,15 @@ export default function TemplateView() {
     // Persistence Effects (Selection)
     useEffect(() => localStorage.setItem('active_engine_file', activeEngineFile), [activeEngineFile]);
     useEffect(() => localStorage.setItem('active_spec_file', activeSpecFile), [activeSpecFile]);
+
+    // Save ViewState on Unmount
+    useEffect(() => {
+        return () => {
+            saveEditorState('engine', activeEngineFile);
+            saveEditorState('spec', activeSpecFile);
+        };
+    }, [activeEngineFile, activeSpecFile]);
+
 
     const ipc = (window as any).ipcRenderer;
 
@@ -61,8 +117,20 @@ export default function TemplateView() {
     // Load Engine Content
     useEffect(() => {
         if (!ipc || !activeEngineFile) return;
+        // Save previous state if we are switching (handled by handleFileSwitch somewhat, but this effect runs on change)
+
         ipc.invoke('read-template', activeEngineFile)
-            .then((content: string) => setEngineCode(content))
+            .then((content: string) => {
+                setEngineCode(content);
+                originalEngineCode.current = content;
+                // Restore state after content set (might need timeout loop or use editor.setValue callback, 
+                // but setting state triggers re-render, keeping editor instance alive)
+                // Monaco value update preserves scroll if model matches? 
+                // We are replacing value string. Scroll usually jumps to top unless handled.
+                // Restoring state should happen AFTER value update renders.
+                // We'll use a timeout here or rely on the editor instance stability if key doesn't change.
+                setTimeout(() => restoreEditorState('engine', activeEngineFile), 50);
+            })
             .catch((err: any) => console.error(err));
     }, [activeEngineFile]);
 
@@ -70,24 +138,71 @@ export default function TemplateView() {
     useEffect(() => {
         if (!ipc || !activeSpecFile) return;
         ipc.invoke('read-template', activeSpecFile)
-            .then((content: string) => setSpecCode(content))
+            .then((content: string) => {
+                setSpecCode(content);
+                originalSpecCode.current = content;
+                setTimeout(() => restoreEditorState('spec', activeSpecFile), 50);
+            })
             .catch((err: any) => console.error(err));
     }, [activeSpecFile]);
 
+    // Warn on Unsaved Changes (Browser Close/Reload) & Notify Parent
+    useEffect(() => {
+        const isDirty = (engineCode !== originalEngineCode.current) || (specCode !== originalSpecCode.current);
+
+        if (onDirtyChange) {
+            onDirtyChange(isDirty);
+        }
+
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [engineCode, specCode, onDirtyChange]);
+
+    const checkDirty = () => {
+        return (engineCode !== originalEngineCode.current) || (specCode !== originalSpecCode.current);
+    };
+
+    const handleFileSwitch = (type: 'engine' | 'spec', newFile: string) => {
+        // Save state of OLD file before switching
+        if (type === 'engine') saveEditorState('engine', activeEngineFile);
+        if (type === 'spec') saveEditorState('spec', activeSpecFile);
+
+        if (checkDirty()) {
+            if (!confirm('You have unsaved changes. Are you sure you want to switch files? Changes will be lost.')) {
+                return;
+            }
+        }
+        if (type === 'engine') setActiveEngineFile(newFile);
+        if (type === 'spec') setActiveSpecFile(newFile);
+    };
 
     const handleSave = async () => {
         if (!ipc) return;
-        setStatus('Saving...');
+
         try {
             await Promise.all([
                 ipc.invoke('save-template', activeEngineFile, engineCode),
                 ipc.invoke('save-template', activeSpecFile, specCode)
             ]);
-            setStatus('Saved!');
-            setTimeout(() => setStatus(''), 2000);
+
+            // Update references
+            originalEngineCode.current = engineCode;
+            originalSpecCode.current = specCode;
+
+            // Force re-eval of dirty state (references updated, but state triggers effect)
+            // We can manually trigger parent update
+            if (onDirtyChange) onDirtyChange(false);
+
+            showNotification('Templates Saved Successfully', 'success');
         } catch (e) {
             console.error(e);
-            setStatus('Error Saving');
+            showNotification('Failed to Save Templates', 'error');
         }
     };
 
@@ -158,6 +273,7 @@ export default function TemplateView() {
                             defaultLanguage="javascript"
                             theme="vs-dark"
                             value={engineCode}
+                            onMount={handleEngineMount}
                             onChange={(val) => setEngineCode(val || '')}
                             options={{
                                 minimap: { enabled: false },
@@ -194,6 +310,7 @@ export default function TemplateView() {
                             defaultLanguage="json"
                             theme="vs-dark"
                             value={specCode}
+                            onMount={handleSpecMount}
                             onChange={(val) => setSpecCode(val || '')}
                             options={{
                                 minimap: { enabled: false },
@@ -208,7 +325,7 @@ export default function TemplateView() {
 
             {/* Sidebar (Right) */}
             <div style={{
-                width: isSidebarCollapsed ? '30px' : `${sidebarWidth}px`,
+                width: isSidebarCollapsed ? '30px' : `${sidebarWidth} px`,
                 flexShrink: 0,
                 borderLeft: '1px solid var(--border-color)',
                 backgroundColor: 'var(--bg-primary)',
@@ -266,15 +383,12 @@ export default function TemplateView() {
                 {!isSidebarCollapsed && (
                     <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
 
-                        {/* Status Message */}
-                        {status && <div style={{ color: '#aaa', fontSize: '0.8rem', textAlign: 'center' }}>{status}</div>}
-
                         {/* File Selections */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                             <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Active Template</label>
                             <select
                                 value={activeEngineFile}
-                                onChange={(e) => setActiveEngineFile(e.target.value)}
+                                onChange={(e) => handleFileSwitch('engine', e.target.value)}
                                 style={{
                                     padding: '6px',
                                     background: 'var(--bg-secondary)',
@@ -291,7 +405,7 @@ export default function TemplateView() {
                             <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>JSON Spec</label>
                             <select
                                 value={activeSpecFile}
-                                onChange={(e) => setActiveSpecFile(e.target.value)}
+                                onChange={(e) => handleFileSwitch('spec', e.target.value)}
                                 style={{
                                     padding: '6px',
                                     background: 'var(--bg-secondary)',
@@ -320,7 +434,6 @@ export default function TemplateView() {
                         >
                             Save Changes
                         </button>
-
                     </div>
                 )}
 

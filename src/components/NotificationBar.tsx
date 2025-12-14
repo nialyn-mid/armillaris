@@ -26,13 +26,21 @@ export default function NotificationBar() {
         </div>
     );
 
+    const getBgColor = () => {
+        switch (notification.type) {
+            case 'success': return '#2e7d32'; // Green
+            case 'error': return '#c62828';   // Red
+            default: return 'var(--accent-color)'; // Blue/Default
+        }
+    };
+
     return (
         <div style={{
             ...barStyle,
-            backgroundColor: 'var(--accent-color)',
+            backgroundColor: getBgColor(),
             color: '#fff',
         }}>
-            {notification}
+            {notification.message}
         </div>
     );
 }

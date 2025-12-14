@@ -99,33 +99,12 @@ export class Generator {
             $definitions: jsonSpec['$definitions'] || {}
         };
 
-        console.log('[Generator Debug] Context Loaded');
-        console.log(' - Nodes:', nodesData.length);
-        console.log(' - Edges (Graph):', graph.edges.length);
-        console.log(' - Unique Labels:', globalContext.uniqueLabels);
-        console.log(' - Unique Meta:', globalContext.uniqueMetaTypes);
-        console.log(' - Definitions Keys:', Object.keys(globalContext.$definitions));
-        console.log(' - IDs Sample:', nodesData.slice(0, 3).map(n => `${n.originalId}->${n.id}`));
-
-        // Sample Adjacency
-        const sampleId = nodesData[0]?.id;
-        if (sampleId) {
-            console.log(` - Adjacency for ${sampleId}:`, JSON.stringify(adjData[sampleId]));
-        }
-
         // 3. Process Spec
         const processedData = this.processSpec(jsonSpec, globalContext);
 
-        // Debug Info
-        const debugInfo = `// DEBUG INFO
-// Labels (Trimmed): ${JSON.stringify(globalContext.uniqueLabels)}
-// Definitions: ${JSON.stringify(Object.keys(globalContext.$definitions))}
-// Context Keys: ${Object.keys(globalContext)}
-`;
-
         // 4. Inject into Template
         const jsonStr = JSON.stringify(processedData, null, options.pretty ? 2 : 0);
-        const fullCode = debugInfo + engineTemplate.replace('"{{JSON_DATA}}"', jsonStr);
+        const fullCode = engineTemplate.replace('"{{JSON_DATA}}"', jsonStr);
 
         // 5. Build/Minify
         if (options.pretty) {
