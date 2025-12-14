@@ -1,0 +1,79 @@
+{
+    "name": "Armillaris Default Engine",
+    "description": "Standard Engine with Logic and Transformations",
+    "nodes": [
+        {
+            "type": "InputNodes",
+            "label": "Graph Nodes",
+            "category": "Input",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "out",
+                    "label": "Nodes",
+                    "type": "array"
+                }
+            ],
+            "properties": []
+        },
+        {
+            "type": "InputAdj",
+            "label": "Graph Adjacency",
+            "category": "Input",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "out",
+                    "label": "Adjacency Map",
+                    "type": "object"
+                }
+            ],
+            "properties": []
+        },
+        {
+            "type": "FilterByMeta",
+            "label": "Filter by Meta",
+            "category": "Transformation",
+            "inputs": [
+                {
+                    "id": "in",
+                    "label": "Input",
+                    "type": "array"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "out",
+                    "label": "Filtered",
+                    "type": "array"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "meta",
+                    "label": "Meta Tag",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "type": "OutputRoot",
+            "label": "Spec Root",
+            "category": "Output",
+            "inputs": [
+                {
+                    "id": "nodes",
+                    "label": "Nodes List",
+                    "type": "array"
+                },
+                {
+                    "id": "adj",
+                    "label": "Adjacency",
+                    "type": "object"
+                }
+            ],
+            "outputs": [],
+            "properties": []
+        }
+    ]
+}

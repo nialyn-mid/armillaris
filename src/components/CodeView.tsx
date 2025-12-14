@@ -107,7 +107,7 @@ export default function CodeView() {
     });
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#1e1e1e' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#1e1e1e', flex: 1 }}>
             {/* Toolbar */}
             <div className="unselectable" style={{
                 height: '40px',

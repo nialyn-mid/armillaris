@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { MdKeyboardDoubleArrowLeft } from 'react-icons/md';
 import { api } from '../api';
 import { useData } from '../context/DataContext';
 import { NotionSource } from '../lib/data-sources/NotionSource';
+import SidePane from './ui/SidePane';
 
 interface ImportPaneProps {
     onClose: () => void;
@@ -83,85 +83,71 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
     };
 
     return (
-        <div className="pane-content" style={{
-            width: '300px',
-            backgroundColor: 'var(--bg-secondary)',
-            borderRight: '1px solid var(--border-color)',
-            padding: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '20px',
-            height: '100%'
-        }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ fontSize: '1rem', margin: 0 }}>Import Settings</h2>
-                <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem', display: 'flex' }}>
-                    <MdKeyboardDoubleArrowLeft />
-                </button>
-            </div>
+        <SidePane title="Import Settings" onClose={onClose}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', padding: '20px' }}>
+                <div className="config-section" style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, overflowY: 'auto' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h3 style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Configuration</h3>
+                        <button onClick={handleSaveConfig} style={{ padding: '4px 8px', fontSize: '0.7rem' }}>Save</button>
+                    </div>
 
-            <div className="config-section" style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, overflowY: 'auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Configuration</h3>
-                    <button onClick={handleSaveConfig} style={{ padding: '4px 8px', fontSize: '0.7rem' }}>Save</button>
-                </div>
+                    <div className="input-group">
+                        <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>
+                            Notion Token {hasToken && <span style={{ color: 'var(--accent-color)' }}>(Set)</span>}
+                        </label>
+                        <input
+                            type="password"
+                            placeholder={hasToken ? "********" : "secret_..."}
+                            value={token}
+                            onChange={(e) => setToken(e.target.value)}
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                        />
+                    </div>
 
-                <div className="input-group">
-                    <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>
-                        Notion Token {hasToken && <span style={{ color: 'var(--accent-color)' }}>(Set)</span>}
-                    </label>
-                    <input
-                        type="password"
-                        placeholder={hasToken ? "********" : "secret_..."}
-                        value={token}
-                        onChange={(e) => setToken(e.target.value)}
-                        style={{ width: '100%', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div className="input-group">
-                    <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Databases</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {dbIds.map((id, idx) => (
-                            <div key={idx} style={{ display: 'flex', gap: '4px' }}>
-                                <input
-                                    type="text"
-                                    placeholder="ID or URL"
-                                    value={id}
-                                    onChange={(e) => updateDbId(idx, e.target.value)}
-                                    style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', fontSize: '0.8rem' }}
-                                />
-                                <button
-                                    onClick={() => removeDbInput(idx)}
-                                    style={{ padding: '4px 8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#ff6b6b' }}
-                                    title="Remove"
-                                >
-                                    &times;
-                                </button>
-                            </div>
-                        ))}
-                        <button
-                            onClick={addDbInput}
-                            style={{
-                                padding: '8px',
-                                background: 'var(--bg-primary)',
-                                border: '1px dashed var(--border-color)',
-                                color: 'var(--text-secondary)',
-                                cursor: 'pointer',
-                                fontSize: '0.8rem'
-                            }}
-                        >
-                            + Add Database
-                        </button>
+                    <div className="input-group">
+                        <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Databases</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {dbIds.map((id, idx) => (
+                                <div key={idx} style={{ display: 'flex', gap: '4px' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="ID or URL"
+                                        value={id}
+                                        onChange={(e) => updateDbId(idx, e.target.value)}
+                                        style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', fontSize: '0.8rem' }}
+                                    />
+                                    <button
+                                        onClick={() => removeDbInput(idx)}
+                                        style={{ padding: '4px 8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#ff6b6b' }}
+                                        title="Remove"
+                                    >
+                                        &times;
+                                    </button>
+                                </div>
+                            ))}
+                            <button
+                                onClick={addDbInput}
+                                style={{
+                                    padding: '8px',
+                                    background: 'var(--bg-primary)',
+                                    border: '1px dashed var(--border-color)',
+                                    color: 'var(--text-secondary)',
+                                    cursor: 'pointer',
+                                    fontSize: '0.8rem'
+                                }}
+                            >
+                                + Add Database
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div className="actions" style={{ marginTop: 'auto' }}>
-                <button className="primary" onClick={handleFetch} disabled={isLoading} style={{ width: '100%' }}>
-                    {isLoading ? 'Fetching...' : 'Fetch Data'}
-                </button>
+                <div className="actions" style={{ marginTop: 'auto' }}>
+                    <button className="primary" onClick={handleFetch} disabled={isLoading} style={{ width: '100%' }}>
+                        {isLoading ? 'Fetching...' : 'Fetch Data'}
+                    </button>
+                </div>
             </div>
-        </div>
+        </SidePane>
     );
 }

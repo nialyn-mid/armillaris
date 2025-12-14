@@ -163,12 +163,12 @@ ipcMain.handle('notion-request', async (_, method: string, endpoint: string, bod
 });
 
 // --------------------------------------------------------------------------
-// Template Management
+// Engine & Template Management
 // --------------------------------------------------------------------------
-const TEMPLATES_DIR = path.join(app.getPath('userData'), 'templates');
+const ENGINES_DIR = path.join(app.getPath('userData'), 'Engines');
 
-if (!fs.existsSync(TEMPLATES_DIR)) {
-  fs.mkdirSync(TEMPLATES_DIR, { recursive: true });
+if (!fs.existsSync(ENGINES_DIR)) {
+  fs.mkdirSync(ENGINES_DIR, { recursive: true });
 }
 
 // Default Content
@@ -419,36 +419,104 @@ const DEFAULT_SPEC = `{
   }
 }`;
 
-function ensureDefaultTemplates() {
-  const enginePath = path.join(TEMPLATES_DIR, 'engine_default.js');
-  const specPath = path.join(TEMPLATES_DIR, 'spec_default.json');
+const DEFAULT_ENGINE_SPEC = `{
+    "name": "Default Engine Spec",
+    "description": "Definition for editing the default JSON spec",
+    "nodes": []
+}`;
 
-  if (!fs.existsSync(enginePath)) {
-    fs.writeFileSync(enginePath, DEFAULT_ENGINE);
+function ensureEngineStructure() {
+  const defaultEnginePath = path.join(ENGINES_DIR, 'Default');
+  const defaultEngineSpecsPath = path.join(defaultEnginePath, 'Specs');
+
+  if (!fs.existsSync(defaultEnginePath)) {
+    fs.mkdirSync(defaultEnginePath, { recursive: true });
   }
-  if (!fs.existsSync(specPath)) {
-    fs.writeFileSync(specPath, DEFAULT_SPEC);
+  if (!fs.existsSync(defaultEngineSpecsPath)) {
+    fs.mkdirSync(defaultEngineSpecsPath, { recursive: true });
+  }
+
+  const engineJs = path.join(defaultEnginePath, 'engine.js');
+  const engineSpec = path.join(defaultEnginePath, 'engine_spec.json');
+  const defaultSpec = path.join(defaultEngineSpecsPath, 'default.json');
+
+
+  if (!fs.existsSync(engineJs)) {
+    fs.writeFileSync(engineJs, DEFAULT_ENGINE);
+  }
+  if (!fs.existsSync(engineSpec)) {
+    fs.writeFileSync(engineSpec, DEFAULT_ENGINE_SPEC);
+  }
+  if (!fs.existsSync(defaultSpec)) {
+    fs.writeFileSync(defaultSpec, DEFAULT_SPEC);
   }
 }
 
 // Run once on load
-ensureDefaultTemplates();
+ensureEngineStructure();
 
-ipcMain.handle('get-templates', async (_, type: 'engine' | 'spec') => {
-  const files = fs.readdirSync(TEMPLATES_DIR);
-  const ext = type === 'engine' ? '.js' : '.json';
-  return files.filter(f => f.endsWith(ext));
+// ---- IPC Handlers for Engines ----
+
+// List all available Engines (folders in Engines/)
+ipcMain.handle('get-engines', async () => {
+  const dirs = fs.readdirSync(ENGINES_DIR, { withFileTypes: true });
+  return dirs.filter(d => d.isDirectory()).map(d => d.name);
 });
 
-ipcMain.handle('read-template', async (_, filename: string) => {
-  const filePath = path.join(TEMPLATES_DIR, filename);
-  if (!fs.existsSync(filePath)) throw new Error('File not found');
-  return fs.readFileSync(filePath, 'utf-8');
+// Get content of engine.js and engine_spec.json for a given Engine
+ipcMain.handle('get-engine-details', async (_, engineName: string) => {
+  const p = path.join(ENGINES_DIR, engineName);
+  if (!fs.existsSync(p)) throw new Error('Engine not found');
+
+  const jsPath = path.join(p, 'engine.js');
+  const devSpecPath = path.join(p, 'engine_spec.json');
+
+  const js = fs.existsSync(jsPath) ? fs.readFileSync(jsPath, 'utf-8') : '';
+  const devSpec = fs.existsSync(devSpecPath) ? fs.readFileSync(devSpecPath, 'utf-8') : '';
+
+  return { js, devSpec };
 });
 
-ipcMain.handle('save-template', async (_, filename: string, content: string) => {
-  const filePath = path.join(TEMPLATES_DIR, filename);
-  fs.writeFileSync(filePath, content);
+// List JSON specs for a given Engine
+ipcMain.handle('get-specs', async (_, engineName: string) => {
+  const p = path.join(ENGINES_DIR, engineName, 'Specs');
+  if (!fs.existsSync(p)) return [];
+
+  const files = fs.readdirSync(p);
+  return files.filter(f => f.endsWith('.json'));
+});
+
+// Read a specific JSON spec
+ipcMain.handle('read-spec', async (_, engineName: string, specName: string) => {
+  const p = path.join(ENGINES_DIR, engineName, 'Specs', specName);
+  if (!fs.existsSync(p)) throw new Error('Spec file not found');
+  return fs.readFileSync(p, 'utf-8');
+});
+
+// Save handlers
+ipcMain.handle('save-engine', async (_, engineName: string, content: string) => {
+  const p = path.join(ENGINES_DIR, engineName, 'engine.js');
+  fs.writeFileSync(p, content);
   return true;
 });
+
+ipcMain.handle('save-engine-spec', async (_, engineName: string, content: string) => {
+  const p = path.join(ENGINES_DIR, engineName, 'engine_spec.json');
+  fs.writeFileSync(p, content);
+  return true;
+});
+
+ipcMain.handle('save-spec', async (_, engineName: string, specName: string, content: string) => {
+  const dir = path.join(ENGINES_DIR, engineName, 'Specs');
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+  const p = path.join(dir, specName);
+  fs.writeFileSync(p, content);
+  return true;
+});
+
+// Legacy handlers (redirecting or keeping for safety until frontend is updated)
+// keeping 'get-templates' temporarily might break things if frontend expects list of strings
+// but we will update frontend immediately. So let's delete the old handlers to force errors if we miss something.
+
 

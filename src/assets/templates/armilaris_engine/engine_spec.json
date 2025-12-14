@@ -1,0 +1,115 @@
+{
+    "name": "Armillaris Default Engine",
+    "description": "Standard Keyword & Meta Activation Engine",
+    "nodes": [
+        {
+            "type": "InputSource",
+            "label": "Graph Source",
+            "category": "Input",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "graph",
+                    "label": "Nodes",
+                    "type": "array"
+                },
+                {
+                    "id": "adj",
+                    "label": "Adjacency",
+                    "type": "object"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "source",
+                    "label": "Source",
+                    "type": "select",
+                    "options": [
+                        "Lore Graph"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "FilterNode",
+            "label": "Filter by Attribute",
+            "category": "Transformation",
+            "inputs": [
+                {
+                    "id": "in",
+                    "label": "Nodes",
+                    "type": "array"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "out",
+                    "label": "Filtered",
+                    "type": "array"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "attribute",
+                    "label": "Attribute",
+                    "type": "string"
+                },
+                {
+                    "name": "value",
+                    "label": "Value",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "type": "MetaConfig",
+            "label": "Meta Configuration",
+            "category": "Utility",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "config",
+                    "label": "Meta Rule",
+                    "type": "object"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "keyword",
+                    "label": "Meta Keyword",
+                    "type": "string"
+                },
+                {
+                    "name": "activateOnLone",
+                    "label": "Activate on Lone",
+                    "type": "boolean",
+                    "default": true
+                }
+            ]
+        },
+        {
+            "type": "OutputRoot",
+            "label": "Engine Target",
+            "category": "Output",
+            "inputs": [
+                {
+                    "id": "nodes",
+                    "label": "Final Nodes",
+                    "type": "array"
+                },
+                {
+                    "id": "adj",
+                    "label": "Adjacency",
+                    "type": "object"
+                },
+                {
+                    "id": "meta",
+                    "label": "Meta Rules",
+                    "type": "object"
+                }
+            ],
+            "outputs": [],
+            "properties": []
+        }
+    ]
+}

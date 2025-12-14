@@ -1,8 +1,8 @@
-import { MdDownload, MdOutput } from 'react-icons/md';
+import { MdDownload, MdOutput, MdSettingsApplications } from 'react-icons/md';
 
 interface ToolbarProps {
-    activePane: 'import' | 'export' | null;
-    onTogglePane: (pane: 'import' | 'export') => void;
+    activePane: 'import' | 'export' | 'engine' | null;
+    onTogglePane: (pane: 'import' | 'export' | 'engine') => void;
 }
 
 export default function Toolbar({ activePane, onTogglePane }: ToolbarProps) {
@@ -25,7 +25,7 @@ export default function Toolbar({ activePane, onTogglePane }: ToolbarProps) {
     return (
         <div style={{
             width: '50px',
-            backgroundColor: 'var(--bg-primary)', // Slightly darker than pane
+            backgroundColor: 'var(--bg-primary)',
             borderRight: '1px solid var(--border-color)',
             display: 'flex',
             flexDirection: 'column',
@@ -33,6 +33,14 @@ export default function Toolbar({ activePane, onTogglePane }: ToolbarProps) {
             paddingTop: '10px',
             zIndex: 10
         }}>
+            <button
+                style={btnStyle(activePane === 'engine')}
+                onClick={() => onTogglePane('engine')}
+                title="Engine Settings"
+            >
+                <MdSettingsApplications />
+            </button>
+            <div style={{ width: '30px', height: '1px', background: '#333', margin: '5px 0' }}></div>
             <button
                 style={btnStyle(activePane === 'import')}
                 onClick={() => onTogglePane('import')}

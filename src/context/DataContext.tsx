@@ -17,6 +17,15 @@ interface DataContextType {
   showNotification: (msg: string, type?: 'success' | 'error' | 'info') => void;
   metaDefinitions: MetaDefinition[];
   updateMetaDefinitions: (defs: MetaDefinition[]) => void;
+
+  // Engine & Spec State
+  activeEngine: string;
+  setActiveEngine: (engine: string) => void;
+  activeSpec: string;
+  setActiveSpec: (spec: string) => void;
+  availableEngines: string[];
+  availableSpecs: string[];
+  refreshEngineLists: () => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -28,6 +37,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [metaDefinitions, setMetaDefinitions] = useState<MetaDefinition[]>([]);
+
+  // Engine State
+  const [activeEngine, setActiveEngine] = useState<string>(() => localStorage.getItem('active_engine') || 'Default');
+  const [activeSpec, setActiveSpec] = useState<string>(() => localStorage.getItem('active_spec') || 'default.json');
+  const [availableEngines, setAvailableEngines] = useState<string[]>([]);
+  const [availableSpecs, setAvailableSpecs] = useState<string[]>([]);
 
   const showNotification = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
     setNotification({ message: msg, type });
@@ -136,6 +151,45 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   }, [entries]);
 
+  // Load Engines & Specs
+  const refreshEngineLists = () => {
+    const ipc = (window as any).ipcRenderer;
+    if (!ipc) return;
+
+    ipc.invoke('get-engines').then((list: string[]) => {
+      setAvailableEngines(list);
+      if (list.length > 0 && !list.includes(activeEngine)) {
+        setActiveEngine(list[0]); // Fallback
+      }
+    }).catch(console.error);
+  };
+
+  // Initial Load
+  useEffect(() => {
+    refreshEngineLists();
+  }, []);
+
+  // When active engine changes, load its specs
+  useEffect(() => {
+    localStorage.setItem('active_engine', activeEngine);
+    const ipc = (window as any).ipcRenderer;
+    if (!ipc) return;
+
+    ipc.invoke('get-specs', activeEngine).then((list: string[]) => {
+      setAvailableSpecs(list);
+      if (list.length > 0 && !list.includes(activeSpec)) {
+        setActiveSpec(list[0]);
+      } else if (list.length === 0) {
+        setActiveSpec(''); // No specs found
+      }
+    }).catch(console.error);
+
+  }, [activeEngine]);
+
+  useEffect(() => {
+    if (activeSpec) localStorage.setItem('active_spec', activeSpec);
+  }, [activeSpec]);
+
   return (
     <DataContext.Provider value={{
       graphData,
@@ -151,7 +205,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
       notification,
       showNotification,
       metaDefinitions,
-      updateMetaDefinitions
+      updateMetaDefinitions,
+      activeEngine,
+      setActiveEngine,
+      activeSpec,
+      setActiveSpec,
+      availableEngines,
+      availableSpecs,
+      refreshEngineLists
     }}>
       {children}
     </DataContext.Provider>
