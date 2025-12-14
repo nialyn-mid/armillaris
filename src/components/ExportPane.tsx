@@ -11,7 +11,35 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
     const handleDownload = () => {
         if (!graphData) return;
         import('../lib/generator').then(async m => {
-            const generated = await m.Generator.generate(graphData, { pretty: false });
+            let engineTemplate: string | undefined;
+            let jsonSpec: any | undefined;
+            const ipc = (window as any).ipcRenderer;
+
+            if (ipc) {
+                const engineFile = localStorage.getItem('active_engine_file');
+                const specFile = localStorage.getItem('active_spec_file');
+                if (engineFile && specFile) {
+                    try {
+                        const [eng, spec] = await Promise.all([
+                            ipc.invoke('read-template', engineFile),
+                            ipc.invoke('read-template', specFile)
+                        ]);
+                        engineTemplate = eng;
+                        jsonSpec = JSON.parse(spec);
+                    } catch (e) {
+                        console.error("Failed to load templates for export:", e);
+                        alert("Failed to load active templates. Please check Template View.");
+                        return;
+                    }
+                }
+            }
+
+            if (!engineTemplate || !jsonSpec) {
+                alert("Error: Missing Engine Template or JSON Spec. Please select them in Template View.");
+                return;
+            }
+
+            const generated = await m.Generator.generate(graphData, { pretty: false, engineTemplate, jsonSpec });
             const blob = new Blob([generated], { type: 'text/javascript' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');

@@ -4,7 +4,7 @@ import { useData } from '../context/DataContext';
 import { Generator } from '../lib/generator';
 
 export default function CodeView() {
-    const { graphData } = useData();
+    const { graphData, showNotification } = useData();
     const [wordWrap, setWordWrap] = useState<boolean>(() => {
         return localStorage.getItem('codeview_wordwrap') === 'true';
     });
@@ -35,20 +35,33 @@ export default function CodeView() {
                 let jsonSpec: any | undefined;
 
                 if (ipc) {
-                    const engineFile = localStorage.getItem('active_engine_file') || 'engine_default.js';
-                    const specFile = localStorage.getItem('active_spec_file') || 'spec_default.json';
+                    const engineFile = localStorage.getItem('active_engine_file');
+                    const specFile = localStorage.getItem('active_spec_file');
+
+                    if (!engineFile || !specFile) {
+                        if (active) setCode('// Error: No template selected in Template View.');
+                        return;
+                    }
 
                     try {
-                        const [eng, spec] = await Promise.all([
-                            ipc.invoke('read-template', engineFile),
-                            ipc.invoke('read-template', specFile)
-                        ]);
-                        engineTemplate = eng;
-                        jsonSpec = JSON.parse(spec);
-                    } catch (err) {
-                        console.error("Failed to load templates for generation:", err);
-                        // Fallback? Or just fail?
-                        if (active) setCode('// Error loading templates: ' + String(err));
+                        // Load Engine
+                        try {
+                            engineTemplate = await ipc.invoke('read-template', engineFile);
+                        } catch (e) {
+                            throw new Error(`Failed to load Engine Template '${engineFile}': ${e}`);
+                        }
+
+                        // Load Spec
+                        try {
+                            const specContent = await ipc.invoke('read-template', specFile);
+                            jsonSpec = JSON.parse(specContent);
+                        } catch (e) {
+                            throw new Error(`Failed to load JSON Spec '${specFile}': ${e}`);
+                        }
+
+                    } catch (err: any) {
+                        console.error(err);
+                        if (active) setCode('// Template Error:\n// ' + err.message);
                         return;
                     }
                 } else {
@@ -76,6 +89,7 @@ export default function CodeView() {
 
     const handleCopy = () => {
         navigator.clipboard.writeText(code);
+        showNotification('Code copied to clipboard!');
     };
 
     const toggleStyle = (active: boolean) => ({

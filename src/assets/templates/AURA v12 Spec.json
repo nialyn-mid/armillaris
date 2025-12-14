@@ -1,0 +1,84 @@
+{
+    "description": "Transforms Graph Data into complex AURA v12 Rules with Meta-Gated Adjacency",
+    "$definitions": {
+        "Group": [
+            "group",
+            "company",
+            "faction",
+            "organization"
+        ],
+        "History": [
+            "history",
+            "past",
+            "log"
+        ],
+        "Object": [
+            "object",
+            "item",
+            "thing"
+        ],
+        "Location": [
+            "location",
+            "place",
+            "spot",
+            "area"
+        ]
+    },
+    "$concat": [
+        {
+            "$for": "uniqueMetaTypes",
+            "$item": {
+                "id": "MetaDetector_{{_value}}",
+                "tag": "{{_value}}",
+                "keywords": "{{$definitions.{{_value}} || _value}}",
+                "triggers": [
+                    "{{_value}}"
+                ],
+                "priority": 5,
+                "probability": 1,
+                "description": "Detector for {{_value}}"
+            }
+        },
+        {
+            "$for": "nodes",
+            "$item": [
+                {
+                    "id": "{{id}}",
+                    "tag": "{{id}}",
+                    "label": "{{label}}",
+                    "keywords": "{{properties.Keywords}}",
+                    "priority": "{{properties.Priority}}",
+                    "probability": "{{properties.Probability}}",
+                    "triggers": {
+                        "$for": "{{adjacency.{{id}}.all}}",
+                        "$item": "{{_value}}_gated"
+                    },
+                    "personality": "{{properties.Description}}",
+                    "scenario": "{{properties.Scenario}}",
+                    "requireNone": "{{properties.Block}}",
+                    "andAny": "{{properties.Requires}}",
+                    "minMessages": "{{properties.MinMessages}}",
+                    "maxMessages": "{{properties.MaxMessages}}"
+                },
+                {
+                    "id": "{{id}}_gated",
+                    "tag": "{{id}}_gated",
+                    "label": "{{label}} (Adjacency)",
+                    "requires": {
+                        "any": [
+                            "{{properties.Meta}}"
+                        ]
+                    },
+                    "priority": "{{properties.Priority}}",
+                    "probability": "{{properties.Probability}}",
+                    "personality": "{{properties.Description}}",
+                    "scenario": "{{properties.Scenario}}",
+                    "requireNone": "{{properties.Block}}",
+                    "andAny": "{{properties.Requires}}",
+                    "minMessages": "{{properties.MinMessages}}",
+                    "maxMessages": "{{properties.MaxMessages}}"
+                }
+            ]
+        }
+    ]
+}
