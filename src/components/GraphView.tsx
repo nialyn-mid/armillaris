@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
+import { MdKeyboardDoubleArrowLeft, MdKeyboardDoubleArrowRight } from 'react-icons/md';
 import ReactFlow, {
     Background,
     Controls,
@@ -357,7 +358,7 @@ export default function GraphView() {
                                 cursor: 'pointer'
                             }}
                         >
-                            ◀
+                            <MdKeyboardDoubleArrowLeft />
                         </button>
                     )}
                 </div>
@@ -455,7 +456,7 @@ export default function GraphView() {
                             onClick={() => setIsPanelCollapsed(true)}
                             style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer' }}
                         >
-                            ▶
+                            <MdKeyboardDoubleArrowRight />
                         </button>
                     </div>
 

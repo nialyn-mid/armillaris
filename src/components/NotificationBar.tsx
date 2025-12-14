@@ -3,15 +3,24 @@ import { useData } from '../context/DataContext';
 export default function NotificationBar() {
     const { notification } = useData();
 
+    const barStyle: React.CSSProperties = {
+        padding: '5px 20px',
+        fontSize: '0.8rem',
+        height: '30px',
+        display: 'flex',
+        alignItems: 'center',
+        flexShrink: 0,
+        position: 'relative',
+        zIndex: 100,
+        borderTop: '1px solid var(--border-color)',
+        boxSizing: 'border-box'
+    };
+
     if (!notification) return (
         <div style={{
+            ...barStyle,
             backgroundColor: 'var(--bg-tertiary)',
             color: '#fff',
-            padding: '5px 20px',
-            fontSize: '0.8rem',
-            height: '30px',
-            display: 'flex',
-            alignItems: 'center'
         }}>
             Armillaris - Lorebook Graph Editor
         </div>
@@ -19,13 +28,9 @@ export default function NotificationBar() {
 
     return (
         <div style={{
+            ...barStyle,
             backgroundColor: 'var(--accent-color)',
             color: '#fff',
-            padding: '5px 20px',
-            fontSize: '0.8rem',
-            height: '30px',
-            display: 'flex',
-            alignItems: 'center'
         }}>
             {notification}
         </div>
