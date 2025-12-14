@@ -1,11 +1,23 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useData } from '../context/DataContext';
-import type { LoreEntry } from '../lib/types';
 import PropertyEditor from './PropertyEditor';
 
 export default function DataView() {
-    const { entries, updateEntry, addEntry, deleteEntry } = useData();
-    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const { entries, updateEntry, addEntry, deleteEntry, originalEntries } = useData();
+
+    // Persistence: Selection
+    const [selectedId, setSelectedId] = useState<string | null>(() => {
+        return localStorage.getItem('dataview_selected_id');
+    });
+
+    useEffect(() => {
+        if (selectedId) {
+            localStorage.setItem('dataview_selected_id', selectedId);
+        } else {
+            localStorage.removeItem('dataview_selected_id');
+        }
+    }, [selectedId]);
+
     const [searchTerm, setSearchTerm] = useState('');
 
     // Sort & Filter State
@@ -15,7 +27,6 @@ export default function DataView() {
     // Details Pane State (Local)
     const [editLabel, setEditLabel] = useState('');
     const [editProps, setEditProps] = useState<Record<string, any>>({});
-    const [isDirty, setIsDirty] = useState(false);
 
     // Derived unique Meta values
     const availableMetas = useMemo(() => {
@@ -58,44 +69,91 @@ export default function DataView() {
         entries.find(e => e.id === selectedId),
         [entries, selectedId]);
 
-    // Sync selection to local state
+    // Sync selection to local state & Snapshot
     useEffect(() => {
         if (selectedEntry) {
-            setEditLabel(selectedEntry.label);
+            // Check if we are switching to a DIFFERENT entry or just updating same one
+            // We want to capture snapshot only on SWITCH.
+            // Actually, selectedEntry updates on auto-save too. 
+            // We rely on selectedId changing to reset snapshot? No, selectedId stays same.
 
-            // Ensure required fields exist
-            const props = { ...selectedEntry.properties };
+            // Simplified: We only sync FROM selectedEntry if content is different from what we are editing?
+            // This is tricky with auto-save.
+            // Better strategy:
+            // When selectedId changes, load everything and set Snapshot.
+        }
+    }, [selectedEntry]);
+
+    // Sync selection to local state
+    // Triggers on Selection Change OR New Data Load (Import)
+    useEffect(() => {
+        const entry = entries.find(e => e.id === selectedId);
+        if (entry) {
+            // Load state
+            const props = { ...entry.properties };
             if (props.Description === undefined) props.Description = '';
             if (props.Keywords === undefined) props.Keywords = [];
             if (props.Meta === undefined) props.Meta = '';
 
+            setEditLabel(entry.label);
             setEditProps(props);
-            setIsDirty(false);
         }
-    }, [selectedEntry]);
+    }, [selectedId, originalEntries]); // originalEntries signals a fresh Import
 
-    const handleSave = () => {
-        if (!selectedEntry) return;
-        const updated: LoreEntry = {
-            ...selectedEntry,
-            label: editLabel,
-            properties: editProps
-        };
-        updateEntry(updated);
-        setIsDirty(false);
-    };
+
+    // Auto-Save Effect
+    useEffect(() => {
+        if (!selectedId) return;
+
+        const timer = setTimeout(() => {
+            // Compare with current global state to avoid redundant updates/loops
+            const currentEntry = entries.find(e => e.id === selectedId);
+            if (!currentEntry) return;
+
+            // Simple dirty check (stringify)
+            const isDirty =
+                currentEntry.label !== editLabel ||
+                JSON.stringify(currentEntry.properties) !== JSON.stringify(editProps);
+
+            if (isDirty) {
+                updateEntry({
+                    ...currentEntry,
+                    label: editLabel,
+                    properties: editProps
+                });
+            }
+        }, 800); // 800ms debounce
+
+        return () => clearTimeout(timer);
+    }, [editLabel, editProps, selectedId, entries, updateEntry]);
+
 
     const handleDelete = () => {
-        if (!selectedEntry) return;
+        if (!selectedId) return;
         if (window.confirm('Are you sure you want to delete this entry?')) {
-            deleteEntry(selectedEntry.id);
+            deleteEntry(selectedId);
             setSelectedId(null);
+        }
+    };
+
+    const handleReset = () => {
+        if (!selectedId) return;
+        const original = originalEntries.find(e => e.id === selectedId);
+        if (original) {
+            const props = { ...original.properties };
+            if (props.Description === undefined) props.Description = '';
+            if (props.Keywords === undefined) props.Keywords = [];
+            if (props.Meta === undefined) props.Meta = '';
+
+            setEditLabel(original.label);
+            setEditProps(props);
+        } else {
+            alert("Original entry not found (this might be a new entry).");
         }
     };
 
     const handlePropsChange = (newProps: Record<string, any>) => {
         setEditProps(newProps);
-        setIsDirty(true);
     };
 
     return (
@@ -174,7 +232,7 @@ export default function DataView() {
                                 <input
                                     type="text"
                                     value={editLabel}
-                                    onChange={e => { setEditLabel(e.target.value); setIsDirty(true); }}
+                                    onChange={e => { setEditLabel(e.target.value); }}
                                     style={{ width: '100%', padding: '8px', fontSize: '1rem', fontWeight: 600, boxSizing: 'border-box' }}
                                 />
                             </div>
@@ -193,19 +251,18 @@ export default function DataView() {
                                     Delete
                                 </button>
                                 <button
-                                    onClick={handleSave}
-                                    disabled={!isDirty}
+                                    onClick={handleReset}
+                                    title="Revert to original import state"
                                     style={{
-                                        padding: '10px 20px',
-                                        backgroundColor: isDirty ? 'var(--accent-color)' : 'var(--bg-tertiary)',
-                                        color: '#fff',
-                                        border: 'none',
-                                        cursor: isDirty ? 'pointer' : 'default',
-                                        opacity: isDirty ? 1 : 0.6,
+                                        padding: '10px 15px',
+                                        backgroundColor: 'var(--bg-tertiary)',
+                                        color: '#e2b340',
+                                        border: '1px solid var(--border-color)',
+                                        cursor: 'pointer',
                                         borderRadius: '4px'
                                     }}
                                 >
-                                    Save Changes
+                                    Reset
                                 </button>
                             </div>
                         </div>

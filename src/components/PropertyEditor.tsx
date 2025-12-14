@@ -5,6 +5,8 @@ interface PropertyEditorProps {
     onChange: (newProps: Record<string, any>) => void;
 }
 
+import { HighlightedTextarea } from './ui/HighlightedTextarea';
+
 export default function PropertyEditor({ properties, onChange }: PropertyEditorProps) {
     // Local state to manage edits before propagation if needed, 
     // but for now we can direct controlled inputs or handle local changes.
@@ -63,31 +65,24 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
                 </label>
 
                 {isDescription ? (
-                    <textarea
-                        value={value}
-                        onChange={(e) => {
-                            handleChange(key, e.target.value);
-                            e.target.style.height = 'auto';
-                            e.target.style.height = e.target.scrollHeight + 'px';
-                        }}
-                        ref={el => {
-                            if (el) {
-                                el.style.height = 'auto';
-                                el.style.height = el.scrollHeight + 'px';
-                            }
-                        }}
-                        style={{
-                            padding: '8px',
-                            background: 'var(--bg-secondary)',
-                            border: '1px solid var(--border-color)',
-                            color: 'var(--text-primary)',
-                            borderRadius: '4px',
-                            resize: 'none',
-                            minHeight: '80px',
-                            fontFamily: 'inherit',
-                            overflow: 'hidden'
-                        }}
-                    />
+                    <div style={{
+                        height: 'auto',
+                        minHeight: '120px',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '4px',
+                        backgroundColor: 'var(--bg-secondary)',
+                        overflow: 'hidden'
+                    }}>
+                        <HighlightedTextarea
+                            value={(value || '').replace(/\\n/g, '\n')}
+                            onChange={(e) => {
+                                const rawVal = e.target.value;
+                                const storedVal = rawVal.replace(/\n/g, '\\n');
+                                handleChange(key, storedVal);
+                            }}
+                            mode="description"
+                        />
+                    </div>
                 ) : isString && !isKeywords ? (
                     <input
                         type="text"
