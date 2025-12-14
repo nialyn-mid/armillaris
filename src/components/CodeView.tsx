@@ -27,9 +27,43 @@ export default function CodeView() {
 
         // Debounce or just run? React effect cleanup helps a bit
         let active = true;
-        Generator.generate(graphData, { pretty }).then(result => {
-            if (active) setCode(result);
-        });
+
+        const generateCode = async () => {
+            try {
+                const ipc = (window as any).ipcRenderer;
+                let engineTemplate: string | undefined;
+                let jsonSpec: any | undefined;
+
+                if (ipc) {
+                    const engineFile = localStorage.getItem('active_engine_file') || 'engine_default.js';
+                    const specFile = localStorage.getItem('active_spec_file') || 'spec_default.json';
+
+                    try {
+                        const [eng, spec] = await Promise.all([
+                            ipc.invoke('read-template', engineFile),
+                            ipc.invoke('read-template', specFile)
+                        ]);
+                        engineTemplate = eng;
+                        jsonSpec = JSON.parse(spec);
+                    } catch (err) {
+                        console.error("Failed to load templates for generation:", err);
+                        // Fallback? Or just fail?
+                        if (active) setCode('// Error loading templates: ' + String(err));
+                        return;
+                    }
+                } else {
+                    // Fallback for non-electron env?
+                    return;
+                }
+
+                const result = await Generator.generate(graphData, { pretty, engineTemplate, jsonSpec });
+                if (active) setCode(result);
+            } catch (e) {
+                if (active) setCode('// Generation Error: ' + String(e));
+            }
+        };
+
+        generateCode();
 
         return () => { active = false; };
     }, [graphData, pretty]);

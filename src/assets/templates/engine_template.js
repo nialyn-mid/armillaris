@@ -1,6 +1,6 @@
 /* Armillaris Generated Engine v2.0 */
 (function () {
-    var DATA = "%%JSON_DATA%%";
+    var DATA = "{{JSON_DATA}}";
 
     // Polyfill-ish helper for unique sets in ES5 (using objects)
     function unique(arr) {
