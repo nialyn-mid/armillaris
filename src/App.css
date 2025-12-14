@@ -2,12 +2,15 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  overflow: hidden;
 }
 
-.content-wrapper {
+.main-wrapper {
   display: flex;
   flex: 1;
+  min-height: 0;
+  /* Critical for nested flex scrolling */
   overflow: hidden;
   width: 100%;
 }

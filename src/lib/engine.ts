@@ -87,14 +87,23 @@ export class Engine {
                     const rawKw = node.data.Keywords;
                     let keywords: string[] = [];
 
-                    if (typeof rawKw === 'string') {
-                        // Sanitize smart quotes
+                    if (Array.isArray(rawKw)) {
+                        keywords = rawKw;
+                    } else if (typeof rawKw === 'string') {
+                        // Sanitize smart quotes and split by comma if not JSON
                         const cleanKw = rawKw.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"');
 
+                        // Check for brackets indicating JSON array
                         if (cleanKw.trim().startsWith('[')) {
-                            keywords = JSON.parse(cleanKw);
+                            try {
+                                keywords = JSON.parse(cleanKw);
+                            } catch {
+                                // Fallback to comma split if parsing fails
+                                keywords = cleanKw.split(',').map(s => s.trim());
+                            }
                         } else {
-                            keywords = [rawKw]; // Keep original if treated as simple string
+                            // Assume comma separated string
+                            keywords = cleanKw.split(',').map(s => s.trim());
                         }
                     }
 

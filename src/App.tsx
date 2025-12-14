@@ -15,7 +15,7 @@ export type PaneMode = 'import' | 'export' | null;
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('graph');
-  const [activePane, setActivePane] = useState<PaneMode>(null);
+  const [activePane, setActivePane] = useState<PaneMode>('import');
 
   const togglePane = (pane: 'import' | 'export') => {
     setActivePane(activePane === pane ? null : pane);
@@ -25,12 +25,13 @@ function App() {
     <div className="app-container">
       <TabBar currentView={currentView} onViewChange={setCurrentView} />
 
-      <div className="content-wrapper">
-        <Toolbar activePane={activePane} onTogglePane={togglePane} />
+      <div className="main-wrapper">
+        <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-color)', height: '100%' }}>
+          <Toolbar activePane={activePane} onTogglePane={togglePane} />
+        </div>
 
         {activePane === 'import' && (
           <ImportPane
-            onViewChange={setCurrentView}
             onClose={() => setActivePane(null)}
           />
         )}

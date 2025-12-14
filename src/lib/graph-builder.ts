@@ -1,156 +1,49 @@
-import { api } from '../api';
-import type { GraphData, GraphNode, GraphEdge, NotionPage } from './types';
-
-// Helper to reliably get property value
-function getPropertyValue(prop: any): any {
-  if (!prop) return null;
-  switch (prop.type) {
-    case 'title':
-      return prop.title.map((t: any) => t.plain_text).join('');
-    case 'rich_text':
-      return prop.rich_text.map((t: any) => t.plain_text).join('');
-    case 'select':
-      return prop.select?.name;
-    case 'multi_select':
-      return prop.multi_select.map((s: any) => s.name);
-    case 'relation':
-      return prop.relation.map((r: any) => r.id);
-    case 'checkbox':
-      return prop.checkbox;
-    case 'date':
-      // Format: YYYY-MM-DD (Start) [ -> YYYY-MM-DD (End)]
-      const d = prop.date;
-      if (!d) return null;
-      if (d.end) return `${d.start} -> ${d.end}`;
-      return d.start;
-    // Add other types as needed
-    default:
-      return 'Unsupported Type';
-  }
-}
+import type { GraphData, GraphNode, GraphEdge, LoreEntry } from './types';
 
 export class GraphBuilder {
-  private dbIds: string[];
+  private entries: LoreEntry[];
 
-  constructor(dbIds: string[]) {
-    this.dbIds = dbIds;
-  }
-
-  async getDataSources(dbId: string): Promise<string[]> {
-    console.log(`[GraphBuilder] Retrieving DB metadata for ${dbId}`);
-    try {
-      const response = await api.notionRequest('GET', `databases/${dbId}`);
-      console.log(`[GraphBuilder] DB Metadata Response:`, JSON.stringify(response));
-
-      if (!response.data_sources) {
-        console.warn(`[GraphBuilder] No 'data_sources' field in DB response. Check if this is the correct ID or if the integration has access.`);
-        return [];
-      }
-
-      const ids = response.data_sources.map((ds: any) => ds.id);
-      console.log(`[GraphBuilder] Found Data Sources:`, ids);
-      return ids;
-    } catch (e) {
-      console.error(`[GraphBuilder] Error getting data sources for ${dbId}:`, e);
-      return [];
-    }
-  }
-
-  async fetchPagesFromDataSource(dataSourceId: string): Promise<NotionPage[]> {
-    let pages: NotionPage[] = [];
-    let cursor: string | undefined = undefined;
-
-    do {
-      console.log(`[GraphBuilder] Querying Data Source ${dataSourceId} with cursor ${cursor}`);
-      try {
-        const response = await api.notionRequest('POST', `data_sources/${dataSourceId}/query`, {
-          page_size: 100,
-          start_cursor: cursor,
-        });
-        console.log(`[GraphBuilder] DS Query Response keys:`, Object.keys(response));
-
-        if (!response.results) {
-          console.error('[GraphBuilder] Invalid Notion Response (no results):', response);
-          break;
-        }
-
-        console.log(`[GraphBuilder] Fetched ${response.results.length} pages from DS ${dataSourceId}`);
-        pages = pages.concat(response.results);
-        cursor = response.next_cursor;
-      } catch (e) {
-        console.error(`[GraphBuilder] Error querying DS ${dataSourceId}:`, e);
-        break;
-      }
-    } while (cursor);
-
-    return pages;
+  constructor(entries: LoreEntry[]) {
+    this.entries = entries;
   }
 
   async buildGraph(): Promise<GraphData> {
-    const allPages: NotionPage[] = [];
-
-    // 1. Fetch all pages from all configured DBs (via Data Sources)
-    for (const id of this.dbIds) {
-      if (!id) continue;
-      try {
-        const dsIds = await this.getDataSources(id.trim());
-        for (const dsId of dsIds) {
-          const pages = await this.fetchPagesFromDataSource(dsId);
-          allPages.push(...pages);
-        }
-      } catch (e) {
-        console.error(`[GraphBuilder] Failed to process DB ${id}`, e);
-        // Optional: re-throw or just log
-        throw e;
-      }
-    }
-
     const nodes: GraphNode[] = [];
     const edges: GraphEdge[] = [];
     const nodeIdSet = new Set<string>();
 
-    // 2. Create Nodes
-    for (const page of allPages) {
-      // Extract generic "Name" or Title
-      let label = 'Untitled';
-      // Search for the title property
-      for (const key in page.properties) {
-        if (page.properties[key].type === 'title') {
-          label = getPropertyValue(page.properties[key]);
-          break;
-        }
-      }
-
+    // 1. Create Nodes
+    for (const entry of this.entries) {
       const node: GraphNode = {
-        id: page.id,
-        label,
-        type: 'page', // Could infer from DB parent if needed
-        data: {},
+        id: entry.id,
+        label: entry.label,
+        data: entry.properties,
       };
-
-      // Process all properties
-      for (const [key, val] of Object.entries(page.properties)) {
-        // Store raw values in data for the engine
-        node.data[key] = getPropertyValue(val);
-      }
-
       nodes.push(node);
-      nodeIdSet.add(node.id); // For existing check
+      nodeIdSet.add(entry.id);
     }
 
-    // 3. Create Edges from Relations
-    for (const page of allPages) {
-      for (const [key, val] of Object.entries(page.properties)) {
-        if ((val as any).type === 'relation') {
-          const targets = (val as any).relation;
-          for (const target of targets) {
-            // Only add edge if target exists in our graph (or maybe we keep dead links?)
-            // Ideally keep edges only if both nodes exist in the fetched set
-            if (nodeIdSet.has(target.id)) {
+    // 2. Create Edges (Generic Inference)
+    for (const entry of this.entries) {
+      for (const [key, val] of Object.entries(entry.properties)) {
+        // Case A: Single ID (String)
+        if (typeof val === 'string' && nodeIdSet.has(val) && val !== entry.id) {
+          edges.push({
+            id: `${entry.id}-${val}-${key}`,
+            source: entry.id,
+            target: val,
+            label: key
+          });
+        }
+
+        // Case B: Array of IDs
+        if (Array.isArray(val)) {
+          for (const item of val) {
+            if (typeof item === 'string' && nodeIdSet.has(item) && item !== entry.id) {
               edges.push({
-                id: `${page.id}-${target.id}`,
-                source: page.id,
-                target: target.id,
+                id: `${entry.id}-${item}-${key}`,
+                source: entry.id,
+                target: item,
                 label: key
               });
             }

@@ -2,11 +2,9 @@ import { useState, useEffect } from 'react';
 import { MdKeyboardDoubleArrowLeft } from 'react-icons/md';
 import { api } from '../api';
 import { useData } from '../context/DataContext';
-import { GraphBuilder } from '../lib/graph-builder';
-import type { ViewMode } from '../App';
+import { NotionSource } from '../lib/data-sources/NotionSource';
 
 interface ImportPaneProps {
-    onViewChange: (mode: ViewMode) => void;
     onClose: () => void;
 }
 
@@ -17,11 +15,12 @@ const parseId = (input: string) => {
     return match ? match[0] : input;
 };
 
-export default function ImportPane({ onViewChange, onClose }: ImportPaneProps) {
+export default function ImportPane({ onClose }: ImportPaneProps) {
     const [token, setToken] = useState('');
     const [dbIds, setDbIds] = useState<string[]>(['']);
     const [hasToken, setHasToken] = useState(false);
-    const { setGraphData, isLoading, setIsLoading, showNotification } = useData();
+
+    const { setEntries, isLoading, setIsLoading, showNotification } = useData();
 
     useEffect(() => {
         const savedIds = localStorage.getItem('notion_db_ids');
@@ -53,12 +52,16 @@ export default function ImportPane({ onViewChange, onClose }: ImportPaneProps) {
         setIsLoading(true);
         try {
             const cleanIds = dbIds.map(parseId).filter(id => id.length > 0);
-            const builder = new GraphBuilder(cleanIds);
-            const data = await builder.buildGraph();
+            const source = new NotionSource(cleanIds);
+            const entries = await source.fetchEntries();
 
-            setGraphData(data);
-            showNotification(`Graph built: ${data.nodes.length} nodes, ${data.edges.length} edges.`);
-            onViewChange('graph');
+            if (entries.length === 0) {
+                showNotification('No entries found.');
+                return;
+            }
+
+            setEntries(entries);
+            showNotification(`Fetched ${entries.length} entries.`);
         } catch (e: any) {
             console.error(e);
             alert('Fetch failed: ' + e.message);
