@@ -28,3 +28,15 @@ export interface GraphData {
   nodes: GraphNode[];
   edges: GraphEdge[];
 }
+
+export type MetaPropertyType = 'string' | 'list' | 'relation';
+
+export interface MetaPropertyDefinition {
+  name: string;
+  type: MetaPropertyType;
+}
+
+export interface MetaDefinition {
+  name: string;
+  properties: MetaPropertyDefinition[];
+}

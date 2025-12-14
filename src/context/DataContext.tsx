@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import type { GraphData, LoreEntry } from '../lib/types';
+import type { GraphData, LoreEntry, MetaDefinition, MetaPropertyDefinition } from '../lib/types';
 import { GraphBuilder } from '../lib/graph-builder';
 
 interface DataContextType {
@@ -15,6 +15,8 @@ interface DataContextType {
   setIsLoading: (loading: boolean) => void;
   notification: string | null;
   showNotification: (msg: string) => void;
+  metaDefinitions: MetaDefinition[];
+  updateMetaDefinitions: (defs: MetaDefinition[]) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -25,15 +27,79 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [entries, setEditableEntries] = useState<LoreEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
+  const [metaDefinitions, setMetaDefinitions] = useState<MetaDefinition[]>([]);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 5000);
   };
 
+  // Helper to infer schema from data
+  const inferMetaDefinitions = (data: LoreEntry[]): MetaDefinition[] => {
+    const map = new Map<string, Map<string, 'string' | 'list' | 'relation'>>();
+
+    data.forEach(entry => {
+      const meta = String(entry.properties.Meta || 'Undefined');
+      if (!map.has(meta)) map.set(meta, new Map());
+
+      const props = map.get(meta)!;
+
+      // 1. Gather potential IDs from ANY property that looks like a list
+      // Iterate properties to determine types
+
+      Object.entries(entry.properties).forEach(([key, value]) => {
+        if (['Meta', 'Description', 'Keywords'].includes(key)) return;
+
+        const currentType = props.get(key);
+
+        let newType: 'string' | 'list' | 'relation' = 'string';
+        if (Array.isArray(value)) {
+          // Check if it looks like a relation (list of valid UUIDs/IDs)
+          // Heuristic: If it has items, and ALL items are found effectively in the data ID set...
+          // But we might be inferring BEFORE we have the full ID set?
+          // "data" passed to this function IS the full set.
+          const allIds = new Set(data.map(e => e.id));
+          const isRelation = value.length > 0 && value.every(v => typeof v === 'string' && allIds.has(v));
+          newType = isRelation ? 'relation' : 'list';
+        }
+
+        // Priority: list > string. relation > list.
+        if (currentType === 'relation') return; // Already relation, strongest.
+        if (currentType === 'list' && newType === 'relation') {
+          props.set(key, 'relation');
+          return;
+        }
+        if (currentType === 'list') return; // Keep list if new is string or list
+
+        props.set(key, newType);
+      });
+    });
+
+    const definitions: MetaDefinition[] = [];
+    map.forEach((propMap, metaName) => {
+      const properties: MetaPropertyDefinition[] = [];
+      propMap.forEach((type, name) => {
+        properties.push({ name, type });
+      });
+      // Sort properties A-Z
+      properties.sort((a, b) => a.name.localeCompare(b.name));
+      definitions.push({ name: metaName, properties });
+    });
+
+    // Sort definitions A-Z
+    definitions.sort((a, b) => a.name.localeCompare(b.name));
+    return definitions;
+  };
+
   const setEntries = (newEntries: LoreEntry[]) => {
     setOriginalEntries(newEntries);
     setEditableEntries(newEntries);
+    // Auto-infer schema on import
+    setMetaDefinitions(inferMetaDefinitions(newEntries));
+  };
+
+  const updateMetaDefinitions = (defs: MetaDefinition[]) => {
+    setMetaDefinitions(defs);
   };
 
   const updateEntry = (updatedEntry: LoreEntry) => {
@@ -83,7 +149,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       isLoading,
       setIsLoading,
       notification,
-      showNotification
+      showNotification,
+      metaDefinitions,
+      updateMetaDefinitions
     }}>
       {children}
     </DataContext.Provider>

@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import PropertyEditor from './PropertyEditor';
+import MetaSchemaEditor from './MetaSchemaEditor';
 
 export default function DataView() {
-    const { entries, updateEntry, addEntry, deleteEntry, originalEntries } = useData();
+    const { entries, updateEntry, addEntry, deleteEntry, originalEntries, metaDefinitions } = useData();
 
     // Persistence: Selection
     const [selectedId, setSelectedId] = useState<string | null>(() => {
@@ -19,6 +20,7 @@ export default function DataView() {
     }, [selectedId]);
 
     const [searchTerm, setSearchTerm] = useState('');
+    const [showSchemaPanel, setShowSchemaPanel] = useState(false);
 
     // Sort & Filter State
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -156,6 +158,35 @@ export default function DataView() {
         setEditProps(newProps);
     };
 
+    const [schemaPanelWidth, setSchemaPanelWidth] = useState(() => {
+        const saved = localStorage.getItem('dataview_schema_width');
+        return saved ? parseInt(saved, 10) : 320;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('dataview_schema_width', String(schemaPanelWidth));
+    }, [schemaPanelWidth]);
+
+    const startResizingSchema = (e: React.MouseEvent) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = schemaPanelWidth;
+
+        const onMouseMove = (moveEvent: MouseEvent) => {
+            const newWidth = startWidth - (moveEvent.clientX - startX);
+            // Min 250, Max 800
+            setSchemaPanelWidth(Math.max(250, Math.min(800, newWidth)));
+        };
+
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    };
+
     return (
         <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
             {/* List Pane */}
@@ -200,22 +231,28 @@ export default function DataView() {
                     </div>
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto' }}>
-                    {filteredEntries.map(entry => (
-                        <div
-                            key={entry.id}
-                            onClick={() => setSelectedId(entry.id)}
-                            style={{
-                                padding: '8px 12px',
-                                cursor: 'pointer',
-                                backgroundColor: selectedId === entry.id ? 'var(--bg-primary)' : 'transparent',
-                                borderLeft: selectedId === entry.id ? '3px solid var(--accent-color)' : '3px solid transparent',
-                                borderBottom: '1px solid var(--border-color)',
-                                color: selectedId === entry.id ? '#fff' : 'var(--text-primary)'
-                            }}
-                        >
-                            <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{entry.label}</div>
-                        </div>
-                    ))}
+                    {filteredEntries.map(entry => {
+                        const isMetaDefined = metaDefinitions.some(d => d.name === entry.properties.Meta);
+                        return (
+                            <div
+                                key={entry.id}
+                                onClick={() => setSelectedId(entry.id)}
+                                style={{
+                                    padding: '8px 12px',
+                                    cursor: 'pointer',
+                                    backgroundColor: selectedId === entry.id ? 'var(--bg-primary)' : 'transparent',
+                                    borderLeft: selectedId === entry.id ? '3px solid var(--accent-color)' : '3px solid transparent',
+                                    borderBottom: '1px solid var(--border-color)',
+                                    color: selectedId === entry.id ? '#fff' : (isMetaDefined ? 'var(--text-primary)' : '#ff6b6b') // Red for invalid meta
+                                }}
+                            >
+                                <div style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', justifyContent: 'space-between' }}>
+                                    <span>{entry.label}</span>
+                                    {!isMetaDefined && <span title="Undefined Meta Type">⚠️</span>}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
                 <div style={{ padding: '10px', fontSize: '0.8rem', color: 'var(--text-secondary)', textAlign: 'center', borderTop: '1px solid var(--border-color)' }}>
                     {filteredEntries.length} Entries
@@ -264,6 +301,20 @@ export default function DataView() {
                                 >
                                     Reset
                                 </button>
+                                <button
+                                    onClick={() => setShowSchemaPanel(!showSchemaPanel)}
+                                    title="Reference types"
+                                    style={{
+                                        padding: '10px 15px',
+                                        backgroundColor: showSchemaPanel ? 'var(--accent-color)' : 'var(--bg-tertiary)',
+                                        color: showSchemaPanel ? '#fff' : 'var(--text-primary)',
+                                        border: '1px solid var(--border-color)',
+                                        cursor: 'pointer',
+                                        borderRadius: '4px'
+                                    }}
+                                >
+                                    Schemas {showSchemaPanel ? '»' : '«'}
+                                </button>
                             </div>
                         </div>
 
@@ -286,6 +337,35 @@ export default function DataView() {
                     </div>
                 )}
             </div>
+
+            {/* Schema Panel */}
+            {showSchemaPanel && (
+                <div style={{
+                    position: 'relative',
+                    width: `${schemaPanelWidth}px`,
+                    borderLeft: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-secondary)',
+                    padding: '15px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flexShrink: 0
+                }}>
+                    {/* Resize Handle */}
+                    <div
+                        onMouseDown={startResizingSchema}
+                        style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                            bottom: 0,
+                            width: '4px',
+                            cursor: 'ew-resize',
+                            zIndex: 10
+                        }}
+                    />
+                    <MetaSchemaEditor />
+                </div>
+            )}
         </div>
     );
 }
