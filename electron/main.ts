@@ -419,15 +419,140 @@ const DEFAULT_SPEC = `{
   }
 }`;
 
+/* ... */
 const DEFAULT_ENGINE_SPEC = `{
     "name": "Default Engine Spec",
     "description": "Definition for editing the default JSON spec",
-    "nodes": []
+    "nodes": [
+        {
+            "type": "InputSource",
+            "label": "Graph Source",
+            "category": "Input",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "graph",
+                    "label": "Nodes",
+                    "type": "array"
+                },
+                {
+                    "id": "adj",
+                    "label": "Adjacency",
+                    "type": "object"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "source",
+                    "label": "Source",
+                    "type": "select",
+                    "options": [
+                        "Lore Graph"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "FilterNode",
+            "label": "Filter Entries",
+            "category": "Transformation",
+            "inputs": [
+                { "id": "in", "label": "Entries", "type": "array" }
+            ],
+            "outputs": [
+                { "id": "out", "label": "Filtered", "type": "array" }
+            ],
+            "properties": [
+                { "name": "field", "label": "Field", "type": "string", "default": "meta" },
+                { "name": "operator", "label": "Operator", "type": "select", "options": ["equals", "contains", "exists"] },
+                { "name": "value", "label": "Value", "type": "string" }
+            ]
+        },
+        {
+            "type": "UnionNode",
+            "label": "Combine Sets",
+            "category": "Transformation",
+            "inputs": [
+                { "id": "a", "label": "Set A", "type": "array" },
+                { "id": "b", "label": "Set B", "type": "array" }
+            ],
+            "outputs": [
+                { "id": "merged", "label": "Merged", "type": "array" }
+            ],
+            "properties": []
+        },
+        {
+            "type": "EntryDecompose",
+            "label": "Entry to Props",
+            "category": "Transformation",
+            "inputs": [
+                { "id": "entry", "label": "Entry", "type": "entry" }
+            ],
+            "outputs": [
+                { "id": "keywords", "label": "Keywords", "type": "array" },
+                { "id": "text", "label": "Text", "type": "string" },
+                { "id": "meta", "label": "Meta", "type": "object" }
+            ],
+            "properties": []
+        },
+        {
+             "type": "PropertySetter",
+             "label": "Set Property",
+             "category": "Transformation",
+             "inputs": [
+                 { "id": "entries", "label": "Entries", "type": "array" }
+             ],
+             "outputs": [
+                 { "id": "out", "label": "Modified", "type": "array" }
+             ],
+             "properties": [
+                 { "name": "property", "label": "Property", "type": "string" },
+                 { "name": "value", "label": "New Value", "type": "string" }
+             ]
+        },
+        {
+            "type": "MetaConfig",
+            "label": "Meta Configuration",
+            "category": "Utility",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "config",
+                    "label": "Meta Rule",
+                    "type": "object"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "keyword",
+                    "label": "Meta Keyword",
+                    "type": "string"
+                },
+                {
+                    "name": "activateOnLone",
+                    "label": "Activate on Lone",
+                    "type": "boolean",
+                    "default": true
+                }
+            ]
+        },
+        {
+            "type": "OutputRoot",
+            "label": "Engine Target",
+            "category": "Output",
+            "inputs": [
+                { "id": "final", "label": "Active Entries", "type": "array" },
+                { "id": "config", "label": "Configuration", "type": "object" }
+            ],
+            "outputs": [],
+            "properties": []
+        }
+    ]
 }`;
 
 function ensureEngineStructure() {
   const defaultEnginePath = path.join(ENGINES_DIR, 'Default');
-  const defaultEngineSpecsPath = path.join(defaultEnginePath, 'Specs');
+  const defaultEngineSpecsPath = path.join(defaultEnginePath, 'behavior_spec');
 
   if (!fs.existsSync(defaultEnginePath)) {
     fs.mkdirSync(defaultEnginePath, { recursive: true });
@@ -479,7 +604,7 @@ ipcMain.handle('get-engine-details', async (_, engineName: string) => {
 
 // List JSON specs for a given Engine
 ipcMain.handle('get-specs', async (_, engineName: string) => {
-  const p = path.join(ENGINES_DIR, engineName, 'Specs');
+  const p = path.join(ENGINES_DIR, engineName, 'behavior_spec');
   if (!fs.existsSync(p)) return [];
 
   const files = fs.readdirSync(p);
@@ -488,7 +613,7 @@ ipcMain.handle('get-specs', async (_, engineName: string) => {
 
 // Read a specific JSON spec
 ipcMain.handle('read-spec', async (_, engineName: string, specName: string) => {
-  const p = path.join(ENGINES_DIR, engineName, 'Specs', specName);
+  const p = path.join(ENGINES_DIR, engineName, 'behavior_spec', specName);
   if (!fs.existsSync(p)) throw new Error('Spec file not found');
   return fs.readFileSync(p, 'utf-8');
 });
@@ -507,7 +632,7 @@ ipcMain.handle('save-engine-spec', async (_, engineName: string, content: string
 });
 
 ipcMain.handle('save-spec', async (_, engineName: string, specName: string, content: string) => {
-  const dir = path.join(ENGINES_DIR, engineName, 'Specs');
+  const dir = path.join(ENGINES_DIR, engineName, 'behavior_spec');
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
   const p = path.join(dir, specName);

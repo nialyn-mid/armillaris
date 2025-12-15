@@ -238,6 +238,7 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
                 {/* Main Graph Area */}
                 <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
                     <ReactFlow
+                        id="main-graph-view"
                         nodes={nodes}
                         edges={edges}
                         edgeTypes={edgeTypes}
