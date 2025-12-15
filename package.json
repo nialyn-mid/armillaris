@@ -9,7 +9,7 @@
     "dev:vite": "vite",
     "dev:electron": "wait-on tcp:5173 && npm run build:electron && cross-env NODE_ENV=development electron .",
     "build": "tsc -b && vite build && npm run build:electron",
-    "build:electron": "tsc -p electron/tsconfig.json",
+    "build:electron": "tsc -p electron/tsconfig.json && node scripts/copy-assets.js",
     "dist": "npm run build && electron-builder",
     "lint": "eslint .",
     "preview": "vite preview"

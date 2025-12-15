@@ -17,7 +17,7 @@ export interface EngineSpecNodeDef {
 export interface PortDef {
     id: string;
     label: string;
-    type: 'any' | 'string' | 'number' | 'object' | 'array';
+    type: 'any' | 'string' | 'number' | 'object' | 'array' | 'entry' | 'map';
 }
 
 export interface PropertyDef {

@@ -7,7 +7,6 @@ import ReactFlow, {
     addEdge,
     type Connection,
     type Node,
-    type Edge,
     type NodeTypes,
     type EdgeTypes,
     ReactFlowProvider
@@ -18,6 +17,7 @@ import type { EngineSpec, EngineSpecNodeDef } from '../../lib/engine-spec-types'
 import SpecNode from './SpecNode';
 import { LabeledEdge } from '../graph/LabeledEdge';
 
+
 const edgeTypes: EdgeTypes = {
     labeled: LabeledEdge,
 };
@@ -26,43 +26,9 @@ const edgeTypes: EdgeTypes = {
 const FALLBACK_ENGINE_SPEC: EngineSpec = {
     name: "Fallback", description: "Default",
     nodes: [
-        { type: "InputSource", label: "Graph Source", category: "Input", inputs: [], outputs: [{ id: "g", label: "G", type: "array" }], properties: [{ name: "source", label: "Source", type: "select", options: ["Lore Graph"] }] },
-        { type: "FilterNode", label: "Filter Entries", category: "Transformation", inputs: [{ id: "i", type: "array", label: "In" }], outputs: [{ id: "o", type: "array", label: "Out" }], properties: [{ name: "field", label: "Field", type: "string" }, { name: "val", label: "Value", type: "string" }] },
-        { type: "UnionNode", label: "Combine", category: "Transformation", inputs: [{ id: "a", label: "A", type: "array" }, { id: "b", label: "B", type: "array" }], outputs: [{ id: "m", label: "Merged", type: "array" }], properties: [] },
+        { type: "InputSource", label: "Graph Source", category: "Input", inputs: [], outputs: [{ id: "g", label: "G", type: "array" }], properties: [] },
         { type: "OutputRoot", label: "Output", category: "Output", inputs: [{ id: "f", label: "Final", type: "array" }], outputs: [], properties: [] }
     ]
-};
-
-// --- Compiler ---
-const compileGraphToSpec = (nodes: Node[], edges: Edge[], _engineSpec: EngineSpec | null) => {
-    // Basic Compilation to JSON "Pipeline" format
-    // This format simply serializes the graph so it can be re-constituted.
-    // A smarter compiler would perform topological sort here.
-
-    // We map nodes to a cleaner format
-    const cleanNodes = nodes.map(n => ({
-        id: n.id,
-        type: n.data.def.type,
-        properties: n.data.values || {},
-        inputs: n.data.def.inputs.map((i: any) => i.id),
-        outputs: n.data.def.outputs.map((o: any) => o.id)
-    }));
-
-    const cleanEdges = edges.map(e => ({
-        source: e.source,
-        sourceHandle: e.sourceHandle,
-        target: e.target,
-        targetHandle: e.targetHandle
-    }));
-
-    return {
-        description: "Armillaris Behavior Spec",
-        pipeline: {
-            nodes: cleanNodes,
-            connections: cleanEdges
-        },
-        _graph: { nodes, edges } // Keep raw graph for editor
-    };
 };
 
 export default function SpecNodeEditor() {
@@ -208,19 +174,26 @@ export default function SpecNodeEditor() {
             return;
         }
 
-        let filename = targetSpecName.trim();
-        if (!filename.endsWith('.json')) filename += '.json';
+        let baseName = targetSpecName.trim();
+        if (baseName.endsWith('.json')) baseName = baseName.replace('.json', '');
+        if (baseName.endsWith('.behavior')) baseName = baseName.replace('.behavior', '');
 
-        const compiled = compileGraphToSpec(nodes, edges, engineSpec);
-        const content = JSON.stringify(compiled, null, 2);
+        // 1. Prepare Graph Data
+        const graphState = {
+            nodes,
+            edges,
+            ver: 1,
+            description: "Armillaris Node Graph",
+        };
 
+        // 2. Save Behavior (Backend handles compiling/adapter)
         try {
-            await ipc.invoke('save-spec', activeEngine, filename, content);
-            showNotification(`Saved spec to ${filename}`, 'success');
-            refreshEngineLists(); // Refresh lists to see new file
-            setActiveSpec(filename);
+            await ipc.invoke('save-behavior', activeEngine, `${baseName}.behavior`, JSON.stringify(graphState, null, 2));
+            showNotification(`Saved ${baseName}.behavior`, 'success');
+            refreshEngineLists();
+            setActiveSpec(`${baseName}.behavior`);
         } catch (e: any) {
-            showNotification(`Failed to save: ${e.message}`, 'error');
+            showNotification(`Failed to save behavior: ${e.message}`, 'error');
         }
     };
 

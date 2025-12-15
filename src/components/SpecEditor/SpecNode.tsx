@@ -93,6 +93,22 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
                                         />
                                         <span style={{ fontSize: '10px', color: '#aaa' }}>Enabled</span>
                                     </div>
+                                ) : prop.type === 'code' ? (
+                                    <textarea
+                                        className="nodrag"
+                                        value={values[prop.name] ?? prop.default ?? ''}
+                                        onChange={(e) => handleChange(prop.name, e.target.value)}
+                                        style={{
+                                            background: '#1e1e1e',
+                                            border: '1px solid #444',
+                                            color: '#dcdcaa',
+                                            fontSize: '11px',
+                                            padding: '4px',
+                                            minHeight: '60px',
+                                            fontFamily: 'monospace',
+                                            resize: 'vertical'
+                                        }}
+                                    />
                                 ) : (
                                     <input
                                         type="text"

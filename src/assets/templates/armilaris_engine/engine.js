@@ -45,8 +45,27 @@
 
     var Engine = {
         data: DATA,
-        nodes: DATA.nodes, // Array of { id, label, data: { Keywords, Meta... } }
-        adj: DATA.adj,     // Object { id: [neighbor_id, ...] }
+        nodes: DATA.nodes || [], // Array of { id, label, data: { Keywords, Meta... } }
+        edges: DATA.edges || [], // Array of { source, target }
+        adj: {},                 // Derived: { id: [neighbor_id, ...] }
+
+        init: function () {
+            // Build Adjacency Map from Edges
+            for (var i = 0; i < this.edges.length; i++) {
+                var e = this.edges[i];
+                if (!this.adj[e.source]) this.adj[e.source] = [];
+                if (!this.adj[e.target]) this.adj[e.target] = []; // bidirectional usually in graph view? 
+                // SpecNodeEditor edges are directional in ReactFlow data, 
+                // but the old engine treated adjacency somewhat generically.
+                // "getNeighbors" looked up adj[sourceId].
+                // If it's a directed graph for activation flow, we usually want outgoing.
+                // BUT "Lore Graph" usually implies bidirectional association for activation spreading.
+                // Old engine: `adj: DATA.adj` which was likely bidirectional.
+                // Let's assume Bidirectional for now for Lore spreading.
+                this.adj[e.source].push(e.target);
+                this.adj[e.target].push(e.source);
+            }
+        },
 
         find: function (id) {
             for (var i = 0; i < this.nodes.length; i++) {
@@ -220,6 +239,9 @@
             };
         }
     };
+
+    // Initialize Adjacency
+    Engine.init();
 
     // Export
     if (typeof module !== 'undefined' && module.exports) {
