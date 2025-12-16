@@ -2,6 +2,7 @@
 export interface EngineSpec {
     name: string;
     description: string;
+    categories?: Record<string, { color: string }>;
     nodes: EngineSpecNodeDef[];
 }
 

@@ -1,6 +1,23 @@
 {
     "name": "Armillaris Default Engine",
     "description": "Standard Keyword & Meta Activation Engine",
+    "categories": {
+        "Input": {
+            "color": "#0078d4"
+        },
+        "Output": {
+            "color": "#d83b01"
+        },
+        "Filter": {
+            "color": "#8e44ad"
+        },
+        "Graph": {
+            "color": "#16a085"
+        },
+        "Utility": {
+            "color": "#607d8b"
+        }
+    },
     "nodes": [
         {
             "type": "InputSource",
@@ -644,8 +661,8 @@
             "inputs": [
                 {
                     "id": "entries",
-                    "label": "Entry",
-                    "type": "Entry"
+                    "label": "Entries",
+                    "type": "Entry List"
                 },
                 {
                     "id": "distance",

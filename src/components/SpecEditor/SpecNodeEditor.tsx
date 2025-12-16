@@ -61,6 +61,26 @@ export default function SpecNodeEditor() {
         }));
     }, [setNodes]);
 
+    const handleDuplicateNode = useCallback((id: string) => {
+        setNodes((nds) => {
+            const node = nds.find((n) => n.id === id);
+            if (!node) return nds;
+            const newNode = {
+                ...node,
+                id: crypto.randomUUID(),
+                position: { x: node.position.x + 20, y: node.position.y + 20 },
+                selected: true,
+                data: { ...node.data }
+            };
+            return [...nds.map(n => ({ ...n, selected: false })), newNode];
+        });
+    }, [setNodes]);
+
+    const handleDeleteNode = useCallback((id: string) => {
+        setNodes((nds) => nds.filter((n) => n.id !== id));
+        setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
+    }, [setNodes, setEdges]);
+
     // ReactFlow Instance for DnD
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
@@ -113,14 +133,23 @@ export default function SpecNodeEditor() {
                     // Restore Graph and attach handlers
                     const restoredNodes = (source.nodes || []).map((n: Node) => {
                         // Upgrade node definition to latest from engineSpec
-                        const latestDef = engineSpec?.nodes.find(def => def.type === n.data.def?.type);
+                        // Upgrade node definition to latest from engineSpec
+                        // Match by Type AND Label to ensure uniqueness
+                        const latestDef = engineSpec?.nodes.find(def =>
+                            def.type === n.data.def?.type &&
+                            def.label === n.data.def?.label
+                        );
+                        const categoryColor = engineSpec?.categories?.[latestDef?.category || '']?.color;
 
                         return {
                             ...n,
                             data: {
                                 ...n.data,
                                 def: latestDef || n.data.def, // Fallback if type not found
-                                onUpdate: handleNodeUpdate
+                                categoryColor,
+                                onUpdate: handleNodeUpdate,
+                                onDuplicate: handleDuplicateNode,
+                                onDelete: handleDeleteNode
                             }
                         };
                     });
@@ -134,9 +163,39 @@ export default function SpecNodeEditor() {
                 console.error("Failed to parse user spec", e);
             }
         });
-    }, [activeEngine, activeSpec, handleNodeUpdate]);
+    }, [activeEngine, activeSpec, handleNodeUpdate, engineSpec]);
 
     const onConnect = useCallback((params: Connection) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+
+    // Handle Keyboard Shortcuts (Duplicate)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Shift + D to Duplicate
+            if (e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+                e.preventDefault();
+                setNodes((nds) => {
+                    const selected = nds.filter((n) => n.selected);
+                    if (selected.length === 0) return nds;
+
+                    const newNodes = selected.map((n) => ({
+                        ...n,
+                        id: crypto.randomUUID(),
+                        position: { x: n.position.x + 20, y: n.position.y + 20 },
+                        selected: true,
+                        // Reset selection of original
+                        data: { ...n.data }
+                    }));
+
+                    // Deselect originals
+                    const deselectedOriginals = nds.map(n => n.selected ? { ...n, selected: false } : n);
+                    return [...deselectedOriginals, ...newNodes];
+                });
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [setNodes]);
 
     // Drag and Drop Handlers
     const onDragStart = (event: React.DragEvent, nodeDef: EngineSpecNodeDef) => {
@@ -164,6 +223,8 @@ export default function SpecNodeEditor() {
                 y: event.clientY - reactFlowBounds.top,
             });
 
+            const categoryColor = engineSpec?.categories?.[nodeDef.category]?.color;
+
             const newNode: Node = {
                 id: crypto.randomUUID(),
                 type: 'custom',
@@ -171,8 +232,11 @@ export default function SpecNodeEditor() {
                 data: {
                     label: nodeDef.label,
                     def: nodeDef,
+                    categoryColor,
                     values: {},
-                    onUpdate: handleNodeUpdate
+                    onUpdate: handleNodeUpdate,
+                    onDuplicate: handleDuplicateNode,
+                    onDelete: handleDeleteNode
                 },
             };
 
@@ -316,6 +380,8 @@ export default function SpecNodeEditor() {
                         style={{ background: 'var(--bg-primary)' }}
                         deleteKeyCode={['Backspace', 'Delete']}
                         multiSelectionKeyCode={['Control', 'Shift']}
+                        selectionOnDrag={true}
+                        panOnDrag={[1, 2]} // Middle or Right click to pan, Left click to select
                     >
                         <Background color="#30363d" gap={20} />
                         <Controls />

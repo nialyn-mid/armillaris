@@ -1,4 +1,5 @@
-import { memo, useMemo, useEffect, useCallback } from 'react';
+import { memo, useMemo, useEffect, useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Handle, Position, type NodeProps, useEdges, useNodes } from 'reactflow';
 import type { EngineSpecNodeDef } from '../../lib/engine-spec-types';
 import { resolveNodeSchema } from '../../utils/engine-spec-utils';
@@ -8,13 +9,42 @@ interface SpecNodeData {
     label: string;
     def: EngineSpecNodeDef;
     values: Record<string, any>;
+    categoryColor?: string;
     onUpdate?: (id: string, data: any) => void;
+    onDuplicate?: (id: string) => void;
+    onDelete?: (id: string) => void;
 }
 
 const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
-    const { def, values, onUpdate } = data;
+    const { def, values, onUpdate, categoryColor, onDuplicate, onDelete } = data;
     const edges = useEdges();
     const nodes = useNodes();
+
+    // Context Menu State
+    const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
+
+    // Close context menu on interaction elsewhere
+    useEffect(() => {
+        const handleClose = () => setContextMenu(null);
+
+        if (contextMenu) {
+            window.addEventListener('mousedown', handleClose);
+            window.addEventListener('wheel', handleClose);
+            window.addEventListener('resize', handleClose);
+        }
+
+        return () => {
+            window.removeEventListener('mousedown', handleClose);
+            window.removeEventListener('wheel', handleClose);
+            window.removeEventListener('resize', handleClose);
+        };
+    }, [contextMenu]);
+
+    const onContextMenu = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent native browser menu
+        setContextMenu({ x: e.clientX, y: e.clientY });
+    }, []);
 
     // 1. Calculate Available Attributes from upstream nodes
     const availableAttributes = useMemo(() => {
@@ -141,19 +171,75 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
             boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
         }}>
             {/* Header */}
-            <div style={{
-                padding: '4px 8px',
-                background: selected ? '#007fd4' : '#333',
-                borderTopLeftRadius: '3px',
-                borderTopRightRadius: '3px',
-                fontWeight: 600,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-            }}>
+            <div
+                style={{
+                    padding: '4px 8px',
+                    background: categoryColor || (selected ? '#007fd4' : '#333'), // Use category color
+                    borderTopLeftRadius: '3px',
+                    borderTopRightRadius: '3px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    cursor: 'grab' // Improve cursor
+                }}
+                onContextMenu={onContextMenu}
+            >
                 <span>{def.label}</span>
                 <span style={{ fontSize: '10px', opacity: 0.7 }}>{def.type}</span>
             </div>
+
+            {/* Context Menu Portal (Rendered attached to Body to avoid Transform issues) */}
+            {contextMenu && createPortal(
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: contextMenu.y,
+                        left: contextMenu.x,
+                        background: '#2d2d2d',
+                        border: '1px solid #454545',
+                        borderRadius: '4px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                        zIndex: 9999,
+                        minWidth: '150px',
+                        padding: '4px 0',
+                        color: '#eee',
+                        fontFamily: 'sans-serif'
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+                    className="nodrag"
+                >
+                    <div
+                        style={{ padding: '6px 12px', cursor: 'pointer', fontSize: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                        className="context-menu-item"
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#007fd4'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (onDuplicate) onDuplicate(id);
+                            setContextMenu(null);
+                        }}
+                    >
+                        <span>Duplicate Node</span>
+                        <span style={{ color: '#aaa', fontSize: '10px' }}>Shift+D</span>
+                    </div>
+                    <div
+                        style={{ padding: '6px 12px', cursor: 'pointer', color: '#ff6b6b', fontSize: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                        className="context-menu-item"
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#4a2c2c'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (onDelete) onDelete(id);
+                            setContextMenu(null);
+                        }}
+                    >
+                        <span>Delete Node</span>
+                        <span style={{ color: '#aaa', fontSize: '10px' }}>Del</span>
+                    </div>
+                </div>,
+                document.body
+            )}
 
             {/* Body */}
             <div style={{
