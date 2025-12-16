@@ -8,22 +8,28 @@ export interface EngineSpec {
 export interface EngineSpecNodeDef {
     type: string;
     label: string;
-    category: 'Input' | 'Transformation' | 'Output' | 'Utility';
-    inputs: PortDef[];
-    outputs: PortDef[];
-    properties: PropertyDef[];
+    category: 'Input' | 'Transformation' | 'Output' | 'Utility' | 'Filter' | 'Graph';
+    inputs: PortDef[] | ExpansionDef<PortDef>;
+    outputs: PortDef[] | ExpansionDef<PortDef>;
+    properties: PropertyDef[] | ExpansionDef<PropertyDef>; // Can be an array OR an expansion object
+}
+
+export interface ExpansionDef<T> {
+    $for: string; // The property name in 'values' that holds the array of IDs/Counts (e.g., "node.expandable_properties")
+    $item: T; // The template item to repeat
 }
 
 export interface PortDef {
-    id: string;
-    label: string;
-    type: 'any' | 'string' | 'number' | 'object' | 'array' | 'entry' | 'map';
+    id: string; // Can contain {{_value}}
+    label: string; // Can contain {{_value}}
+    type: 'any' | 'string' | 'number' | 'object' | 'array' | 'entry' | 'map' | 'List' | 'Entry List' | 'Entry' | 'Value' | 'Message List' | 'String List' | 'Value List' | 'Attribute List' | 'String' | 'Number' | 'Boolean' | 'Date';
 }
 
 export interface PropertyDef {
-    name: string;
+    name: string; // Can contain {{_value}}
     label: string;
-    type: 'string' | 'number' | 'boolean' | 'select' | 'code';
-    options?: string[]; // for select
+    type: 'string' | 'number' | 'boolean' | 'select' | 'code' | 'Property Block' | 'String' | 'Number' | 'Boolean' | 'Value' | 'Attribute List' | 'Value List' | 'Entry List' | 'Message List' | 'String List' | 'Date' | 'Attribute';
+    options?: { value: string, label: string }[] | string[]; // Support object options too
     default?: any;
+    content?: PropertyDef[] | ExpansionDef<PropertyDef> | Record<string, PropertyDef>; // For Property Block (Recursive)
 }

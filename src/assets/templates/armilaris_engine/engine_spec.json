@@ -4,108 +4,680 @@
     "nodes": [
         {
             "type": "InputSource",
-            "label": "Graph Source",
+            "label": "Input Entry List",
             "category": "Input",
             "inputs": [],
             "outputs": [
                 {
-                    "id": "graph",
-                    "label": "Nodes",
-                    "type": "array"
-                },
-                {
-                    "id": "adj",
-                    "label": "Adjacency",
-                    "type": "object"
+                    "id": "entries",
+                    "label": "Entries",
+                    "type": "Entry List"
                 }
             ],
-            "properties": [
-                {
-                    "name": "source",
-                    "label": "Source",
-                    "type": "select",
-                    "options": [
-                        "Lore Graph"
-                    ]
-                }
-            ]
+            "properties": []
         },
         {
-            "type": "FilterNode",
-            "label": "Filter by Attribute",
-            "category": "Transformation",
-            "inputs": [
-                {
-                    "id": "in",
-                    "label": "Nodes",
-                    "type": "array"
-                }
-            ],
-            "outputs": [
-                {
-                    "id": "out",
-                    "label": "Filtered",
-                    "type": "array"
-                }
-            ],
-            "properties": [
-                {
-                    "name": "attribute",
-                    "label": "Attribute",
-                    "type": "string"
-                },
-                {
-                    "name": "value",
-                    "label": "Value",
-                    "type": "string"
-                }
-            ]
-        },
-        {
-            "type": "MetaConfig",
-            "label": "Meta Configuration",
-            "category": "Utility",
+            "type": "InputSource",
+            "label": "Input Chat",
+            "category": "Input",
             "inputs": [],
             "outputs": [
                 {
-                    "id": "config",
-                    "label": "Meta Rule",
-                    "type": "object"
+                    "id": "last_message",
+                    "label": "Last Message",
+                    "type": "String"
+                },
+                {
+                    "id": "last_messages",
+                    "label": "Message History",
+                    "type": "Message List"
+                },
+                {
+                    "id": "first_message_date",
+                    "label": "First Message Date",
+                    "type": "Date"
+                },
+                {
+                    "id": "last_bot_message_date",
+                    "label": "Last Bot Message Date",
+                    "type": "Date"
+                },
+                {
+                    "id": "message_count",
+                    "label": "Message Count",
+                    "type": "Number"
+                },
+                {
+                    "id": "contextLength",
+                    "label": "Context Length",
+                    "type": "Number"
+                },
+                {
+                    "id": "user_name",
+                    "label": "User Name",
+                    "type": "String"
+                },
+                {
+                    "id": "persona_name",
+                    "label": "Persona Name",
+                    "type": "String"
+                }
+            ],
+            "properties": []
+        },
+        {
+            "type": "InputSource",
+            "label": "Character Input",
+            "category": "Input",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "name",
+                    "label": "Name",
+                    "type": "String"
+                },
+                {
+                    "id": "chat_name",
+                    "label": "Chat Name",
+                    "type": "String"
+                },
+                {
+                    "id": "example_dialogs",
+                    "label": "Example Dialogs",
+                    "type": "String"
+                },
+                {
+                    "id": "personality",
+                    "label": "Personality",
+                    "type": "String"
+                },
+                {
+                    "id": "scenario",
+                    "label": "Scenario",
+                    "type": "String"
+                },
+                {
+                    "id": "custom_prompt_complete",
+                    "label": "Custom Prompt",
+                    "type": "String"
+                }
+            ],
+            "properties": []
+        },
+        {
+            "type": "InputSource",
+            "label": "Custom Attributes Input",
+            "category": "Input",
+            "inputs": [
+                {
+                    "id": "names",
+                    "label": "Names",
+                    "type": "String List"
+                },
+                {
+                    "id": "values",
+                    "label": "Values",
+                    "type": "Value List"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "attributes",
+                    "label": "Attributes",
+                    "type": "Attribute List"
+                }
+            ],
+            "properties": {
+                "$for": "node.expandable_properties",
+                "$item": {
+                    "name": "attribute_{{_value}}",
+                    "label": "Attribute {{_value}}",
+                    "type": "Property Block",
+                    "content": [
+                        {
+                            "name": "attribute_name",
+                            "label": "Attribute Name",
+                            "type": "String",
+                            "default": "Attribute"
+                        },
+                        {
+                            "name": "attribute_type",
+                            "label": "Attribute Type",
+                            "type": "select",
+                            "options": [
+                                {
+                                    "value": "String",
+                                    "label": "String"
+                                },
+                                {
+                                    "value": "Number",
+                                    "label": "Number"
+                                },
+                                {
+                                    "value": "Boolean",
+                                    "label": "Boolean"
+                                },
+                                {
+                                    "value": "Date",
+                                    "label": "Date"
+                                },
+                                {
+                                    "value": "String List",
+                                    "label": "String List"
+                                }
+                            ],
+                            "default": "String"
+                        },
+                        {
+                            "name": "attribute_value",
+                            "label": "Attribute Value",
+                            "type": "Value"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "InputSource",
+            "label": "Custom Value List Input",
+            "category": "Input",
+            "inputs": [
+                {
+                    "id": "type",
+                    "label": "Type",
+                    "type": "String"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "values",
+                    "label": "Values",
+                    "type": "Value List"
+                }
+            ],
+            "properties": {
+                "value_type": {
+                    "label": "Value Type",
+                    "type": "select",
+                    "options": [
+                        {
+                            "value": "String",
+                            "label": "String"
+                        },
+                        {
+                            "value": "Number",
+                            "label": "Number"
+                        },
+                        {
+                            "value": "Boolean",
+                            "label": "Boolean"
+                        },
+                        {
+                            "value": "Date",
+                            "label": "Date"
+                        },
+                        {
+                            "value": "String List",
+                            "label": "String List"
+                        }
+                    ],
+                    "default": "String"
+                },
+                "$for": "node.expandable_properties",
+                "$item": {
+                    "name": "value_{{_value}}",
+                    "label": "Value {{_value}}",
+                    "type": "Value"
+                }
+            }
+        },
+        {
+            "type": "Filter",
+            "label": "Entry Filter",
+            "category": "Filter",
+            "inputs": [
+                {
+                    "id": "entries",
+                    "label": "Entries",
+                    "type": "Entry List"
+                },
+                {
+                    "id": "attributes",
+                    "label": "Attributes",
+                    "type": "Attribute List"
+                },
+                {
+                    "id": "values",
+                    "label": "Values",
+                    "type": "Value List"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "entries",
+                    "label": "Entries",
+                    "type": "Entry List"
                 }
             ],
             "properties": [
                 {
-                    "name": "keyword",
-                    "label": "Meta Keyword",
-                    "type": "string"
+                    "name": "combine",
+                    "label": "Combine",
+                    "type": "select",
+                    "options": [
+                        {
+                            "value": "or",
+                            "label": "Any"
+                        },
+                        {
+                            "value": "and",
+                            "label": "All"
+                        }
+                    ],
+                    "default": "or"
                 },
                 {
-                    "name": "activateOnLone",
-                    "label": "Activate on Lone",
-                    "type": "boolean",
-                    "default": true
+                    "name": "attributes",
+                    "label": "Attributes",
+                    "type": "Attribute List",
+                    "default": ""
+                },
+                {
+                    "name": "operator",
+                    "label": "Operator",
+                    "type": "select",
+                    "options": [
+                        {
+                            "value": "contains",
+                            "label": "Contains"
+                        },
+                        {
+                            "value": "not contains",
+                            "label": "Does Not Contain"
+                        },
+                        {
+                            "value": "==",
+                            "label": "Is"
+                        },
+                        {
+                            "value": "!=",
+                            "label": "Is Not"
+                        },
+                        {
+                            "value": ">=",
+                            "label": "Greater Than Or Equal To"
+                        },
+                        {
+                            "value": "<=",
+                            "label": "Less Than Or Equal To"
+                        },
+                        {
+                            "value": ">",
+                            "label": "Greater Than"
+                        },
+                        {
+                            "value": "<",
+                            "label": "Less Than"
+                        }
+                    ],
+                    "default": "=="
+                },
+                {
+                    "name": "values",
+                    "label": "Values",
+                    "type": "Value List"
+                }
+            ]
+        },
+        {
+            "type": "Filter",
+            "label": "Keyword Filter",
+            "category": "Filter",
+            "inputs": [
+                {
+                    "id": "entries",
+                    "label": "Entries",
+                    "type": "Entry List"
+                },
+                {
+                    "id": "messages",
+                    "label": "Messages",
+                    "type": "Message List"
+                },
+                {
+                    "id": "case_sensitive",
+                    "label": "Case Sensitive",
+                    "type": "Boolean"
+                },
+                {
+                    "id": "wordbreak_sensitive",
+                    "label": "Match Inside Word",
+                    "type": "Boolean"
+                },
+                {
+                    "id": "match_limit",
+                    "label": "Match Limit",
+                    "type": "Number"
+                },
+                {
+                    "id": "message_range_start",
+                    "label": "Message Range Start",
+                    "type": "Number"
+                },
+                {
+                    "id": "message_range_end",
+                    "label": "Message Range End",
+                    "type": "Number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "entries",
+                    "label": "Entries",
+                    "type": "Entry List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "case_sensitive",
+                    "label": "Case Sensitive",
+                    "type": "Boolean",
+                    "default": false
+                },
+                {
+                    "name": "wordbreak_sensitive",
+                    "label": "Match Inside Word",
+                    "type": "Boolean",
+                    "default": false
+                },
+                {
+                    "name": "match_limit",
+                    "label": "Match Limit Per Message",
+                    "type": "Number",
+                    "default": 0
+                },
+                {
+                    "name": "message_user_type",
+                    "label": "Sender Type",
+                    "type": "select",
+                    "options": [
+                        {
+                            "value": "user",
+                            "label": "User"
+                        },
+                        {
+                            "value": "bot",
+                            "label": "Bot"
+                        },
+                        {
+                            "value": "all",
+                            "label": "All"
+                        }
+                    ],
+                    "default": "all"
+                }
+            ]
+        },
+        {
+            "type": "Filter",
+            "label": "Message Filter",
+            "category": "Filter",
+            "inputs": [
+                {
+                    "id": "messages",
+                    "label": "Messages",
+                    "type": "Message List"
+                },
+                {
+                    "id": "conditions",
+                    "label": "Conditions",
+                    "type": "String List"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "messages",
+                    "label": "Messages",
+                    "type": "Message List"
+                },
+                {
+                    "id": "matched_conditions",
+                    "label": "Matched Conditions",
+                    "type": "String List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "case_sensitive",
+                    "label": "Case Sensitive",
+                    "type": "Boolean",
+                    "default": false
+                },
+                {
+                    "name": "wordbreak_sensitive",
+                    "label": "Match Inside Word",
+                    "type": "Boolean",
+                    "default": false
+                },
+                {
+                    "name": "is_regex",
+                    "label": "Use As RegEx",
+                    "type": "Boolean",
+                    "default": false
+                },
+                {
+                    "name": "message_user_type",
+                    "label": "Sender Type",
+                    "type": "select",
+                    "options": [
+                        {
+                            "value": "user",
+                            "label": "User"
+                        },
+                        {
+                            "value": "bot",
+                            "label": "Bot"
+                        },
+                        {
+                            "value": "all",
+                            "label": "All"
+                        }
+                    ],
+                    "default": "all"
+                }
+            ]
+        },
+        {
+            "type": "Filter",
+            "label": "List Filter",
+            "category": "Filter",
+            "inputs": [
+                {
+                    "id": "list",
+                    "label": "List",
+                    "type": "List"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "list",
+                    "label": "List",
+                    "type": "List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "trim_start",
+                    "label": "Trim Start",
+                    "type": "Number",
+                    "default": 0
+                },
+                {
+                    "name": "trim_end",
+                    "label": "Trim End",
+                    "type": "Number",
+                    "default": 0
+                },
+                {
+                    "name": "frequency",
+                    "label": "Include Every Nth",
+                    "type": "Number",
+                    "default": 1
+                }
+            ]
+        },
+        {
+            "type": "AttributeExtractor",
+            "label": "Attribute",
+            "category": "Utility",
+            "inputs": [
+                {
+                    "id": "entry",
+                    "label": "Entry",
+                    "type": "Entry"
+                }
+            ],
+            "outputs": [
+                {
+                    "$for": "entry.meta.attributes",
+                    "$item": {
+                        "id": "{{_value}}",
+                        "label": "{{_value}}",
+                        "type": "Attribute"
+                    }
+                }
+            ],
+            "properties": []
+        },
+        {
+            "type": "AttributeExtractor",
+            "label": "Attribute List",
+            "category": "Utility",
+            "inputs": [
+                {
+                    "id": "entries",
+                    "label": "Entries",
+                    "type": "Entry List"
+                }
+            ],
+            "outputs": [
+                {
+                    "$for": "entries.meta.attributes",
+                    "$item": {
+                        "id": "{{_value}}_list",
+                        "label": "{{_value}}",
+                        "type": "Attribute List"
+                    }
+                }
+            ],
+            "properties": []
+        },
+        {
+            "type": "DataUtility",
+            "label": "Join List",
+            "category": "Utility",
+            "inputs": {
+                "$for": "node.expandable_inputs",
+                "$item": {
+                    "id": "list_{{_value}}",
+                    "label": "List {{_value}}",
+                    "type": "List"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "joined_list",
+                    "label": "Joined List",
+                    "type": "List"
+                }
+            ],
+            "properties": []
+        },
+        {
+            "type": "DataUtility",
+            "label": "Value Map",
+            "category": "Utility",
+            "inputs": {
+                "values": {
+                    "label": "Values",
+                    "type": "Value List"
+                },
+                "$for": "node.mappings",
+                "$item": {
+                    "id": "mapping_{{_value}}",
+                    "label": "Mapping {{_value}}",
+                    "type": "Value List"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "outputs",
+                    "label": "Outputs",
+                    "type": "Value List"
+                }
+            ],
+            "properties": {
+                "$for": "node.mappings",
+                "$item": {
+                    "name": "mapping_{{_value}}",
+                    "label": "Mapping {{_value}}",
+                    "type": "Property Block",
+                    "content": {
+                        "$for": "inputs",
+                        "$item": {
+                            "name": "input_{{_value}}",
+                            "label": "Input {{_value}}",
+                            "type": "Value"
+                        },
+                        "output_{{_value}}": {
+                            "label": "Output {{_value}}",
+                            "type": "Value"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "type": "Adjacency",
+            "label": "Graph Adjacency",
+            "category": "Graph",
+            "inputs": [
+                {
+                    "id": "entries",
+                    "label": "Entry",
+                    "type": "Entry"
+                },
+                {
+                    "id": "distance",
+                    "label": "Distance",
+                    "type": "Number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "adjacency",
+                    "label": "Adjacency",
+                    "type": "Entry List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "distance",
+                    "label": "Distance",
+                    "type": "Number",
+                    "default": 1
                 }
             ]
         },
         {
             "type": "OutputRoot",
-            "label": "Engine Target",
+            "label": "Activation Output",
             "category": "Output",
             "inputs": [
                 {
-                    "id": "nodes",
-                    "label": "Final Nodes",
-                    "type": "array"
-                },
-                {
-                    "id": "adj",
-                    "label": "Adjacency",
-                    "type": "object"
-                },
-                {
-                    "id": "meta",
-                    "label": "Meta Rules",
-                    "type": "object"
+                    "id": "entries",
+                    "label": "Entries",
+                    "type": "Entry List"
                 }
             ],
             "outputs": [],

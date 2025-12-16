@@ -42,8 +42,7 @@
 
 .node-palette-tab {
   font-size: 0.7rem;
-  padding: 10px 4px;
-  text-align: center;
+  padding: 10px 8px;
   cursor: pointer;
   background: transparent;
   color: var(--text-secondary);
@@ -51,8 +50,7 @@
   border-left: 3px solid transparent;
   transition: all 0.2s;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  justify-content: right;
 }
 
 .node-palette-tab:hover {
@@ -183,4 +181,67 @@
 .react-flow__panel>button.react-flow__controls-button {
   background-color: var(--accent-color);
   border: none;
+}
+
+/* Property Blocks */
+.property-block {
+  border: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  padding: 6px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.property-block-header {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+/* Add Item Button (for expandable lists) */
+.add-item-btn {
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  padding: 4px;
+  cursor: pointer;
+  text-align: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.add-item-btn:hover {
+  border-color: var(--accent-color);
+  color: var(--text-primary);
+  background: rgba(88, 166, 255, 0.1);
+}
+
+.property-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.property-label {
+  color: #ccc;
+  font-size: 10px;
+}
+
+.property-input {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  color: #fff;
+  font-size: 11px;
+  padding: 2px;
+  border-radius: 2px;
+}
+
+.property-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
 }

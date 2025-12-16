@@ -1,0 +1,859 @@
+{
+  "nodes": [
+    {
+      "id": "e8d3f1b1-be44-4632-b705-d08607391b6b",
+      "type": "custom",
+      "position": {
+        "x": 291.08413494426577,
+        "y": -48.843518819470546
+      },
+      "data": {
+        "label": "Input Entry List",
+        "def": {
+          "type": "InputSource",
+          "label": "Input Entry List",
+          "category": "Input",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            }
+          ],
+          "properties": []
+        },
+        "values": {}
+      },
+      "width": 220,
+      "height": 78,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 291.08413494426577,
+        "y": -48.843518819470546
+      },
+      "dragging": false
+    },
+    {
+      "id": "553e7cfd-5544-4c89-9bb2-f448888e02f9",
+      "type": "custom",
+      "position": {
+        "x": -240.1101431706054,
+        "y": -537.2876016485409
+      },
+      "data": {
+        "label": "Input Chat",
+        "def": {
+          "type": "InputSource",
+          "label": "Input Chat",
+          "category": "Input",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "last_message",
+              "label": "Last Message",
+              "type": "String"
+            },
+            {
+              "id": "last_messages",
+              "label": "Message History",
+              "type": "Message List"
+            },
+            {
+              "id": "first_message_date",
+              "label": "First Message Date",
+              "type": "Date"
+            },
+            {
+              "id": "last_bot_message_date",
+              "label": "Last Bot Message Date",
+              "type": "Date"
+            },
+            {
+              "id": "message_count",
+              "label": "Message Count",
+              "type": "Number"
+            },
+            {
+              "id": "contextLength",
+              "label": "Context Length",
+              "type": "Number"
+            },
+            {
+              "id": "user_name",
+              "label": "User Name",
+              "type": "String"
+            },
+            {
+              "id": "persona_name",
+              "label": "Persona Name",
+              "type": "String"
+            }
+          ],
+          "properties": []
+        },
+        "values": {}
+      },
+      "width": 220,
+      "height": 260,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -240.1101431706054,
+        "y": -537.2876016485409
+      },
+      "dragging": false
+    },
+    {
+      "id": "8a196f55-edac-40b7-b4ee-1342c442ab96",
+      "type": "custom",
+      "position": {
+        "x": 552.9194569726868,
+        "y": -172.47676320686713
+      },
+      "data": {
+        "label": "Keyword Filter",
+        "def": {
+          "type": "Filter",
+          "label": "Keyword Filter",
+          "category": "Filter",
+          "inputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            },
+            {
+              "id": "messages",
+              "label": "Messages",
+              "type": "Message List"
+            },
+            {
+              "id": "case_sensitive",
+              "label": "Case Sensitive",
+              "type": "Boolean"
+            },
+            {
+              "id": "wordbreak_sensitive",
+              "label": "Match Inside Word",
+              "type": "Boolean"
+            },
+            {
+              "id": "match_limit",
+              "label": "Match Limit",
+              "type": "Number"
+            },
+            {
+              "id": "message_range_start",
+              "label": "Message Range Start",
+              "type": "Number"
+            },
+            {
+              "id": "message_range_end",
+              "label": "Message Range End",
+              "type": "Number"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            }
+          ],
+          "properties": [
+            {
+              "name": "case_sensitive",
+              "label": "Case Sensitive",
+              "type": "Boolean",
+              "default": false
+            },
+            {
+              "name": "wordbreak_sensitive",
+              "label": "Match Inside Word",
+              "type": "Boolean",
+              "default": false
+            },
+            {
+              "name": "match_limit",
+              "label": "Match Limit Per Message",
+              "type": "Number",
+              "default": 0
+            },
+            {
+              "name": "message_user_type",
+              "label": "Sender Type",
+              "type": "select",
+              "options": [
+                {
+                  "value": "user",
+                  "label": "User"
+                },
+                {
+                  "value": "bot",
+                  "label": "Bot"
+                },
+                {
+                  "value": "all",
+                  "label": "All"
+                }
+              ],
+              "default": "all"
+            }
+          ]
+        },
+        "values": {
+          "case_sensitive": false
+        }
+      },
+      "width": 220,
+      "height": 418,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 552.9194569726868,
+        "y": -172.47676320686713
+      },
+      "dragging": false
+    },
+    {
+      "id": "a6362734-2edc-4796-bf57-65f449765f5c",
+      "type": "custom",
+      "position": {
+        "x": 1142.8346512648193,
+        "y": -93.87473547267223
+      },
+      "data": {
+        "label": "Activation Output",
+        "def": {
+          "type": "OutputRoot",
+          "label": "Activation Output",
+          "category": "Output",
+          "inputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            }
+          ],
+          "outputs": [],
+          "properties": []
+        },
+        "values": {}
+      },
+      "width": 220,
+      "height": 78,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1142.8346512648193,
+        "y": -93.87473547267223
+      },
+      "dragging": false
+    },
+    {
+      "id": "7ce38f03-7191-491a-acd9-e084201d74e8",
+      "type": "custom",
+      "position": {
+        "x": -270.1440979618483,
+        "y": -246.49953406097106
+      },
+      "data": {
+        "label": "Custom Attributes Input",
+        "def": {
+          "type": "InputSource",
+          "label": "Custom Attributes Input",
+          "category": "Input",
+          "inputs": [
+            {
+              "id": "names",
+              "label": "Names",
+              "type": "String List"
+            },
+            {
+              "id": "values",
+              "label": "Values",
+              "type": "Value List"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "attributes",
+              "label": "Attributes",
+              "type": "Attribute List"
+            }
+          ],
+          "properties": {
+            "$for": "node.expandable_properties",
+            "$item": {
+              "name": "attribute_{{_value}}",
+              "label": "Attribute {{_value}}",
+              "type": "Property Block",
+              "content": [
+                {
+                  "name": "attribute_name",
+                  "label": "Attribute Name",
+                  "type": "String",
+                  "default": "Attribute"
+                },
+                {
+                  "name": "attribute_type",
+                  "label": "Attribute Type",
+                  "type": "select",
+                  "options": [
+                    {
+                      "value": "String",
+                      "label": "String"
+                    },
+                    {
+                      "value": "Number",
+                      "label": "Number"
+                    },
+                    {
+                      "value": "Boolean",
+                      "label": "Boolean"
+                    },
+                    {
+                      "value": "Date",
+                      "label": "Date"
+                    },
+                    {
+                      "value": "String List",
+                      "label": "String List"
+                    }
+                  ],
+                  "default": "String"
+                },
+                {
+                  "name": "attribute_value",
+                  "label": "Attribute Value",
+                  "type": "Value"
+                }
+              ]
+            }
+          }
+        },
+        "values": {
+          "attribute_0": {
+            "attribute_name": "Meta",
+            "attribute_value": "history"
+          }
+        }
+      },
+      "width": 220,
+      "height": 354,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -270.1440979618483,
+        "y": -246.49953406097106
+      },
+      "dragging": false
+    },
+    {
+      "id": "25c9a093-240a-425d-ab94-a0f2768bebd9",
+      "type": "custom",
+      "position": {
+        "x": 809.2389675749869,
+        "y": -173.90429613731493
+      },
+      "data": {
+        "label": "Adjacency",
+        "def": {
+          "type": "Adjacency",
+          "label": "Adjacency",
+          "category": "Graph",
+          "inputs": [
+            {
+              "id": "entry",
+              "label": "Entry",
+              "type": "Entry"
+            },
+            {
+              "id": "distance",
+              "label": "Distance",
+              "type": "Number"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "adjacency",
+              "label": "Adjacency",
+              "type": "Entry List"
+            }
+          ],
+          "properties": [
+            {
+              "name": "distance",
+              "label": "Distance",
+              "type": "Number",
+              "default": 1
+            }
+          ]
+        },
+        "values": {}
+      },
+      "width": 220,
+      "height": 187,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 809.2389675749869,
+        "y": -173.90429613731493
+      },
+      "dragging": false
+    },
+    {
+      "id": "c1071842-fe02-401c-903b-68fba5731f8b",
+      "type": "custom",
+      "position": {
+        "x": 1087.2502701939727,
+        "y": -510.6299985457489
+      },
+      "data": {
+        "label": "Entry Filter",
+        "def": {
+          "type": "Filter",
+          "label": "Entry Filter",
+          "category": "Filter",
+          "inputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            },
+            {
+              "id": "attributes",
+              "label": "Attributes",
+              "type": "Attribute List"
+            },
+            {
+              "id": "values",
+              "label": "Values",
+              "type": "Value List"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            }
+          ],
+          "properties": [
+            {
+              "name": "combine",
+              "label": "Combine",
+              "type": "select",
+              "options": [
+                {
+                  "value": "or",
+                  "label": "Any"
+                },
+                {
+                  "value": "and",
+                  "label": "All"
+                }
+              ],
+              "default": "or"
+            },
+            {
+              "name": "attributes",
+              "label": "Attributes",
+              "type": "Attribute List",
+              "default": ""
+            },
+            {
+              "name": "operator",
+              "label": "Operator",
+              "type": "select",
+              "options": [
+                {
+                  "value": "contains",
+                  "label": "Contains"
+                },
+                {
+                  "value": "not contains",
+                  "label": "Does Not Contain"
+                },
+                {
+                  "value": "==",
+                  "label": "Is"
+                },
+                {
+                  "value": "!=",
+                  "label": "Is Not"
+                },
+                {
+                  "value": ">=",
+                  "label": "Greater Than Or Equal To"
+                },
+                {
+                  "value": "<=",
+                  "label": "Less Than Or Equal To"
+                },
+                {
+                  "value": ">",
+                  "label": "Greater Than"
+                },
+                {
+                  "value": "<",
+                  "label": "Less Than"
+                }
+              ],
+              "default": "=="
+            },
+            {
+              "name": "values",
+              "label": "Values",
+              "type": "Value List"
+            }
+          ]
+        },
+        "values": {
+          "attributes": "Meta"
+        }
+      },
+      "width": 220,
+      "height": 352,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1087.2502701939727,
+        "y": -510.6299985457489
+      },
+      "dragging": false
+    },
+    {
+      "id": "fdcdd17b-d372-46d2-b45f-3825f8d13696",
+      "type": "custom",
+      "position": {
+        "x": 543.1546628815328,
+        "y": -506.6131267394228
+      },
+      "data": {
+        "label": "Message Filter",
+        "def": {
+          "type": "Filter",
+          "label": "Message Filter",
+          "category": "Filter",
+          "inputs": [
+            {
+              "id": "messages",
+              "label": "Messages",
+              "type": "Message List"
+            },
+            {
+              "id": "conditions",
+              "label": "Conditions",
+              "type": "String List"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "messages",
+              "label": "Messages",
+              "type": "Message List"
+            },
+            {
+              "id": "matched_conditions",
+              "label": "Matched Conditions",
+              "type": "String List"
+            }
+          ],
+          "properties": [
+            {
+              "name": "case_sensitive",
+              "label": "Case Sensitive",
+              "type": "Boolean",
+              "default": false
+            },
+            {
+              "name": "wordbreak_sensitive",
+              "label": "Match Inside Word",
+              "type": "Boolean",
+              "default": false
+            },
+            {
+              "name": "is_regex",
+              "label": "Use As RegEx",
+              "type": "Boolean",
+              "default": false
+            },
+            {
+              "name": "message_user_type",
+              "label": "Sender Type",
+              "type": "select",
+              "options": [
+                {
+                  "value": "user",
+                  "label": "User"
+                },
+                {
+                  "value": "bot",
+                  "label": "Bot"
+                },
+                {
+                  "value": "all",
+                  "label": "All"
+                }
+              ],
+              "default": "all"
+            }
+          ]
+        },
+        "values": {}
+      },
+      "width": 220,
+      "height": 296,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 543.1546628815328,
+        "y": -506.6131267394228
+      },
+      "dragging": false
+    },
+    {
+      "id": "11c21548-266d-47d6-bd8b-78d45905753f",
+      "type": "custom",
+      "position": {
+        "x": 21.312815267040264,
+        "y": -518.3809897433798
+      },
+      "data": {
+        "label": "Join List",
+        "def": {
+          "type": "DataUtility",
+          "label": "Join List",
+          "category": "Utility",
+          "inputs": {
+            "$for": "node.expandable_inputs",
+            "$item": {
+              "id": "{{_value}}",
+              "label": "{{_value}}",
+              "type": "List"
+            }
+          },
+          "outputs": [
+            {
+              "id": "joined_list",
+              "label": "Joined List",
+              "type": "List"
+            }
+          ],
+          "properties": []
+        },
+        "values": {
+          "_expandable_inputs": [
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "width": 220,
+      "height": 163,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 21.312815267040264,
+        "y": -518.3809897433798
+      },
+      "dragging": false
+    },
+    {
+      "id": "e813b50e-9dc2-4810-a705-99897bb5b88d",
+      "type": "custom",
+      "position": {
+        "x": 19.15474222853186,
+        "y": -332.38981326618534
+      },
+      "data": {
+        "label": "Value Map",
+        "def": {
+          "type": "DataUtility",
+          "label": "Value Map",
+          "category": "Utility",
+          "inputs": [
+            {
+              "id": "values",
+              "label": "Values",
+              "type": "Value List"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "outputs",
+              "label": "Outputs",
+              "type": "Value List"
+            }
+          ],
+          "properties": {
+            "$for": "node.expandable_properties",
+            "$item": {
+              "name": "mapping_{{_value}}",
+              "label": "Mapping {{_value}}",
+              "type": "Property Block",
+              "content": {
+                "$for": "node.expandable_properties",
+                "$item": {
+                  "name": "input_{{_value}}",
+                  "label": "Input {{_value}}",
+                  "type": "Value"
+                },
+                "output_{{_value}}": {
+                  "label": "Output {{_value}}",
+                  "type": "Value"
+                }
+              }
+            }
+          }
+        },
+        "values": {}
+      },
+      "width": 220,
+      "height": 269,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 19.15474222853186,
+        "y": -332.38981326618534
+      },
+      "dragging": false
+    },
+    {
+      "id": "951ae703-df77-4556-840b-2f1bc02aaddf",
+      "type": "custom",
+      "position": {
+        "x": 293.965073100664,
+        "y": -520.158588369437
+      },
+      "data": {
+        "label": "List Filter",
+        "def": {
+          "type": "Filter",
+          "label": "List Filter",
+          "category": "Filter",
+          "inputs": [
+            {
+              "id": "list",
+              "label": "List",
+              "type": "List"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "list",
+              "label": "List",
+              "type": "List"
+            }
+          ],
+          "properties": [
+            {
+              "name": "trim_start",
+              "label": "Trim Start",
+              "type": "Number",
+              "default": 0
+            },
+            {
+              "name": "trim_end",
+              "label": "Trim End",
+              "type": "Number",
+              "default": 0
+            },
+            {
+              "name": "frequency",
+              "label": "Include Every Nth",
+              "type": "Number",
+              "default": 1
+            }
+          ]
+        },
+        "values": {
+          "trim_end": "-2"
+        }
+      },
+      "width": 220,
+      "height": 251,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 293.965073100664,
+        "y": -520.158588369437
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "e8d3f1b1-be44-4632-b705-d08607391b6b",
+      "sourceHandle": "entries",
+      "target": "8a196f55-edac-40b7-b4ee-1342c442ab96",
+      "targetHandle": "entries",
+      "id": "reactflow__edge-e8d3f1b1-be44-4632-b705-d08607391b6bentries-8a196f55-edac-40b7-b4ee-1342c442ab96entries"
+    },
+    {
+      "source": "8a196f55-edac-40b7-b4ee-1342c442ab96",
+      "sourceHandle": "entries",
+      "target": "25c9a093-240a-425d-ab94-a0f2768bebd9",
+      "targetHandle": "entry",
+      "id": "reactflow__edge-8a196f55-edac-40b7-b4ee-1342c442ab96entries-25c9a093-240a-425d-ab94-a0f2768bebd9entry"
+    },
+    {
+      "source": "25c9a093-240a-425d-ab94-a0f2768bebd9",
+      "sourceHandle": "adjacency",
+      "target": "c1071842-fe02-401c-903b-68fba5731f8b",
+      "targetHandle": "entries",
+      "id": "reactflow__edge-25c9a093-240a-425d-ab94-a0f2768bebd9adjacency-c1071842-fe02-401c-903b-68fba5731f8bentries"
+    },
+    {
+      "source": "553e7cfd-5544-4c89-9bb2-f448888e02f9",
+      "sourceHandle": "last_message",
+      "target": "11c21548-266d-47d6-bd8b-78d45905753f",
+      "targetHandle": "0",
+      "id": "reactflow__edge-553e7cfd-5544-4c89-9bb2-f448888e02f9last_message-11c21548-266d-47d6-bd8b-78d45905753f0"
+    },
+    {
+      "source": "553e7cfd-5544-4c89-9bb2-f448888e02f9",
+      "sourceHandle": "last_messages",
+      "target": "11c21548-266d-47d6-bd8b-78d45905753f",
+      "targetHandle": "1",
+      "id": "reactflow__edge-553e7cfd-5544-4c89-9bb2-f448888e02f9last_messages-11c21548-266d-47d6-bd8b-78d45905753f1"
+    },
+    {
+      "source": "fdcdd17b-d372-46d2-b45f-3825f8d13696",
+      "sourceHandle": "matched_conditions",
+      "target": "c1071842-fe02-401c-903b-68fba5731f8b",
+      "targetHandle": "values",
+      "id": "reactflow__edge-fdcdd17b-d372-46d2-b45f-3825f8d13696matched_conditions-c1071842-fe02-401c-903b-68fba5731f8bvalues"
+    },
+    {
+      "source": "e813b50e-9dc2-4810-a705-99897bb5b88d",
+      "sourceHandle": "outputs",
+      "target": "fdcdd17b-d372-46d2-b45f-3825f8d13696",
+      "targetHandle": "conditions",
+      "id": "reactflow__edge-e813b50e-9dc2-4810-a705-99897bb5b88doutputs-fdcdd17b-d372-46d2-b45f-3825f8d13696conditions"
+    },
+    {
+      "source": "c1071842-fe02-401c-903b-68fba5731f8b",
+      "sourceHandle": "entries",
+      "target": "a6362734-2edc-4796-bf57-65f449765f5c",
+      "targetHandle": "entries",
+      "id": "reactflow__edge-c1071842-fe02-401c-903b-68fba5731f8bentries-a6362734-2edc-4796-bf57-65f449765f5centries"
+    },
+    {
+      "source": "11c21548-266d-47d6-bd8b-78d45905753f",
+      "sourceHandle": "joined_list",
+      "target": "951ae703-df77-4556-840b-2f1bc02aaddf",
+      "targetHandle": "list",
+      "id": "reactflow__edge-11c21548-266d-47d6-bd8b-78d45905753fjoined_list-951ae703-df77-4556-840b-2f1bc02aaddflist"
+    },
+    {
+      "source": "951ae703-df77-4556-840b-2f1bc02aaddf",
+      "sourceHandle": "list",
+      "target": "fdcdd17b-d372-46d2-b45f-3825f8d13696",
+      "targetHandle": "messages",
+      "id": "reactflow__edge-951ae703-df77-4556-840b-2f1bc02aaddflist-fdcdd17b-d372-46d2-b45f-3825f8d13696messages"
+    },
+    {
+      "source": "951ae703-df77-4556-840b-2f1bc02aaddf",
+      "sourceHandle": "list",
+      "target": "8a196f55-edac-40b7-b4ee-1342c442ab96",
+      "targetHandle": "messages",
+      "id": "reactflow__edge-951ae703-df77-4556-840b-2f1bc02aaddflist-8a196f55-edac-40b7-b4ee-1342c442ab96messages"
+    }
+  ],
+  "ver": 1,
+  "description": "Armillaris Node Graph"
+}

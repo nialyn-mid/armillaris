@@ -111,13 +111,19 @@ export default function SpecNodeEditor() {
                     const source = json.nodes ? json : json._graph;
 
                     // Restore Graph and attach handlers
-                    const restoredNodes = (source.nodes || []).map((n: Node) => ({
-                        ...n,
-                        data: {
-                            ...n.data,
-                            onUpdate: handleNodeUpdate // Re-attach handler
-                        }
-                    }));
+                    const restoredNodes = (source.nodes || []).map((n: Node) => {
+                        // Upgrade node definition to latest from engineSpec
+                        const latestDef = engineSpec?.nodes.find(def => def.type === n.data.def?.type);
+
+                        return {
+                            ...n,
+                            data: {
+                                ...n.data,
+                                def: latestDef || n.data.def, // Fallback if type not found
+                                onUpdate: handleNodeUpdate
+                            }
+                        };
+                    });
                     setNodes(restoredNodes);
                     setEdges(source.edges || []);
                 } else {
@@ -176,8 +182,28 @@ export default function SpecNodeEditor() {
     );
 
     // Filter nodes by category
-    const categories = ['Input', 'Transformation', 'Utility', 'Output'];
-    const filteredNodes = engineSpec?.nodes.filter(n => n.category === activeTab) || [];
+    const categories = useMemo(() => {
+        if (!engineSpec?.nodes) return [];
+        const uniqueCats = Array.from(new Set(engineSpec.nodes.map(n => n.category)));
+        return uniqueCats.sort((a, b) => {
+            if (a === 'Input') return -1;
+            if (b === 'Input') return 1;
+            if (a === 'Output') return 1;
+            if (b === 'Output') return -1;
+            return a.localeCompare(b);
+        });
+    }, [engineSpec]);
+
+    // specific effect to ensure activeTab is valid
+    useEffect(() => {
+        if (categories.length > 0 && !categories.includes(activeTab as any)) {
+            setActiveTab(categories[0]);
+        }
+    }, [categories, activeTab]);
+
+    const filteredNodes = useMemo(() => {
+        return engineSpec?.nodes.filter(n => n.category === activeTab) || [];
+    }, [engineSpec, activeTab]);
 
     const handleSave = async () => {
         if (!targetSpecName.trim()) {
@@ -248,9 +274,9 @@ export default function SpecNodeEditor() {
                         {/* Node List */}
                         <div className="node-palette-list">
                             <div className="node-palette-grid">
-                                {filteredNodes.length > 0 ? filteredNodes.map(nodeDef => (
+                                {filteredNodes.length > 0 ? filteredNodes.map((nodeDef, idx) => (
                                     <div
-                                        key={nodeDef.type}
+                                        key={`${nodeDef.type}-${idx}`}
                                         className="node-palette-card"
                                         draggable
                                         onDragStart={(event) => onDragStart(event, nodeDef)}
