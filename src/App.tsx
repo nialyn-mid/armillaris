@@ -19,7 +19,13 @@ export type PaneMode = 'import' | 'export' | 'engine' | null;
 function App() {
   const [activeTab, setActiveTab] = useState('graph');
   const [activePane, setActivePane] = useState<PaneMode>(null);
-  const [activeTools, setActiveTools] = useState<string[]>([]); // Multi-select support
+  // Persistence: Active Tools (Panels)
+  const [activeTools, setActiveTools] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('app_active_tools');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [isTemplateDirty, setIsTemplateDirty] = useState(false);
 
   const togglePane = (pane: PaneMode) => {
@@ -32,8 +38,9 @@ function App() {
 
   const toggleTool = (toolId: string) => {
     setActiveTools(prev => {
-      if (prev.includes(toolId)) return prev.filter(t => t !== toolId);
-      return [...prev, toolId];
+      const newList = prev.includes(toolId) ? prev.filter(t => t !== toolId) : [...prev, toolId];
+      localStorage.setItem('app_active_tools', JSON.stringify(newList));
+      return newList;
     });
   };
 
@@ -44,8 +51,7 @@ function App() {
       }
     }
     setActiveTab(tab);
-    // Reset tools on tab switch to avoid confusion
-    setActiveTools([]);
+    // Do not clear tools, so state persists
   };
 
   return (

@@ -42,7 +42,15 @@ export default function SpecNodeEditor() {
     // UI State
     const [targetSpecName, setTargetSpecName] = useState('');
     const [managerWidth, setManagerWidth] = useState(250);
+    const [paletteWidth, setPaletteWidth] = useState(() => {
+        const saved = parseInt(localStorage.getItem('spec_node_editor_palette_width') || '300', 10);
+        return isNaN(saved) ? 300 : saved;
+    });
     const [activeTab, setActiveTab] = useState('Input');
+
+    useEffect(() => {
+        localStorage.setItem('spec_node_editor_palette_width', String(paletteWidth));
+    }, [paletteWidth]);
 
     const handleNodeUpdate = useCallback((id: string, newValues: any) => {
         setNodes((nds) => nds.map((node) => {
@@ -98,9 +106,12 @@ export default function SpecNodeEditor() {
         ipc.invoke('read-spec', activeEngine, activeSpec).then((content: string) => {
             try {
                 const json = JSON.parse(content);
-                if (json._graph) {
+                if (json.nodes || json._graph) {
+                    // Support both root-level (new) and nested (legacy/dev) formats
+                    const source = json.nodes ? json : json._graph;
+
                     // Restore Graph and attach handlers
-                    const restoredNodes = (json._graph.nodes || []).map((n: Node) => ({
+                    const restoredNodes = (source.nodes || []).map((n: Node) => ({
                         ...n,
                         data: {
                             ...n.data,
@@ -108,7 +119,7 @@ export default function SpecNodeEditor() {
                         }
                     }));
                     setNodes(restoredNodes);
-                    setEdges(json._graph.edges || []);
+                    setEdges(source.edges || []);
                 } else {
                     setNodes([]);
                     setEdges([]);
@@ -202,55 +213,57 @@ export default function SpecNodeEditor() {
             <div style={{ width: '100%', height: '100%', display: 'flex', position: 'relative' }}>
 
                 {/* Left: Node Palette */}
-                <div style={{ width: '220px', background: 'var(--bg-secondary)', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ width: paletteWidth }} className="node-palette">
+                    {/* Palette Resize Handle */}
+                    <div
+                        style={{
+                            position: 'absolute', right: -4, top: 0, bottom: 0, width: '8px', cursor: 'ew-resize', zIndex: 10
+                        }}
+                        onMouseDown={(e) => {
+                            const startX = e.clientX;
+                            const startW = paletteWidth;
+                            const onMove = (mv: MouseEvent) => setPaletteWidth(Math.max(200, Math.min(600, startW + (mv.clientX - startX))));
+                            const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+                            window.addEventListener('mousemove', onMove);
+                            window.addEventListener('mouseup', onUp);
+                        }}
+                    />
+
                     <div className="panel-subheader">Node Palette</div>
 
-                    {/* Tabs */}
-                    <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)' }}>
-                        {categories.map(cat => (
-                            <div
-                                key={cat}
-                                onClick={() => setActiveTab(cat)}
-                                style={{
-                                    flex: 1,
-                                    fontSize: '0.65rem',
-                                    padding: '6px 2px',
-                                    textAlign: 'center',
-                                    cursor: 'pointer',
-                                    background: activeTab === cat ? 'var(--bg-primary)' : 'transparent',
-                                    color: activeTab === cat ? 'var(--text-primary)' : 'var(--text-secondary)',
-                                    fontWeight: activeTab === cat ? 600 : 400
-                                }}
-                            >
-                                {cat.slice(0, 4)}..
-                            </div>
-                        ))}
-                    </div>
-
-                    <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {filteredNodes.length > 0 ? filteredNodes.map(nodeDef => (
+                    <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+                        {/* Vertical Tabs */}
+                        <div className="node-palette-tabs">
+                            {categories.map(cat => (
                                 <div
-                                    key={nodeDef.type}
-                                    className="btn-secondary"
-                                    draggable
-                                    onDragStart={(event) => onDragStart(event, nodeDef)}
-                                    style={{
-                                        textAlign: 'left',
-                                        fontSize: '0.8rem',
-                                        padding: '8px',
-                                        justifyContent: 'flex-start',
-                                        cursor: 'grab'
-                                    }}
+                                    key={cat}
+                                    className={`node-palette-tab unselectable ${activeTab === cat ? 'active' : ''}`}
+                                    onClick={() => setActiveTab(cat)}
                                 >
-                                    <div style={{ fontWeight: 600 }}>{nodeDef.label}</div>
-                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{nodeDef.type}</div>
+                                    {cat}
                                 </div>
-                            )) : (
-                                <div style={{ padding: '10px', color: 'var(--text-secondary)', fontSize: '0.8rem', textAlign: 'center' }}>
-                                    No nodes in {activeTab}
-                                </div>
-                            )}
+                            ))}
+                        </div>
+
+                        {/* Node List */}
+                        <div className="node-palette-list">
+                            <div className="node-palette-grid">
+                                {filteredNodes.length > 0 ? filteredNodes.map(nodeDef => (
+                                    <div
+                                        key={nodeDef.type}
+                                        className="node-palette-card"
+                                        draggable
+                                        onDragStart={(event) => onDragStart(event, nodeDef)}
+                                    >
+                                        <div className="node-palette-card-title">{nodeDef.label}</div>
+                                        <div className="node-palette-card-type">{nodeDef.type}</div>
+                                    </div>
+                                )) : (
+                                    <div style={{ gridColumn: '1/-1', padding: '20px', color: 'var(--text-secondary)', fontSize: '0.8rem', textAlign: 'center' }}>
+                                        No nodes in {activeTab}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -307,10 +320,10 @@ export default function SpecNodeEditor() {
                         }}
                     />
 
-                    <div className="panel-subheader">Spec Management</div>
+                    <div className="panel-subheader">Behavior Editor</div>
 
                     <div className="panel-section">
-                        <div className="panel-section-title">Active Spec File</div>
+                        <div className="panel-section-title">Active Behavior File</div>
                         <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
                             <input
                                 type="text"
@@ -324,7 +337,7 @@ export default function SpecNodeEditor() {
                     </div>
 
                     <div className="panel-section" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                        <div className="panel-section-title" style={{ marginBottom: '5px' }}>Available Specs</div>
+                        <div className="panel-section-title" style={{ marginBottom: '5px' }}>Available Behaviors</div>
                         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                             {availableSpecs.map(spec => (
                                 <button
@@ -338,6 +351,7 @@ export default function SpecNodeEditor() {
                                         margin: '0',
                                         border: activeSpec === spec ? '1px solid var(--accent-color)' : '1px solid transparent',
                                         background: activeSpec === spec ? 'rgba(88, 166, 255, 0.1)' : 'transparent',
+                                        color: activeSpec === spec ? '#ffffff' : 'var(--text-secondary)',
                                         justifyContent: 'flex-start'
                                     }}
                                 >
@@ -348,8 +362,8 @@ export default function SpecNodeEditor() {
                     </div>
 
                     {/* Compilation Status / Live Preview (Stub) */}
-                    <div className="panel-section" style={{ height: '150px' }}>
-                        <div className="panel-section-title">Compilation Output</div>
+                    <div className="panel-section" style={{ height: '80px' }}>
+                        <div className="panel-section-title">Behavior Stats</div>
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '5px' }}>
                             Nodes: {nodes.length} <br />
                             Edges: {edges.length}

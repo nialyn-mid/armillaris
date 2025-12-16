@@ -23,3 +23,164 @@
   display: flex;
   flex-direction: column;
 }
+
+/* Node Palette Styles */
+.node-palette {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.node-palette-tabs {
+  background: rgba(0, 0, 0, 0.2);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.node-palette-tab {
+  font-size: 0.7rem;
+  padding: 10px 4px;
+  text-align: center;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 400;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.node-palette-tab:hover {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.node-palette-tab.active {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-weight: 600;
+  border-left: 3px solid var(--accent-color);
+}
+
+.node-palette-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.node-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.node-palette-card {
+  text-align: left;
+  font-size: 0.8rem;
+  padding: 10px;
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 80px;
+  justify-content: center;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s;
+}
+
+.node-palette-card:hover {
+  border-color: var(--accent-color);
+  background: #21262d;
+}
+
+.node-palette-card-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+
+.node-palette-card:hover .node-palette-card-title {
+  color: #fff;
+  /* Ensure it stays light/white, NOT black */
+}
+
+.node-palette-card-type {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+}
+
+/* Chat Styles */
+.chat-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px 0;
+  position: relative;
+  height: 10px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.chat-separator:hover {
+  opacity: 1;
+}
+
+.chat-separator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.chat-add-bot-btn {
+  z-index: 10;
+  border-radius: 1em;
+  padding: 4px 38px 4px 32px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
+  cursor: pointer;
+}
+
+.chat-add-bot-btn:hover {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  background: var(--bg-secondary);
+}
+
+.chat-status-dot {
+  font-size: 1em;
+  margin-right: 4px;
+  transition: color 0.3s ease;
+}
+
+.chat-status-dot.active {
+  color: var(--accent-color);
+}
+
+.chat-status-dot.inactive {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+/* Graph Viewer Styles*/
+
+.react-flow__panel>button.react-flow__controls-button {
+  background-color: var(--accent-color);
+  border: none;
+}

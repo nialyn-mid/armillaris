@@ -55,7 +55,7 @@ export function registerEngineHandlers() {
         const p = path.join(ENGINES_DIR, engineName, 'behavior_spec');
         if (!fs.existsSync(p)) return [];
         const files = fs.readdirSync(p);
-        return files.filter(f => f.endsWith('.behavior') || f.endsWith('.json'));
+        return files.filter(f => f.endsWith('.behavior'));
     });
 
     // Read Spec

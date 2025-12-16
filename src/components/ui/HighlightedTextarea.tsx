@@ -2,11 +2,13 @@
 export const HighlightedTextarea = ({
     value,
     onChange,
+    onKeyDown,
     matches = [],
     mode = 'default'
 }: {
     value: string,
     onChange: (e: any) => void,
+    onKeyDown?: (e: any) => void,
     matches?: any[],
     mode?: 'default' | 'description'
 }) => {
@@ -123,7 +125,8 @@ export const HighlightedTextarea = ({
             width: '100%',
             fontFamily: 'monospace',
             fontSize: '14px',
-            lineHeight: '20px'
+            lineHeight: '20px',
+            borderRadius: 'inherit'
         }}>
             {/* Backdrop for highlights - Dictates Height */}
             <div style={{
@@ -135,7 +138,7 @@ export const HighlightedTextarea = ({
                 backgroundColor: '#0d1117',
                 minHeight: '120px', // Match min-height expectation
                 pointerEvents: 'none',
-                // Ensure borders match if any (none here, handled by parent container usually)
+                borderRadius: 'inherit',
                 boxSizing: 'border-box'
             }}>
                 {renderHighlights()}
@@ -147,6 +150,7 @@ export const HighlightedTextarea = ({
             <textarea
                 value={value}
                 onChange={onChange}
+                onKeyDown={onKeyDown}
                 placeholder="Type..."
                 style={{
                     position: 'absolute',
@@ -158,6 +162,7 @@ export const HighlightedTextarea = ({
                     height: '100%',
                     padding: '10px',
                     border: 'none',
+                    borderRadius: 'inherit',
                     background: 'transparent',
                     color: 'transparent', // Transparent text
                     caretColor: '#fff', // White cursor
