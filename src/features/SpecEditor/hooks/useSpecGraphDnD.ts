@@ -1,6 +1,7 @@
 import { useCallback, useState, useRef } from 'react';
 import { type Node, useReactFlow } from 'reactflow';
 import type { EngineSpec, EngineSpecNodeDef } from '../../../lib/engine-spec-types';
+import { regenerateGraphIds } from '../utils/specTraversals';
 
 interface UseSpecGraphDnDProps {
     setNodes: (nodes: Node[] | ((nds: Node[]) => Node[])) => void;
@@ -19,9 +20,9 @@ export const useSpecGraphDnD = ({
     handleDeleteNode,
     onEditGroup
 }: UseSpecGraphDnDProps) => {
+
     // We don't strictly need reactFlowInstance for positioning anymore with screenToFlowPosition, 
-    // but maybe for other things? If not used elsewhere, we can remove it.
-    // However, onDrop uses it to check existence.
+    // but onDrop uses it to check existence.
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
     const { screenToFlowPosition } = useReactFlow();
@@ -35,47 +36,13 @@ export const useSpecGraphDnD = ({
         event.dataTransfer.effectAllowed = 'move';
     };
 
-    // Recursive ID regeneration helper...
-    const regenerateGraphIds = useCallback((graph: any): any => {
-        if (!graph || !graph.nodes) return graph;
-        const newGraph = { ...graph };
-        const idMap = new Map<string, string>();
-
-        newGraph.nodes = graph.nodes.map((node: any) => {
-            const newId = crypto.randomUUID();
-            idMap.set(node.id, newId);
-            return { ...node, id: newId, selected: false };
-        });
-
-        newGraph.edges = graph.edges.map((edge: any) => ({
-            ...edge,
-            id: crypto.randomUUID(),
-            source: idMap.get(edge.source) || edge.source,
-            target: idMap.get(edge.target) || edge.target
-        }));
-
-        newGraph.nodes = newGraph.nodes.map((node: any) => {
-            if (node.data && node.data.graph) {
-                return {
-                    ...node,
-                    data: {
-                        ...node.data,
-                        graph: regenerateGraphIds(node.data.graph)
-                    }
-                };
-            }
-            return node;
-        });
-        return newGraph;
-    }, []);
-
     const onDrop = useCallback(
         (event: React.DragEvent) => {
             event.preventDefault();
 
             if (!reactFlowWrapper.current || !reactFlowInstance) return;
 
-            // Updated to use screenToFlowPosition
+            // Use screenToFlowPosition for accurate drop location
             const position = screenToFlowPosition({
                 x: event.clientX,
                 y: event.clientY,
@@ -91,21 +58,21 @@ export const useSpecGraphDnD = ({
                     newData.graph = regenerateGraphIds(newData.graph);
                 }
 
-
-
                 const newNode: Node = {
                     id: crypto.randomUUID(),
-                    type: customData.def.type || 'Group', // Default to Group if type missing, but it should be there
+                    type: customData.def.type || 'Group',
                     position,
-                    style: { width: 220, height: 100, ...customData.style }, // Preserve style?
                     data: {
-                        ...newData,
+                        ...newData, // Use the regenerated data
+                        isDragTarget: false,
+                        def: customData.def, // Keep ref to def
                         onUpdate: handleNodeUpdate,
                         onDuplicate: handleDuplicateNode,
                         onDelete: handleDeleteNode,
                         onEditGroup: onEditGroup
-                    }
+                    },
                 };
+
                 setNodes((nds) => nds.concat(newNode));
                 return;
             }
@@ -123,7 +90,6 @@ export const useSpecGraphDnD = ({
                     id: groupId,
                     type: 'Group',
                     position,
-                    // Standard Size
                     style: { width: 220, height: 100 },
                     data: {
                         label: 'New Group',
@@ -133,9 +99,8 @@ export const useSpecGraphDnD = ({
                         outputs: [],
                         onUpdate: handleNodeUpdate,
                         onEditGroup: onEditGroup,
-                        // Initialize internal graph? 
-                        // It will be lazily created by 'onEditGroup' navigation if missing,
-                        // or we can init it here.
+                        onDuplicate: handleDuplicateNode,
+                        onDelete: handleDeleteNode,
                         graph: {
                             nodes: [
                                 { id: 'start', type: 'GroupInput', position: { x: 50, y: 150 }, data: { label: 'Input', ports: [] } },
@@ -187,7 +152,7 @@ export const useSpecGraphDnD = ({
 
             setNodes((nds) => nds.concat(newNode));
         },
-        [reactFlowInstance, setNodes, handleNodeUpdate, engineSpec, handleDuplicateNode, handleDeleteNode, onEditGroup, regenerateGraphIds, screenToFlowPosition]
+        [reactFlowInstance, setNodes, handleNodeUpdate, engineSpec, handleDuplicateNode, handleDeleteNode, onEditGroup, screenToFlowPosition]
     );
 
     const onNodeDragStop = useCallback((_event: React.MouseEvent, _node: Node, _nodes: Node[]) => {

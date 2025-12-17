@@ -8,62 +8,23 @@ interface UseSpecGraphConnectionsProps {
     setNodes: (nodes: Node[] | ((nds: Node[]) => Node[])) => void;
 }
 
+import { inferTypeFromNode, inferInputTypeFromNode } from '../utils/specTypeInference';
+
 export const useSpecGraphConnections = ({ setEdges, nodes, setNodes }: UseSpecGraphConnectionsProps) => {
 
     const onConnect = useCallback((params: Connection) => {
         let { source, target, sourceHandle, targetHandle } = params;
         if (!source || !target) return; // Ensure valid connection
 
-        // Helper to infer type from a handle
+        // Type Inference Helpers (Now using Utils)
         const inferType = (nodeId: string, handleId: string | null): string => {
-            if (!handleId) return 'any';
             const node = nodes.find(n => n.id === nodeId);
-            if (!node) return 'any';
-
-            if (node.type === 'GroupInput') {
-                const port = node.data.ports?.find((p: any) => p.id === handleId);
-                return port?.type || 'any';
-            }
-            if (node.type === 'GroupOutput') {
-                // Output of a GroupOutput node? invalid? (GroupOutput is a sink inside)
-                // But if we are chaining groups?
-                // No, inside the graph, GroupOutput is a Target.
-                return 'any';
-            }
-            // Standard Node
-            if (Array.isArray(node.data.def?.outputs)) {
-                const outputDef = node.data.def.outputs.find((o: any) => o.id === handleId);
-                if (outputDef?.type) return outputDef.type;
-            }
-            // Fallback (Runtime)
-            if (Array.isArray(node.data.outputs)) {
-                const port = node.data.outputs.find((o: any) => o.id === handleId);
-                if (port?.type) return port.type;
-            }
-            return 'any';
+            return inferTypeFromNode(node, handleId);
         };
 
         const inferInputType = (nodeId: string, handleId: string | null): string => {
-            if (!handleId) return 'any';
             const node = nodes.find(n => n.id === nodeId);
-            if (!node) return 'any';
-
-            // Check def inputs
-            if (Array.isArray(node.data.def?.inputs)) {
-                const inputDef = node.data.def.inputs.find((i: any) => i.id === handleId);
-                if (inputDef?.type) return inputDef.type;
-            }
-            // Check Element-wise Definition
-            if (node.data.def?.inputs?.$item?.type) {
-                return node.data.def.inputs.$item.type;
-            }
-
-            // Fallback (Runtime)
-            if (Array.isArray(node.data.inputs)) {
-                const port = node.data.inputs.find((i: any) => i.id === handleId);
-                if (port?.type) return port.type;
-            }
-            return 'any';
+            return inferInputTypeFromNode(node, handleId);
         }
 
 

@@ -59,7 +59,7 @@ export default function SpecManagerPanel({
                         placeholder="my_behavior.json"
                         style={{ flex: 1, fontSize: '0.85rem' }}
                     />
-                    <button onClick={handleSave} className="btn-primary btn-toolbar">Save</button>
+                    <button onClick={handleSave} className="btn-primary btn-toolbar" style={{ height: '100%' }}>Save</button>
                 </div>
             </div>
 

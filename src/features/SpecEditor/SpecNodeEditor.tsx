@@ -38,6 +38,8 @@ export function SpecNodeEditor() {
         onDrop,
         onNodeDrag,
         onNodeDragStop,
+        onSelectionDrag,
+        onSelectionDragStop,
         reactFlowWrapper,
         setReactFlowInstance,
         engineSpec,
@@ -121,6 +123,8 @@ export function SpecNodeEditor() {
                         panOnDrag={[1, 2]}
                         onNodeDragStop={onNodeDragStop as any}
                         onNodeDrag={onNodeDrag as any}
+                        onSelectionDrag={onSelectionDrag as any}
+                        onSelectionDragStop={onSelectionDragStop as any}
                     >
                         <Background color="#30363d" gap={20} />
                         <Controls />

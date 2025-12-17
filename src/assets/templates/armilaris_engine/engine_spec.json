@@ -678,6 +678,85 @@
             }
         },
         {
+            "type": "DataUtility",
+            "label": "Sort Messages",
+            "category": "Utility",
+            "description": "Sort messages based on a chosen method.",
+            "inputs": [
+                {
+                    "id": "messages",
+                    "label": "Messages",
+                    "type": "Message List"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "sorted_messages",
+                    "label": "Sorted Messages",
+                    "type": "Message List"
+                },
+                {
+                    "id": "inverse_sorted_messages",
+                    "label": "Inverse Sorted Messages",
+                    "type": "Message List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "sort_by",
+                    "label": "Sort By",
+                    "type": "select",
+                    "options": [
+                        {
+                            "value": "date",
+                            "label": "Date (Recent First)"
+                        },
+                        {
+                            "value": "random",
+                            "label": "Random"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "DataUtility",
+            "label": "Sort Entries By Attribute",
+            "category": "Utility",
+            "description": "Sort entries based on an attribute.",
+            "inputs": [
+                {
+                    "id": "entries",
+                    "label": "Entries",
+                    "type": "Entry List"
+                },
+                {
+                    "id": "attribute",
+                    "label": "Attribute",
+                    "type": "Attribute"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "sorted_entries",
+                    "label": "Sorted Entries",
+                    "type": "Entry List"
+                },
+                {
+                    "id": "inverse_sorted_entries",
+                    "label": "Inverse Sorted Entries",
+                    "type": "Entry List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "attribute",
+                    "label": "Attribute",
+                    "type": "Attribute"
+                }
+            ]
+        },
+        {
             "type": "Adjacency",
             "label": "Graph Adjacency",
             "category": "Graph",
