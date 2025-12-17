@@ -5,7 +5,7 @@ export type TemplateTabLeft = 'script' | 'spec';
 export type TemplateTabRight = 'behavior' | 'adapter' | 'data';
 
 export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
-    const { showNotification, activeEngine, activeSpec } = useData();
+    const { showNotification, activeEngine, activeSpec, entries } = useData();
     const ipc = (window as any).ipcRenderer;
 
     // ---- Content State ----
@@ -13,7 +13,7 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
     const [engineSpecCode, setEngineSpecCode] = useState<string>('');
     const [specCode, setSpecCode] = useState<string>('');
     const [compiledCode, setCompiledCode] = useState<string>('');
-    const [dataCode] = useState<string>('{\n  "note": "Data JSON implementation pending"\n}');
+    const [dataCode, setDataCode] = useState<string>('{\n  "note": "Data JSON implementation pending"\n}');
 
     const [isCompiling, setIsCompiling] = useState(false);
 
@@ -126,6 +126,46 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         }
     }, [ipc, activeEngine, specCode]);
 
+    const compileData = useCallback(async () => {
+        if (!ipc || !activeEngine || !entries) return;
+
+        setIsCompiling(true);
+        try {
+            const adapterCode = await ipc.invoke('read-adapter', activeEngine);
+            if (!adapterCode) {
+                setDataCode('// No adapter.js found for this engine.');
+                return;
+            }
+
+            const response = await ipc.invoke('sandbox:execute', {
+                script: adapterCode,
+                entryPoint: 'adaptData',
+                args: [entries]
+            });
+
+            if (response.success) {
+                let result = response.result;
+                if (typeof result !== 'string') {
+                    result = JSON.stringify(result, null, 2);
+                } else {
+                    try {
+                        const obj = JSON.parse(result);
+                        result = JSON.stringify(obj, null, 2);
+                    } catch { }
+                }
+                setDataCode(result);
+            } else {
+                setDataCode(`// Data Compilation Failed:\n${response.error}\n${response.stack || ''}`);
+            }
+
+        } catch (err: any) {
+            console.error(err);
+            setDataCode(`// System Error:\n${err.message}`);
+        } finally {
+            setIsCompiling(false);
+        }
+    }, [ipc, activeEngine, entries]);
+
     // ---- Save Handlers ----
     const handleSaveEngineScript = async () => {
         if (!ipc) return;
@@ -195,6 +235,7 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         // Actions
         forceUpdate,
         compileBehavior,
+        compileData,
         handleSaveEngineScript,
         handleSaveEngineSpec,
         handleSaveBehavior,

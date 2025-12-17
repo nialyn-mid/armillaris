@@ -99,7 +99,10 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
         if (rightTab === 'adapter') {
             logic.compileBehavior();
         }
-    }, [rightTab, logic.specCode, logic.activeEngine, logic.compileBehavior]);
+        if (rightTab === 'data') {
+            logic.compileData();
+        }
+    }, [rightTab, logic.specCode, logic.activeEngine, logic.compileBehavior, logic.compileData]);
 
     // ---- Definitions for Headers ----
 

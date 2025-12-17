@@ -147,7 +147,79 @@ function adapt(behaviorData) {
     return JSON.stringify(ane);
 }
 
+/**
+ * Data Adapter Function
+ * @param {Array} entries - The list of lore entries from DataContext
+ * @returns {string} - The valid JSON string of the compact data format
+ */
+function adaptData(entries) {
+    var stringMap = {};
+    var stringTable = [];
+
+    function getStringIndex(str) {
+        if (str === null || str === undefined) return -1;
+        var s = String(str);
+        if (Object.prototype.hasOwnProperty.call(stringMap, s)) {
+            return stringMap[s];
+        }
+        var idx = stringTable.length;
+        stringTable.push(s);
+        stringMap[s] = idx;
+        return idx;
+    }
+
+    var serializedEntries = [];
+
+    for (var i = 0; i < entries.length; i++) {
+        var entry = entries[i];
+        var properties = entry.properties || {};
+
+        var compactProps = [];
+        for (var key in properties) {
+            if (Object.prototype.hasOwnProperty.call(properties, key)) {
+                var val = properties[key];
+                var finalVal = val;
+
+                if (typeof val === 'string') {
+                    finalVal = getStringIndex(val);
+                } else if (Array.isArray(val)) {
+                    // Index strings within arrays (e.g., Keywords)
+                    var compactArray = [];
+                    for (var j = 0; j < val.length; j++) {
+                        if (typeof val[j] === 'string') {
+                            compactArray.push(getStringIndex(val[j]));
+                        } else {
+                            compactArray.push(val[j]);
+                        }
+                    }
+                    finalVal = compactArray;
+                }
+
+                compactProps.push(getStringIndex(key));
+                compactProps.push(finalVal);
+            }
+        }
+
+        serializedEntries.push({
+            id: entry.id,
+            l: getStringIndex(entry.label),
+            p: compactProps
+        });
+    }
+
+    var result = {
+        v: "1.0",
+        s: stringTable,
+        d: serializedEntries
+    };
+
+    return JSON.stringify(result);
+}
+
 // Export for Node.js/Test environments if needed, or simply expose to scope
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { adapt: adapt };
+    module.exports = {
+        adapt: adapt,
+        adaptData: adaptData
+    };
 }
