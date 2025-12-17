@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import './App.css';
 import Toolbar from './shared/ui/Toolbar';
 import ImportPane from './features/Project/ImportPane';
@@ -11,13 +11,15 @@ import TemplateView from './features/TemplateView/TemplateView';
 import DataView from './features/DataView/DataView';
 import NotificationBar from './shared/ui/NotificationBar';
 import RightActivityBar from './shared/ui/RightActivityBar';
+import ConfirmModal from './shared/ui/ConfirmModal';
+import { type TemplateViewHandle } from './features/TemplateView/TemplateView';
 
-export type ViewMode = 'template' | 'data' | 'graph' | 'code';
+export type ViewMode = 'develop' | 'data' | 'graph' | 'output';
 export type PaneMode = 'import' | 'export' | 'engine' | null;
 
 
 function App() {
-  const [activeTab, setActiveTab] = useState('graph');
+  const [activeTab, setActiveTab] = useState('data');
   const [activePane, setActivePane] = useState<PaneMode>(null);
   // Persistence: Active Tools (Panels)
   const [activeTools, setActiveTools] = useState<string[]>(() => {
@@ -27,6 +29,8 @@ function App() {
     } catch { return []; }
   });
   const [isTemplateDirty, setIsTemplateDirty] = useState(false);
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
+  const templateRef = useRef<TemplateViewHandle>(null);
 
   const togglePane = (pane: PaneMode) => {
     if (activePane === pane) {
@@ -45,13 +49,33 @@ function App() {
   };
 
   const handleTabChange = (tab: string) => {
-    if (activeTab === 'template' && isTemplateDirty) {
-      if (!confirm('You have unsaved changes in the template editor. Leave without saving?')) {
-        return;
-      }
+    if (activeTab === 'develop' && isTemplateDirty) {
+      setPendingTab(tab);
+      return;
     }
     setActiveTab(tab);
     // Do not clear tools, so state persists
+  };
+
+  const confirmNavigation = () => {
+    if (pendingTab) {
+      setActiveTab(pendingTab);
+      setPendingTab(null);
+    }
+  };
+
+  const handleSaveAndLeave = async () => {
+    if (templateRef.current) {
+      await templateRef.current.handleSaveAll();
+    }
+    confirmNavigation();
+  };
+
+  const handleDiscardAndLeave = () => {
+    if (templateRef.current) {
+      templateRef.current.handleDiscardAll();
+    }
+    confirmNavigation();
   };
 
   return (
@@ -72,7 +96,11 @@ function App() {
 
         {/* Main Content Area */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', minWidth: 0 }}>
-          <TabBar currentView={activeTab as ViewMode} onViewChange={(mode) => handleTabChange(mode)} />
+          <TabBar
+            currentView={activeTab as ViewMode}
+            onViewChange={(mode) => handleTabChange(mode)}
+            tabs={['data', 'graph', 'develop', 'output']}
+          />
 
           <div style={{ flex: 1, overflow: 'hidden', position: 'relative', display: 'flex' }}>
             {activeTab === 'graph' && (
@@ -86,8 +114,13 @@ function App() {
                 showSchema={activeTools.includes('schema')}
               />
             )}
-            {activeTab === 'template' && <TemplateView onDirtyChange={setIsTemplateDirty} />}
-            {activeTab === 'code' && <CodeView />}
+            {activeTab === 'develop' && (
+              <TemplateView
+                ref={templateRef}
+                onDirtyChange={setIsTemplateDirty}
+              />
+            )}
+            {activeTab === 'output' && <CodeView />}
           </div>
         </div>
 
@@ -99,6 +132,31 @@ function App() {
         />
       </div>
       <NotificationBar />
+
+      {pendingTab && (
+        <ConfirmModal
+          title="Unsaved Changes"
+          message={`You have unsaved changes in the Develop view.\nWould you like to save them before leaving?`}
+          buttons={[
+            {
+              label: 'Save & Leave',
+              variant: 'primary',
+              onClick: handleSaveAndLeave
+            },
+            {
+              label: 'Discard & Leave',
+              variant: 'danger',
+              onClick: handleDiscardAndLeave
+            },
+            {
+              label: 'Stay',
+              variant: 'secondary',
+              onClick: () => setPendingTab(null)
+            }
+          ]}
+          onClose={() => setPendingTab(null)}
+        />
+      )}
     </div>
   );
 }

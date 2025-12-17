@@ -6,6 +6,7 @@ import Store from 'electron-store';
 import { registerEngineHandlers } from './handlers/engines.js';
 import { registerNotionHandlers } from './handlers/notion.js';
 import { registerSecretHandlers } from './handlers/secrets.js';
+import { registerSandboxHandlers } from './handlers/sandbox.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -69,6 +70,7 @@ app.whenReady().then(() => {
     registerEngineHandlers();
     registerNotionHandlers();
     registerSecretHandlers();
+    registerSandboxHandlers();
 
     ipcMain.handle('get-app-version', () => app.getVersion());
 });

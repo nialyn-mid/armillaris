@@ -78,17 +78,17 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
     };
 
     return (
-        <SidePane title="Export & Generate" onClose={onClose}>
+        <SidePane title="Export" onClose={onClose}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', padding: '20px' }}>
                 <div style={{ flex: 1 }}>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                        Generate the lorebook JavaScript/ES5 file from the current graph data.
+                        Export the lorebook as a JavaScript file.
                     </p>
                 </div>
 
                 <div className="actions" style={{ marginTop: 'auto' }}>
                     <button onClick={handleDownload} disabled={!graphData} style={{ width: '100%' }}>
-                        Generate & Download
+                        Export
                     </button>
                 </div>
             </div>

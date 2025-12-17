@@ -3,10 +3,10 @@ import type { ViewMode } from '../../App';
 interface TabBarProps {
     currentView: ViewMode;
     onViewChange: (mode: ViewMode) => void;
+    tabs: ViewMode[];
 }
 
-export default function TabBar({ currentView, onViewChange }: TabBarProps) {
-    const tabs: ViewMode[] = ['template', 'data', 'graph', 'code'];
+export default function TabBar({ currentView, onViewChange, tabs }: TabBarProps) {
 
     return (
         <div className="unselectable" style={{

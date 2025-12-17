@@ -1,0 +1,153 @@
+/**
+ * Armillaris Native Engine Adapter
+ * 
+ * Transforms Editor .behavior format (JSON) into Armillaris Native Engine format (.ane).
+ * The .ane format is a specific Compact Array-based JSON designed for:
+ * 1. ES5 Compatibility (for injection into legacy/strict JS environments)
+ * 2. Minimization of size (String Tables, Index-based references)
+ * 3. Fast Runtime Loading (Direct array access, no UUID lookups)
+ * 
+ * Format Structure:
+ * {
+ *   "v": "1.0",      // Version
+ *   "s": [...],      // String Table
+ *   "n": [...],      // Nodes: [ [TypeIdx, [KeyIdx, Val, ...]], ... ]
+ *   "e": [...]       // Edges: [ [SrcIdx, SrcPortIdx, TgtIdx, TgtPortIdx], ... ]
+ * }
+ */
+
+/**
+ * Main Adapter Function
+ * @param {Object} behaviorData - The parsed JSON content of a .behavior file
+ * @returns {string} - The valid JSON string of the .ane format
+ */
+function adapt(behaviorData) {
+    // 1. Flatten Nodes (Handle groups if present, though engine usually receives flattened)
+    // The editor usually exports 'nodes' as a flat list, but just in case we filter.
+    // We also valid nodes only (ignore pure UI nodes if any, though usually all are functional).
+    var rawNodes = behaviorData.nodes || [];
+    var rawEdges = behaviorData.edges || [];
+
+    // 2. Build String Table
+    // We need to collect ALL unique strings: Node Types, Property keys, String Values, Port Names.
+    var stringMap = {}; // String -> Index
+    var stringTable = [];
+
+    function getStringIndex(str) {
+        if (str === null || str === undefined) return -1;
+        var s = String(str);
+        if (Object.prototype.hasOwnProperty.call(stringMap, s)) {
+            return stringMap[s];
+        }
+        var idx = stringTable.length;
+        stringTable.push(s);
+        stringMap[s] = idx;
+        return idx;
+    }
+
+    // 3. Map UUIDs to Sequential Indices
+    var uuidToIndex = {};
+    var validNodes = [];
+
+    // Pass 1: Collect Nodes and build UUID map
+    for (var i = 0; i < rawNodes.length; i++) {
+        var node = rawNodes[i];
+        if (!node.data || !node.data.def) continue; // Skip malformed nodes
+
+        // Skip Group containers themselves (the children are what matters ?)
+        // Actually, in this system, if flattening is required, it should be done here.
+        // For now assuming standard flat export or that logic is handled by editor.
+        // We just process what is given.
+
+        // Exclude specific UI-only nodes if known, e.g., "NoteNode" or "LabelNode"
+        // For now, if it has 'def' (definition), it's an engine node.
+
+        var runtimeIndex = validNodes.length;
+        uuidToIndex[node.id] = runtimeIndex;
+        validNodes.push(node);
+    }
+
+    // 4. Serialize Nodes
+    var serializedNodes = [];
+
+    for (var i = 0; i < validNodes.length; i++) {
+        var node = validNodes[i];
+        var def = node.data.def;
+        var values = node.data.values || {};
+
+        // Type Index
+        var typeIdx = getStringIndex(def.type);
+
+        // Compact Properties: [KeyIdx, Value, KeyIdx, Value...]
+        var propsArray = [];
+
+        // We only serialize values that are explicitly set or have defaults in 'def' if needed.
+        // Usually the engine wants ONLY the 'values' object from the instance data.
+        // But we might want to iterate definition properties to ensure type safety?
+        // For this optimized format, we just dump what is in 'values'.
+        // NOTE: The engine might expect specific property names.
+
+        for (var key in values) {
+            if (Object.prototype.hasOwnProperty.call(values, key)) {
+                var val = values[key];
+
+                // Handle complex values or primitives
+                // If val is string, we index it.
+                // If val is primitive/bool/number, we keep it.
+                // If val is object/array, we just keep it as is (JSON) but maybe compact keys if possible?
+                // For simplicity level 1: Index Strings, keep others.
+
+                var finalVal = val;
+                if (typeof val === 'string') {
+                    finalVal = getStringIndex(val); // Store index for string values
+                }
+                // Note: If we really want to optimize nested objects, we'd need recursion.
+                // For ES5/Simplicity, we'll keep objects as plain objects, but keys won't be indexed.
+                // Revisit if deep compression needed.
+
+                propsArray.push(getStringIndex(key));
+                propsArray.push(finalVal);
+            }
+        }
+
+        serializedNodes.push([typeIdx, propsArray]);
+    }
+
+    // 5. Serialize Edges
+    var serializedEdges = [];
+
+    for (var i = 0; i < rawEdges.length; i++) {
+        var edge = rawEdges[i];
+        var srcId = edge.source;
+        var tgtId = edge.target;
+        var srcHandle = edge.sourceHandle;
+        var tgtHandle = edge.targetHandle;
+
+        // Resolve indices
+        var srcIdx = uuidToIndex[srcId];
+        var tgtIdx = uuidToIndex[tgtId];
+
+        // Skip if connected to a node we filtered out
+        if (srcIdx === undefined || tgtIdx === undefined) continue;
+
+        var srcPortIdx = getStringIndex(srcHandle || "default");
+        var tgtPortIdx = getStringIndex(tgtHandle || "default");
+
+        serializedEdges.push([srcIdx, srcPortIdx, tgtIdx, tgtPortIdx]);
+    }
+
+    // 6. Construct Final Object
+    var ane = {
+        v: "1.0",
+        s: stringTable,
+        n: serializedNodes,
+        e: serializedEdges
+    };
+
+    return JSON.stringify(ane);
+}
+
+// Export for Node.js/Test environments if needed, or simply expose to scope
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { adapt: adapt };
+}

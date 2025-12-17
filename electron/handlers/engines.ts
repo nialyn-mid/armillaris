@@ -12,7 +12,7 @@ if (!fs.existsSync(ENGINES_DIR)) {
 
 export function registerEngineHandlers() {
     // ---- Initialization Logic ----
-    const defaultEnginePath = path.join(ENGINES_DIR, 'Default');
+    const defaultEnginePath = path.join(ENGINES_DIR, 'armilaris_engine');
     const defaultEngineSpecsPath = path.join(defaultEnginePath, 'behavior_spec');
 
     if (!fs.existsSync(defaultEnginePath)) fs.mkdirSync(defaultEnginePath, { recursive: true });
@@ -20,12 +20,12 @@ export function registerEngineHandlers() {
 
     const engineJs = path.join(defaultEnginePath, 'engine.js');
     const engineSpec = path.join(defaultEnginePath, 'engine_spec.json');
-    const defaultSpec = path.join(defaultEngineSpecsPath, 'default.json');
+    const defaultSpec = path.join(defaultEngineSpecsPath, 'default_spec.behavior');
 
     // Init from Templates using TemplateLoader
     TemplateLoader.ensureTemplate(engineJs, 'armilaris_engine', 'engine.js');
     TemplateLoader.ensureTemplate(engineSpec, 'armilaris_engine', 'engine_spec.json');
-    TemplateLoader.ensureTemplate(defaultSpec, 'armilaris_engine', 'default.json', 'behavior_spec');
+    TemplateLoader.ensureTemplate(defaultSpec, 'armilaris_engine', 'default_spec.behavior', 'behavior_spec');
 
 
     // ---- IPC Handlers ----
@@ -62,6 +62,13 @@ export function registerEngineHandlers() {
     ipcMain.handle('read-spec', async (_, engineName: string, specName: string) => {
         const p = path.join(ENGINES_DIR, engineName, 'behavior_spec', specName);
         if (!fs.existsSync(p)) throw new Error('Spec file not found');
+        return fs.readFileSync(p, 'utf-8');
+    });
+
+    // Read Adapter
+    ipcMain.handle('read-adapter', async (_, engineName: string) => {
+        const p = path.join(ENGINES_DIR, engineName, 'adapter.js');
+        if (!fs.existsSync(p)) return '';
         return fs.readFileSync(p, 'utf-8');
     });
 
@@ -124,8 +131,7 @@ export function registerEngineHandlers() {
         }
 
         // 4. Save Output JSON
-        const jsonName = behaviorName.replace(/\.behavior$/, '.json');
-        const jsonPath = path.join(dir, jsonName);
+        const jsonPath = path.join(dir, behaviorName);
         fs.writeFileSync(jsonPath, JSON.stringify(outputData, null, 2));
 
         return true;

@@ -56,7 +56,7 @@ export default function SpecManagerPanel({
                         type="text"
                         value={targetSpecName}
                         onChange={(e) => setTargetSpecName(e.target.value)}
-                        placeholder="my_behavior.json"
+                        placeholder="my_behavior.behavior"
                         style={{ flex: 1, fontSize: '0.85rem' }}
                     />
                     <button onClick={handleSave} className="btn-primary btn-toolbar" style={{ height: '100%' }}>Save</button>

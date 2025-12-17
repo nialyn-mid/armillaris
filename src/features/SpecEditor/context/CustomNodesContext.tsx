@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import ConfirmModal from '../../../shared/ui/ConfirmModal';
 
 export interface CustomNodeDef {
     id: string;
@@ -90,43 +91,23 @@ export function CustomNodesProvider({ children }: { children: React.ReactNode })
         <CustomNodesContext.Provider value={{ customNodes, addCustomNode, removeCustomNode, saveCustomNode, requestDeleteCustomNode }}>
             {children}
             {isDeleteModalOpen && (
-                <div style={{
-                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.5)', zIndex: 99999,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                    <div style={{
-                        background: '#252526', border: '1px solid #454545', borderRadius: '4px',
-                        padding: '16px', minWidth: '300px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                        color: '#eee', fontFamily: 'sans-serif'
-                    }}>
-                        <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '14px' }}>Confirm Deletion</h3>
-                        <div style={{ marginBottom: '24px', fontSize: '13px', color: '#ccc' }}>
-                            Are you sure you want to delete custom node "{nodeToDelete?.name}"?
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                            <button
-                                onClick={handleCancelDelete}
-                                style={{
-                                    background: 'transparent', border: '1px solid #555', color: '#ccc',
-                                    padding: '6px 12px', cursor: 'pointer', borderRadius: '2px'
-                                }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleConfirmDelete}
-                                style={{
-                                    background: '#d32f2f', border: 'none', color: '#fff',
-                                    padding: '6px 12px', cursor: 'pointer', borderRadius: '2px'
-                                }}
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <ConfirmModal
+                    title="Confirm Deletion"
+                    message={`Are you sure you want to delete custom node "${nodeToDelete?.name}"?`}
+                    buttons={[
+                        {
+                            label: 'Delete',
+                            variant: 'danger',
+                            onClick: handleConfirmDelete
+                        },
+                        {
+                            label: 'Cancel',
+                            variant: 'secondary',
+                            onClick: handleCancelDelete
+                        }
+                    ]}
+                    onClose={handleCancelDelete}
+                />
             )}
         </CustomNodesContext.Provider>
     );

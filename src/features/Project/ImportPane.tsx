@@ -87,7 +87,7 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', padding: '20px' }}>
                 <div className="config-section" style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, overflowY: 'auto' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h3 style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Configuration</h3>
+                        <h3 style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Notion Configuration</h3>
                         <button onClick={handleSaveConfig} style={{ padding: '4px 8px', fontSize: '0.7rem' }}>Save</button>
                     </div>
 

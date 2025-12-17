@@ -27,7 +27,7 @@ export default function EnginePane({ onClose }: EnginePaneProps) {
             </div>
 
             <div className="panel-section">
-                <div className="panel-section-title">Active Spec</div>
+                <div className="panel-section-title">Active Behavior</div>
                 <select
                     value={activeSpec}
                     onChange={(e) => setActiveSpec(e.target.value)}

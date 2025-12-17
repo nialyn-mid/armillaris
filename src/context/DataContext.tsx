@@ -39,8 +39,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [metaDefinitions, setMetaDefinitions] = useState<MetaDefinition[]>([]);
 
   // Engine State
-  const [activeEngine, setActiveEngine] = useState<string>(() => localStorage.getItem('active_engine') || 'Default');
-  const [activeSpec, setActiveSpec] = useState<string>(() => localStorage.getItem('active_spec') || 'default.json');
+  const [activeEngine, setActiveEngine] = useState<string>(() => localStorage.getItem('active_engine') || 'armilaris_engine');
+  const [activeSpec, setActiveSpec] = useState<string>(() => localStorage.getItem('active_spec') || 'default_spec.behavior');
   const [availableEngines, setAvailableEngines] = useState<string[]>([]);
   const [availableSpecs, setAvailableSpecs] = useState<string[]>([]);
 
