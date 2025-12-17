@@ -25,9 +25,9 @@ export const useSpecGraphState = () => {
         setNodes((nds) => {
             return nds.map((node) => {
                 if (node.id === id) {
-                    // Update keys: 'inputs', 'outputs', 'label', 'graph' go to root data.
+                    // Update keys: 'inputs', 'outputs', 'label', 'graph', 'color', 'ports' go to root data.
                     // Everything else goes to data.values.
-                    const rootKeys = ['inputs', 'outputs', 'label', 'graph'];
+                    const rootKeys = ['inputs', 'outputs', 'label', 'graph', 'color', 'ports'];
                     const rootUpdates: any = {};
                     const valueUpdates: any = { ...node.data.values };
 
@@ -65,10 +65,7 @@ export const useSpecGraphState = () => {
         setNodes((nds) => {
             const node = nds.find((n) => n.id === id);
             if (!node) return nds;
-            // For Group nodes, we might need deep clone of the graph data?
-            // JSON stringify/parse is a cheap deep clone for spec data.
             const clonedData = JSON.parse(JSON.stringify(node.data));
-
             const newNode = {
                 ...node,
                 id: crypto.randomUUID(),
@@ -77,6 +74,30 @@ export const useSpecGraphState = () => {
                 data: clonedData
             };
             return [...nds.map(n => ({ ...n, selected: false })), newNode];
+        });
+    }, [setNodes]);
+
+    const duplicateSelectedNodes = useCallback(() => {
+        setNodes((nds) => {
+            const selected = nds.filter(n => n.selected);
+            if (selected.length === 0) return nds;
+
+            const newNodes = selected.map(node => {
+                const clonedData = JSON.parse(JSON.stringify(node.data));
+                return {
+                    ...node,
+                    id: crypto.randomUUID(),
+                    position: { x: node.position.x + 20, y: node.position.y + 20 },
+                    selected: true,
+                    data: clonedData
+                };
+            });
+
+            // Return old nodes (deselected) + new nodes (selected)
+            return [
+                ...nds.map(n => ({ ...n, selected: false })),
+                ...newNodes
+            ];
         });
     }, [setNodes]);
 
@@ -90,6 +111,7 @@ export const useSpecGraphState = () => {
         edges, setEdges, onEdgesChange,
         handleNodeUpdate,
         handleDuplicateNode,
+        duplicateSelectedNodes, // Expose
         handleDeleteNode,
         viewPath, setViewPath,
         masterGraph, setMasterGraph

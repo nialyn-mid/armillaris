@@ -19,6 +19,7 @@ import { LabeledEdge } from '../graph/LabeledEdge';
 import NodePalette from './NodePalette';
 import SpecManagerPanel from './SpecManagerPanel';
 import { useSpecGraph } from './hooks/useSpecGraph';
+import { SpecHotkeys } from './SpecHotkeys';
 
 const edgeTypes: EdgeTypes = {
     labeled: LabeledEdge,
@@ -41,8 +42,11 @@ export default function SpecNodeEditor() {
         targetSpecName,
         setTargetSpecName,
         handleSave,
+        navigateTo,
         viewPath,
-        navigateUp
+
+        masterGraph,
+        duplicateSelectedNodes
     } = useSpecGraph();
 
     // UI state
@@ -87,27 +91,11 @@ export default function SpecNodeEditor() {
                     onDragOver={onDragOver}
                 >
                     {/* Breadcrumbs Navigation */}
-                    <div style={{ padding: '0 8px', background: '#252526', borderBottom: '1px solid #333' }}>
+                    <div style={{ padding: '0', background: '#252526', borderBottom: '1px solid #333' }}>
                         <Breadcrumbs
                             path={[{ id: 'root', label: 'Root' }, ...viewPath]}
-                            onNavigate={(index) => {
-                                // If index is 0 (Root), navigate to empty path
-                                if (index === 0) {
-                                    navigateUp(-1); // navigateUp(-1) should ideally be "Clear all"
-                                    // Use specific logic:
-                                    // We need to call navigateTo([]) eventually.
-                                    // navigateUp in useSpecGraph slices viewPath.
-                                    // If we click Root (0), we want viewPath slice(0, 0) which is [].
-                                    // If our rendered list is [Root, G1, G2]
-                                    // Click Root (0) -> target is 0 items. 
-                                    // Click G1 (1) -> target is 1 item.
-                                }
-                                // navigateUp uses slice(0, index+1) of the CURRENT viewPath.
-                                // If we pass index-1 to navigateUp?
-                                // Let's simplify:
-                                // navigateUp(-1) -> Root?
-                                navigateUp(index - 1);
-                            }}
+                            onNavigate={navigateTo}
+                            masterGraph={masterGraph}
                         />
                     </div>
 
@@ -151,6 +139,8 @@ export default function SpecNodeEditor() {
                     nodeCount={nodes.length}
                     edgeCount={edges.length}
                 />
+
+                <SpecHotkeys onDuplicate={duplicateSelectedNodes} />
             </div>
         </ReactFlowProvider>
     );

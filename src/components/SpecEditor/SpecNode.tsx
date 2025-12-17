@@ -7,6 +7,8 @@ import RecursiveProperties from './nodes/RecursiveProperties';
 import SpecNodeHeader from './nodes/SpecNodeHeader';
 import { SpecNodeInputPorts, SpecNodeOutputPorts } from './nodes/SpecNodePorts';
 
+import './nodes/Nodes.css';
+
 interface SpecNodeData {
     label: string;
     def: EngineSpecNodeDef;
@@ -26,6 +28,8 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
 
     const edges = useEdges();
     const nodes = useNodes();
+
+
 
     // Context Menu State
     const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
@@ -147,15 +151,13 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
     const isSideBySide = isMappingsNode;
 
     return (
-        <div style={{
-            background: '#252526',
-            border: `1px solid ${selected ? '#007fd4' : '#454545'}`,
-            borderRadius: '4px',
-            minWidth: isSideBySide ? '400px' : '220px',
-            color: '#fff',
-            fontSize: '12px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-        }}>
+        <div
+            className={`spec-node ${selected ? 'selected' : ''}`}
+            style={{
+                '--node-accent-color': categoryColor || '#007fd4',
+                minWidth: isSideBySide ? '400px' : undefined
+            } as React.CSSProperties}
+        >
             {/* Context Menu Portal */}
             {contextMenu && createPortal(
                 <div

@@ -49,22 +49,17 @@ const updateSpecAt = (spec: any, path: { id: string }[], newGraph: { nodes: Node
     // Propagate Ports to Container Node
     if (containerNode) {
         // Find internal GroupInput/GroupOutput nodes
-        const inputNode = newGraph.nodes.find(n => n.type === 'GroupInput');
-        const outputNode = newGraph.nodes.find(n => n.type === 'GroupOutput');
+        // Find internal GroupInput/GroupOutput nodes
+        const inputNodes = newGraph.nodes.filter(n => n.type === 'GroupInput');
+        const outputNodes = newGraph.nodes.filter(n => n.type === 'GroupOutput');
 
         // Sync Inputs
-        if (inputNode && inputNode.data.ports) {
-            containerNode.data.inputs = inputNode.data.ports;
-        } else if (inputNode && !inputNode.data.ports) {
-            containerNode.data.inputs = [];
-        }
+        const allInputs = inputNodes.flatMap(n => n.data.ports || []);
+        containerNode.data.inputs = allInputs;
 
         // Sync Outputs
-        if (outputNode && outputNode.data.ports) {
-            containerNode.data.outputs = outputNode.data.ports;
-        } else if (outputNode && !outputNode.data.ports) {
-            containerNode.data.outputs = [];
-        }
+        const allOutputs = outputNodes.flatMap(n => n.data.ports || []);
+        containerNode.data.outputs = allOutputs;
     }
 
     return newSpec;
@@ -77,6 +72,7 @@ export const useSpecGraph = () => {
         edges, setEdges, onEdgesChange,
         handleNodeUpdate,
         handleDuplicateNode,
+        duplicateSelectedNodes,
         handleDeleteNode,
         viewPath, setViewPath,
         masterGraph, setMasterGraph // Moved masterGraph state here
@@ -237,7 +233,10 @@ export const useSpecGraph = () => {
         handleSave: safeSave, // Use ours
         // Navigation
         viewPath,
+        navigateTo, // Expose for Breadcrumbs
         navigateUp,
-        onEditGroup
+        onEditGroup,
+        masterGraph, // Expose for Breadcrumbs
+        duplicateSelectedNodes
     };
 };

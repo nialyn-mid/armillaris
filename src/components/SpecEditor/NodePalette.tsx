@@ -23,7 +23,7 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
             if (b === 'Output') return -1;
             return a.localeCompare(b);
         });
-        return [...sorted, 'System'];
+        return [...sorted, 'Group'];
     }, [engineSpec]);
 
     // Ensure activeTab is valid
@@ -34,8 +34,12 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
     }, [categories, activeTab]);
 
     const filteredNodes = useMemo(() => {
-        if (activeTab === 'System') {
-            return [SYSTEM_NODES.Group];
+        if (activeTab === 'Group') {
+            return [
+                SYSTEM_NODES.Group,
+                SYSTEM_NODES.GroupInput,
+                SYSTEM_NODES.GroupOutput
+            ];
         }
         return engineSpec?.nodes.filter(n => n.category === activeTab) || [];
     }, [engineSpec, activeTab]);

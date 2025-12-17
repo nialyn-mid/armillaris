@@ -1,72 +1,93 @@
 import { memo } from 'react';
-import { NodeResizer } from 'reactflow';
 import { SpecNodeInputPorts, SpecNodeOutputPorts } from './SpecNodePorts';
 import SpecNodeHeader from './SpecNodeHeader';
+import './Nodes.css';
 
 const GroupNode = ({ data, selected, id }: any) => {
-    const { label, inputs, outputs, onEditGroup, categoryColor } = data;
+    const { label, inputs, outputs, onEditGroup, onUpdate, color } = data;
+
+    // Dynamic Min Height based on ports (for layout hint)
+    const portCount = Math.max(inputs?.length || 0, outputs?.length || 0);
+    const minCalculatedHeight = Math.max(80, portCount * 24 + 80);
+
+    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (onUpdate) onUpdate(id, { label: e.target.value });
+    };
+
+    const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (onUpdate) onUpdate(id, { color: e.target.value });
+    };
+
+    const activeColor = color || '#007fd4';
 
     return (
-        <div style={{
-            minWidth: '200px',
-            minHeight: '100px',
-            height: '100%',
-            background: '#1e1e1e',
-            border: selected ? '2px solid #007fd4' : '1px solid #444',
-            borderRadius: '4px',
-            display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
-            position: 'relative'
-        }}>
-            <NodeResizer
-                isVisible={selected}
-                minWidth={200}
-                minHeight={100}
-                lineStyle={{ border: '1px solid #007fd4' }}
-                handleStyle={{ width: 8, height: 8, borderRadius: 4 }}
-            />
-
-            {/* Header with Edit Button */}
-            <div style={{ display: 'flex', alignItems: 'center', cursor: 'grab' }}>
-                <SpecNodeHeader
-                    label={label}
-                    type="Group"
-                    categoryColor={categoryColor || '#888'}
-                    onContextMenu={() => { }} // TODO: Menu
-                />
+        <div
+            className={`spec-node group-node ${selected ? 'selected' : ''}`}
+            style={{
+                '--node-accent-color': activeColor,
+                '--node-bg-color': `color-mix(in srgb, ${activeColor} 15%, #1e1e1e)`,
+                minHeight: `${minCalculatedHeight}px`
+            } as React.CSSProperties}
+        >
+            {/* Header */}
+            <div className="group-header-container">
+                <div style={{ flex: 1 }}>
+                    <SpecNodeHeader
+                        label={label}
+                        type="Group"
+                        categoryColor={activeColor}
+                        onContextMenu={() => { }}
+                    />
+                </div>
             </div>
 
-            {/* Action Bar */}
-            <div style={{ padding: '8px', borderBottom: '1px solid #333', background: '#252526' }}>
+            {/* Properties & Actions */}
+            <div style={{ padding: '8px', borderBottom: '1px solid #333', background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+
+                {/* Properties Row */}
+                <div className="group-properties-row nodrag">
+                    <input
+                        type="text"
+                        value={label}
+                        onChange={handleNameChange}
+                        style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid #555', color: '#fff', padding: '4px', borderRadius: '2px', fontSize: '11px' }}
+                        placeholder="Group Name"
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <input
+                            type="color"
+                            value={activeColor}
+                            onChange={handleColorChange}
+                            style={{ width: '24px', height: '24px', padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
+                            title="Group Color"
+                        />
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px', color: '#aaa', padding: '0 2px' }}>
+                    <span>In: {inputs?.length || 0}</span>
+                    <span>Out: {outputs?.length || 0}</span>
+                </div>
+
                 <button
-                    className="nodrag"
+                    className="group-edit-button nodrag"
                     onClick={() => onEditGroup && onEditGroup(id, label || 'Group')}
-                    style={{
-                        width: '100%',
-                        padding: '4px',
-                        background: '#3e3e42',
-                        border: '1px solid #555',
-                        color: '#fff',
-                        borderRadius: '2px',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                    }}
                 >
-                    Edit Group Content ➜
+                    <span>Edit Content</span>
+                    <span>➜</span>
                 </button>
             </div>
 
-            {/* Ports */}
-            <div style={{ position: 'relative', flex: 1, padding: '10px 0' }}>
-                <div style={{ position: 'absolute', top: 0, left: '-10px', bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            {/* Ports Area - Use Flex Row to allow natural height growth */}
+            <div className="group-ports-container">
+                {/* Inputs Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <SpecNodeInputPorts inputs={inputs || []} />
                 </div>
-                <div style={{ position: 'absolute', top: 0, right: '-10px', bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+
+                {/* Outputs Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
                     <SpecNodeOutputPorts outputs={outputs || []} />
-                </div>
-                <div style={{ textAlign: 'center', color: '#666', fontSize: '11px', padding: '0 16px' }}>
-                    {inputs?.length || 0} Inputs / {outputs?.length || 0} Outputs
                 </div>
             </div>
         </div>

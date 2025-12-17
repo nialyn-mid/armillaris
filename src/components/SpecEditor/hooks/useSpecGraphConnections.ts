@@ -12,30 +12,65 @@ export const useSpecGraphConnections = ({ setEdges, nodes, setNodes }: UseSpecGr
 
     const onConnect = useCallback((params: Connection) => {
         let { source, target, sourceHandle, targetHandle } = params;
+        if (!source || !target) return; // Ensure valid connection
+
+        // Helper to infer type from a handle
+        const inferType = (nodeId: string, handleId: string | null): string => {
+            if (!handleId) return 'any';
+            const node = nodes.find(n => n.id === nodeId);
+            if (!node) return 'any';
+
+            if (node.type === 'GroupInput') {
+                const port = node.data.ports?.find((p: any) => p.id === handleId);
+                return port?.type || 'any';
+            }
+            if (node.type === 'GroupOutput') {
+                // Output of a GroupOutput node? invalid? (GroupOutput is a sink inside)
+                // But if we are chaining groups?
+                // No, inside the graph, GroupOutput is a Target.
+                return 'any';
+            }
+            // Standard Node
+            const outputDef = node.data.def?.outputs?.find((o: any) => o.id === handleId);
+            return outputDef?.type || 'any';
+        };
+
+        const inferInputType = (nodeId: string, handleId: string | null): string => {
+            if (!handleId) return 'any';
+            const node = nodes.find(n => n.id === nodeId);
+            if (!node) return 'any';
+            // Check def inputs
+            const inputDef = node.data.def?.inputs?.find((i: any) => i.id === handleId);
+            return inputDef?.type || 'any';
+        }
+
+
+        let finalSourceHandle = sourceHandle;
+        let finalTargetHandle = targetHandle;
+        let pendingNodeUpdates: Node[] = [];
 
         // Handle Magic Input Creation (Source is GroupInputNode)
         if (sourceHandle === '__create_input__') {
             const inputNode = nodes.find(n => n.id === source);
             if (inputNode && inputNode.type === 'GroupInput') {
-                // Generate new Port ID
                 const portIndex = (inputNode.data.ports?.length || 0) + 1;
-                const newPortId = `in_${Date.now()}`; // Unique ID
+                const newPortId = `in_${Date.now()}`;
                 const newPortLabel = `Input ${portIndex}`;
 
-                // Update Node Data
-                const newPort = { id: newPortId, label: newPortLabel, type: 'any' };
+                // Backwards Inference: GroupInput -> Target
+                // If connecting to a target with known type, adopt it.
+                const inferredType = inferInputType(target, targetHandle);
+
+                const newPort = { id: newPortId, label: newPortLabel, type: inferredType };
                 const updatedNode = {
                     ...inputNode,
-                    data: {
-                        ...inputNode.data,
-                        ports: [...(inputNode.data.ports || []), newPort]
-                    }
+                    data: { ...inputNode.data, ports: [...(inputNode.data.ports || []), newPort] }
                 };
 
-                setNodes(nds => nds.map(n => n.id === source ? updatedNode : n));
-
-                // Use the new handle for the edge
-                sourceHandle = newPortId;
+                // We shouldn't depend on setNodes immediately if we reuse `nodes` array?
+                // `nodes` is from closure.
+                pendingNodeUpdates.push(updatedNode);
+                finalSourceHandle = newPortId;
             }
         }
 
@@ -43,37 +78,52 @@ export const useSpecGraphConnections = ({ setEdges, nodes, setNodes }: UseSpecGr
         if (targetHandle === '__create_output__') {
             const outputNode = nodes.find(n => n.id === target);
             if (outputNode && outputNode.type === 'GroupOutput') {
-                // Generate new Port ID
                 const portIndex = (outputNode.data.ports?.length || 0) + 1;
                 const newPortId = `out_${Date.now()}`;
                 const newPortLabel = `Output ${portIndex}`;
 
-                const newPort = { id: newPortId, label: newPortLabel, type: 'any' };
+                // Forward Inference: Source -> GroupOutput
+                const inferredType = inferType(source, finalSourceHandle);
+
+                const newPort = { id: newPortId, label: newPortLabel, type: inferredType };
                 const updatedNode = {
                     ...outputNode,
-                    data: {
-                        ...outputNode.data,
-                        ports: [...(outputNode.data.ports || []), newPort]
-                    }
+                    data: { ...outputNode.data, ports: [...(outputNode.data.ports || []), newPort] }
                 };
+                pendingNodeUpdates.push(updatedNode);
+                finalTargetHandle = newPortId;
+            }
+        } else {
+            // Connecting to EXISTING GroupOutput port?
+            // We should update the type!
+            const outputNode = nodes.find(n => n.id === target);
+            if (outputNode && outputNode.type === 'GroupOutput' && finalTargetHandle) {
+                const inferredType = inferType(source, finalSourceHandle);
+                if (inferredType !== 'any') {
+                    // Check if update needed
+                    const portIndex = outputNode.data.ports?.findIndex((p: any) => p.id === finalTargetHandle);
+                    if (portIndex >= 0 && outputNode.data.ports[portIndex].type !== inferredType) {
+                        const newPorts = [...outputNode.data.ports];
+                        newPorts[portIndex] = { ...newPorts[portIndex], type: inferredType };
+                        const updatedNode = { ...outputNode, data: { ...outputNode.data, ports: newPorts } };
 
-                setNodes(nds => nds.map(n => n.id === target ? updatedNode : n));
-
-                // Use the new handle
-                targetHandle = newPortId;
+                        // Check if already in pendingUpdates (priority to magic creation?)
+                        // Magic creation block handled it. This is 'else'.
+                        pendingNodeUpdates.push(updatedNode);
+                    }
+                }
             }
         }
 
-        // Create the edge with (possibly updated) handles
-        const connection = { ...params, sourceHandle, targetHandle };
+        // Apply Updates
+        if (pendingNodeUpdates.length > 0) {
+            setNodes(nds => nds.map(n => {
+                const update = pendingNodeUpdates.find(u => u.id === n.id);
+                return update || n;
+            }));
+        }
 
-        // Use LabeledEdge by default or based on logic?
-        // Default to simple edge for now, or 'labeled' if we want.
-        // SpecNodeEditor uses `edgeTypes={{ labeled: LabeledEdge }}`.
-        // But `addEdge` creates standard edge unless properties are set.
-        // Let's set type='labeled' if we want labels? Or standard.
-        // Stick to standard "default" connection for now, can enhance later.
-
+        const connection = { ...params, sourceHandle: finalSourceHandle, targetHandle: finalTargetHandle };
         setEdges((eds) => addEdge(connection, eds));
     }, [nodes, setNodes, setEdges]);
 

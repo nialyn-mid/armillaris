@@ -81,6 +81,14 @@ export const resolveExpansion = <T extends { id?: string; name?: string; label?:
             const itemTemplate = (def as ExpansionDef<T>).$item;
             // Use structural replace instead of stringify
             const resolvedItem = deepReplace(itemTemplate, id);
+
+            // Auto-Unique ID check: 
+            // If the resolved ID is identical to the template ID (no substitution happened),
+            // we must append the index/value to prevent ID collision.
+            if (resolvedItem.id === itemTemplate.id) {
+                resolvedItem.id = `${resolvedItem.id}_${id}`;
+            }
+
             // Attach metadata for removal
             (resolvedItem as any)._sourceId = id;
             (resolvedItem as any)._listKey = valuesKey;

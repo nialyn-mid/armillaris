@@ -437,7 +437,6 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
                         height: bottomPanelHeight,
                         position: 'relative',
                         zIndex: 20,
-                        borderTop: '1px solid var(--border-color)'
                     }} className="panel bottom">
                         {/* Height Resize Handle (Top Edge) */}
                         <div

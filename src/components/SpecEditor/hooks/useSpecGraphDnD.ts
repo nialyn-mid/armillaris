@@ -75,6 +75,25 @@ export const useSpecGraphDnD = ({
                 return;
             }
 
+            // Handle Group Input/Output Nodes
+            if (nodeDef.type === 'GroupInput' || nodeDef.type === 'GroupOutput') {
+                const isInput = nodeDef.type === 'GroupInput';
+                const newNode: Node = {
+                    id: crypto.randomUUID(),
+                    type: nodeDef.type,
+                    position,
+                    data: {
+                        label: isInput ? 'Group Input' : 'Group Output',
+                        ports: [],
+                        onUpdate: handleNodeUpdate,
+                        onDuplicate: handleDuplicateNode,
+                        onDelete: handleDeleteNode
+                    }
+                };
+                setNodes((nds) => nds.concat(newNode));
+                return;
+            }
+
             // Normal Node
             const categoryColor = engineSpec?.categories?.[nodeDef.category]?.color;
             const newNode: Node = {
