@@ -36,6 +36,7 @@ export function SpecNodeEditor() {
         onConnect,
         onDragStart,
         onDrop,
+        onNodeDrag,
         onNodeDragStop,
         reactFlowWrapper,
         setReactFlowInstance,
@@ -73,84 +74,87 @@ export function SpecNodeEditor() {
     //console.log("[SpecNodeEditor] Render Nodes:", nodes?.length, nodes?.[0]);
 
     return (
-        <ReactFlowProvider>
-            <div style={{ width: '100%', height: '100%', display: 'flex', position: 'relative' }}>
+        <div style={{ width: '100%', height: '100%', display: 'flex', position: 'relative' }}>
 
-                {/* Left: Node Palette */}
-                <NodePalette
-                    engineSpec={engineSpec}
-                    onDragStart={onDragStart}
-                    width={paletteWidth}
-                    setWidth={setPaletteWidth}
-                />
 
-                {/* Middle: Graph Editor */}
-                <div
-                    style={{ flex: 1, height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}
-                    ref={reactFlowWrapper}
-                    onDrop={onDrop}
-                    onDragOver={onDragOver}
-                >
-                    {/* Breadcrumbs Navigation */}
-                    <div style={{ padding: '0', background: '#252526', borderBottom: '1px solid #333' }}>
-                        <Breadcrumbs
-                            path={[{ id: 'root', label: 'Behavior' }, ...viewPath]}
-                            onNavigate={navigateTo}
-                            masterGraph={masterGraph}
-                        />
-                    </div>
+            {/* Left: Node Palette */}
+            <NodePalette
+                engineSpec={engineSpec}
+                onDragStart={onDragStart}
+                width={paletteWidth}
+                setWidth={setPaletteWidth}
+            />
 
-                    <div style={{ flex: 1, width: '100%', position: 'relative' }}>
-                        <ReactFlow
-                            id="spec-node-editor"
-                            nodes={nodes || []}
-                            edges={edges || []}
-                            onNodesChange={onNodesChange}
-                            onEdgesChange={onEdgesChange}
-                            onConnect={onConnect}
-                            nodeTypes={nodeTypes}
-                            edgeTypes={edgeTypes}
-                            onInit={setReactFlowInstance}
-                            fitView
-                            className="dark-theme"
-                            style={{ background: 'var(--bg-primary)' }}
-                            deleteKeyCode={['Backspace', 'Delete']}
-                            multiSelectionKeyCode={['Control', 'Shift']}
-                            selectionOnDrag={true}
-                            panOnDrag={[1, 2]}
-                            onNodeDragStop={onNodeDragStop as any}
-                        >
-                            <Background color="#30363d" gap={20} />
-                            <Controls />
-                        </ReactFlow>
-                    </div>
+            {/* Middle: Graph Editor */}
+            <div
+                style={{ flex: 1, height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}
+                ref={reactFlowWrapper}
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+            >
+                {/* Breadcrumbs Navigation */}
+                <div style={{ padding: '0', background: '#252526', borderBottom: '1px solid #333' }}>
+                    <Breadcrumbs
+                        path={[{ id: 'root', label: 'Behavior' }, ...viewPath]}
+                        onNavigate={navigateTo}
+                        masterGraph={masterGraph}
+                    />
                 </div>
 
-
-                {/* Right: Spec Manager */}
-                <SpecManagerPanel
-                    width={managerWidth}
-                    setWidth={setManagerWidth}
-                    targetSpecName={targetSpecName}
-                    setTargetSpecName={setTargetSpecName}
-                    handleSave={handleSave}
-                    availableSpecs={availableSpecs}
-                    activeSpec={activeSpec}
-                    setActiveSpec={setActiveSpec}
-                    nodeCount={nodes.length}
-                    edgeCount={edges.length}
-                />
-
-                <SpecHotkeys onDuplicate={duplicateSelectedNodes} />
+                <div style={{ flex: 1, width: '100%', position: 'relative' }}>
+                    <ReactFlow
+                        id="spec-node-editor"
+                        nodes={nodes || []}
+                        edges={edges || []}
+                        onNodesChange={onNodesChange}
+                        onEdgesChange={onEdgesChange}
+                        onConnect={onConnect}
+                        nodeTypes={nodeTypes}
+                        edgeTypes={edgeTypes}
+                        onInit={setReactFlowInstance}
+                        fitView
+                        className="dark-theme"
+                        style={{ background: 'var(--bg-primary)' }}
+                        deleteKeyCode={['Backspace', 'Delete']}
+                        multiSelectionKeyCode={['Control', 'Shift']}
+                        selectionOnDrag={true}
+                        panOnDrag={[1, 2]}
+                        onNodeDragStop={onNodeDragStop as any}
+                        onNodeDrag={onNodeDrag as any}
+                    >
+                        <Background color="#30363d" gap={20} />
+                        <Controls />
+                    </ReactFlow>
+                </div>
             </div>
-        </ReactFlowProvider>
+
+
+            {/* Right: Spec Manager */}
+            <SpecManagerPanel
+                width={managerWidth}
+                setWidth={setManagerWidth}
+                targetSpecName={targetSpecName}
+                setTargetSpecName={setTargetSpecName}
+                handleSave={handleSave}
+                availableSpecs={availableSpecs}
+                activeSpec={activeSpec}
+                setActiveSpec={setActiveSpec}
+                nodeCount={nodes.length}
+                edgeCount={edges.length}
+            />
+
+            <SpecHotkeys onDuplicate={duplicateSelectedNodes} />
+        </div>
     );
+
 }
 
 export default function SpecNodeEditorWithProvider() {
     return (
-        <CustomNodesProvider>
-            <SpecNodeEditor />
-        </CustomNodesProvider>
+        <ReactFlowProvider>
+            <CustomNodesProvider>
+                <SpecNodeEditor />
+            </CustomNodesProvider>
+        </ReactFlowProvider>
     );
 }

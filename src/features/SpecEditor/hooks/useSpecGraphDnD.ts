@@ -1,5 +1,5 @@
 import { useCallback, useState, useRef } from 'react';
-import type { Node, ReactFlowInstance } from 'reactflow';
+import { type Node, useReactFlow } from 'reactflow';
 import type { EngineSpec, EngineSpecNodeDef } from '../../../lib/engine-spec-types';
 
 interface UseSpecGraphDnDProps {
@@ -19,8 +19,12 @@ export const useSpecGraphDnD = ({
     handleDeleteNode,
     onEditGroup
 }: UseSpecGraphDnDProps) => {
-    const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+    // We don't strictly need reactFlowInstance for positioning anymore with screenToFlowPosition, 
+    // but maybe for other things? If not used elsewhere, we can remove it.
+    // However, onDrop uses it to check existence.
+    const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
+    const { screenToFlowPosition } = useReactFlow();
 
     const onDragStart = (event: React.DragEvent, nodeDef: EngineSpecNodeDef, customData?: any) => {
         if (customData) {
@@ -31,20 +35,18 @@ export const useSpecGraphDnD = ({
         event.dataTransfer.effectAllowed = 'move';
     };
 
-    // Recursive ID regeneration helper (Duplicated here or should be shared? Shared if possible, but localized is safer for now)
+    // Recursive ID regeneration helper...
     const regenerateGraphIds = useCallback((graph: any): any => {
         if (!graph || !graph.nodes) return graph;
         const newGraph = { ...graph };
         const idMap = new Map<string, string>();
 
-        // 1. New IDs
         newGraph.nodes = graph.nodes.map((node: any) => {
             const newId = crypto.randomUUID();
             idMap.set(node.id, newId);
             return { ...node, id: newId, selected: false };
         });
 
-        // 2. Edges
         newGraph.edges = graph.edges.map((edge: any) => ({
             ...edge,
             id: crypto.randomUUID(),
@@ -52,7 +54,6 @@ export const useSpecGraphDnD = ({
             target: idMap.get(edge.target) || edge.target
         }));
 
-        // 3. Recurse
         newGraph.nodes = newGraph.nodes.map((node: any) => {
             if (node.data && node.data.graph) {
                 return {
@@ -73,24 +74,24 @@ export const useSpecGraphDnD = ({
             event.preventDefault();
 
             if (!reactFlowWrapper.current || !reactFlowInstance) return;
-            const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
 
-            const position = reactFlowInstance.project({
-                x: event.clientX - reactFlowBounds.left,
-                y: event.clientY - reactFlowBounds.top,
+            // Updated to use screenToFlowPosition
+            const position = screenToFlowPosition({
+                x: event.clientX,
+                y: event.clientY,
             });
 
             // 1. Handle Custom Node Drop
             const customDataStr = event.dataTransfer.getData('application/reactflow/custom');
             if (customDataStr) {
                 const customData = JSON.parse(customDataStr);
-                // "customData" is the full "data" object of the node.
-                // We need to regenerate IDs because it's a new instance.
-                const newData = JSON.parse(JSON.stringify(customData)); // Deep clone
+                const newData = JSON.parse(JSON.stringify(customData));
 
                 if (newData.graph) {
                     newData.graph = regenerateGraphIds(newData.graph);
                 }
+
+
 
                 const newNode: Node = {
                     id: crypto.randomUUID(),
@@ -186,7 +187,7 @@ export const useSpecGraphDnD = ({
 
             setNodes((nds) => nds.concat(newNode));
         },
-        [reactFlowInstance, setNodes, handleNodeUpdate, engineSpec, handleDuplicateNode, handleDeleteNode, onEditGroup, regenerateGraphIds]
+        [reactFlowInstance, setNodes, handleNodeUpdate, engineSpec, handleDuplicateNode, handleDeleteNode, onEditGroup, regenerateGraphIds, screenToFlowPosition]
     );
 
     const onNodeDragStop = useCallback((_event: React.MouseEvent, _node: Node, _nodes: Node[]) => {

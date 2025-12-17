@@ -21,6 +21,18 @@
     box-shadow: 0 0 0 1px var(--node-accent-color);
 }
 
+.group-node.selected {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px var(--node-accent-color);
+}
+
+.group-node.drop-target,
+.group-io-node.drop-target {
+    border-color: #fff;
+    box-shadow: 0 0 0 4px var(--node-accent-color), 0 0 20px var(--node-accent-color);
+    background: color-mix(in srgb, var(--node-accent-color) 30%, #1e1e1e) !important;
+}
+
 .spec-node.group-node {
     min-width: 220px;
     background: var(--node-bg-color, #1e1e1e);

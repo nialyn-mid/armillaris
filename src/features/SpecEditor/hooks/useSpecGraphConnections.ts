@@ -31,17 +31,39 @@ export const useSpecGraphConnections = ({ setEdges, nodes, setNodes }: UseSpecGr
                 return 'any';
             }
             // Standard Node
-            const outputDef = node.data.def?.outputs?.find((o: any) => o.id === handleId);
-            return outputDef?.type || 'any';
+            if (Array.isArray(node.data.def?.outputs)) {
+                const outputDef = node.data.def.outputs.find((o: any) => o.id === handleId);
+                if (outputDef?.type) return outputDef.type;
+            }
+            // Fallback (Runtime)
+            if (Array.isArray(node.data.outputs)) {
+                const port = node.data.outputs.find((o: any) => o.id === handleId);
+                if (port?.type) return port.type;
+            }
+            return 'any';
         };
 
         const inferInputType = (nodeId: string, handleId: string | null): string => {
             if (!handleId) return 'any';
             const node = nodes.find(n => n.id === nodeId);
             if (!node) return 'any';
+
             // Check def inputs
-            const inputDef = node.data.def?.inputs?.find((i: any) => i.id === handleId);
-            return inputDef?.type || 'any';
+            if (Array.isArray(node.data.def?.inputs)) {
+                const inputDef = node.data.def.inputs.find((i: any) => i.id === handleId);
+                if (inputDef?.type) return inputDef.type;
+            }
+            // Check Element-wise Definition
+            if (node.data.def?.inputs?.$item?.type) {
+                return node.data.def.inputs.$item.type;
+            }
+
+            // Fallback (Runtime)
+            if (Array.isArray(node.data.inputs)) {
+                const port = node.data.inputs.find((i: any) => i.id === handleId);
+                if (port?.type) return port.type;
+            }
+            return 'any';
         }
 
 

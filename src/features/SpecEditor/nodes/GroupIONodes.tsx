@@ -134,7 +134,7 @@ export const GroupInputNode = memo(({ data, id }: any) => {
     };
 
     return (
-        <div style={nodeStyle} onContextMenu={onContextMenu}>
+        <div className={`spec-node group-io-node ${data.isDragTarget ? 'drop-target' : ''}`} style={{ ...nodeStyle, background: undefined, border: undefined }} onContextMenu={onContextMenu}>
             {contextMenu && (
                 <NodeContextMenu
                     x={contextMenu.x}
@@ -196,7 +196,7 @@ export const GroupOutputNode = memo(({ data, id }: any) => {
     };
 
     return (
-        <div style={nodeStyle} onContextMenu={onContextMenu}>
+        <div className={`spec-node group-io-node ${data.isDragTarget ? 'drop-target' : ''}`} style={{ ...nodeStyle, background: undefined, border: undefined }} onContextMenu={onContextMenu}>
             {contextMenu && (
                 <NodeContextMenu
                     x={contextMenu.x}

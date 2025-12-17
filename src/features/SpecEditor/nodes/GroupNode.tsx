@@ -32,7 +32,7 @@ const GroupNode = ({ data, selected, id }: any) => {
 
     return (
         <div
-            className={`spec-node group-node ${selected ? 'selected' : ''}`}
+            className={`spec-node group-node ${selected ? 'selected' : ''} ${data.isDragTarget ? 'drop-target' : ''}`}
             style={{
                 '--node-accent-color': activeColor,
                 '--node-bg-color': `color-mix(in srgb, ${activeColor} 15%, #1e1e1e)`,
