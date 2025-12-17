@@ -13,7 +13,7 @@ import GroupNode from './nodes/GroupNode';
 import LabelNode from './nodes/LabelNode';
 import { GroupInputNode, GroupOutputNode } from './nodes/GroupIONodes';
 import { Breadcrumbs } from './Breadcrumbs';
-import { LabeledEdge } from '../graph/LabeledEdge';
+import { LabeledEdge } from '../GraphEditor/graph/LabeledEdge';
 
 // Components & Hooks
 import NodePalette from './NodePalette';

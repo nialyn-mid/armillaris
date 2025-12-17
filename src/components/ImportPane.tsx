@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useData } from '../context/DataContext';
 import { NotionSource } from '../lib/data-sources/NotionSource';
-import SidePane from './ui/SidePane';
+import SidePane from '../shared/ui/SidePane';
 
 interface ImportPaneProps {
     onClose: () => void;

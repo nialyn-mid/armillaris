@@ -5,7 +5,7 @@ import ImportPane from './components/ImportPane';
 import ExportPane from './components/ExportPane';
 import EnginePane from './components/EnginePane';
 import TabBar from './components/TabBar';
-import GraphView from './components/GraphView';
+import GraphView from './features/GraphEditor/GraphView';
 import CodeView from './components/CodeView';
 import TemplateView from './components/TemplateView';
 import DataView from './components/DataView';

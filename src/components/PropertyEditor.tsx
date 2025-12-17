@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { HighlightedTextarea } from './ui/HighlightedTextarea';
+import { HighlightedTextarea } from '../shared/ui/HighlightedTextarea';
 import { useData } from '../context/DataContext';
 import type { MetaPropertyType } from '../lib/types';
 

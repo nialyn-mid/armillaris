@@ -1,6 +1,6 @@
 
 import { useData } from '../context/DataContext';
-import SidePane from './ui/SidePane';
+import SidePane from '../shared/ui/SidePane';
 
 interface EnginePaneProps {
     onClose: () => void;
