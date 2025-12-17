@@ -1,6 +1,9 @@
 import { memo } from 'react';
 import { SpecNodeInputPorts, SpecNodeOutputPorts } from './SpecNodePorts';
 import SpecNodeHeader from './SpecNodeHeader';
+import { useContextMenu } from '../hooks/useContextMenu';
+import { NodeContextMenu } from '../components/NodeContextMenu';
+import { useCustomNodes } from '../context/CustomNodesContext';
 import './Nodes.css';
 
 const GroupNode = ({ data, selected, id }: any) => {
@@ -20,6 +23,13 @@ const GroupNode = ({ data, selected, id }: any) => {
 
     const activeColor = color || '#007fd4';
 
+    const { contextMenu, onContextMenu, closeContextMenu } = useContextMenu();
+    const { saveCustomNode } = useCustomNodes();
+
+    const handleSaveCustom = () => {
+        saveCustomNode(data, label);
+    };
+
     return (
         <div
             className={`spec-node group-node ${selected ? 'selected' : ''}`}
@@ -29,6 +39,16 @@ const GroupNode = ({ data, selected, id }: any) => {
                 minHeight: `${minCalculatedHeight}px`
             } as React.CSSProperties}
         >
+            {/* Context Menu Portal */}
+            {contextMenu && <NodeContextMenu
+                x={contextMenu.x}
+                y={contextMenu.y}
+                onClose={closeContextMenu}
+                onDuplicate={() => data.onDuplicate?.(id)}
+                onDelete={() => data.onDelete?.(id)}
+                onSaveCustom={handleSaveCustom}
+            />}
+
             {/* Header */}
             <div className="group-header-container">
                 <div style={{ flex: 1 }}>
@@ -36,7 +56,7 @@ const GroupNode = ({ data, selected, id }: any) => {
                         label={label}
                         type="Group"
                         categoryColor={activeColor}
-                        onContextMenu={() => { }}
+                        onContextMenu={onContextMenu}
                     />
                 </div>
             </div>

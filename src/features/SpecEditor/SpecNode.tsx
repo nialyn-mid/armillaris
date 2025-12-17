@@ -5,6 +5,7 @@ import SpecNodeHeader from './nodes/SpecNodeHeader';
 import { SpecNodeInputPorts, SpecNodeOutputPorts } from './nodes/SpecNodePorts';
 import { useNodeLogic } from './hooks/useNodeLogic';
 import { useContextMenu } from './hooks/useContextMenu';
+import { useCustomNodes } from './context/CustomNodesContext';
 import { NodeContextMenu } from './components/NodeContextMenu';
 import type { SpecNodeData } from './types';
 
@@ -24,6 +25,11 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
     } = useNodeLogic(id, data);
 
     const { contextMenu, onContextMenu, closeContextMenu } = useContextMenu();
+    const { saveCustomNode } = useCustomNodes();
+
+    const handleSaveCustom = () => {
+        saveCustomNode(data, def.label);
+    };
 
     return (
         <div
@@ -40,6 +46,7 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
                 onClose={closeContextMenu}
                 onDuplicate={() => onDuplicate?.(id)}
                 onDelete={() => onDelete?.(id)}
+                onSaveCustom={def.type === 'Group' ? handleSaveCustom : undefined}
             />}
 
             <SpecNodeHeader

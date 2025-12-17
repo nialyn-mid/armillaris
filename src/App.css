@@ -90,6 +90,8 @@
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
 }
 
 .node-palette-card:hover {
@@ -113,6 +115,27 @@
 .node-palette-card-type {
   font-size: 0.65rem;
   color: var(--text-secondary);
+}
+
+.delete-custom-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 1px solid transparent;
+}
+
+.delete-custom-btn:hover {
+  background: #d32f2f;
+  color: white;
 }
 
 /* Chat Styles */

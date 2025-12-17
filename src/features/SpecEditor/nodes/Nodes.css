@@ -104,7 +104,7 @@
 .group-edit-button {
     width: 100%;
     padding: 4px;
-    background: #3e3e42;
+    background: var(--node-accent-color);
     border: 1px solid #555;
     color: #fff;
     border-radius: 2px;
@@ -117,5 +117,5 @@
 }
 
 .group-edit-button:hover {
-    background: #4e4e52;
+    background: var(--bg-secondary);
 }

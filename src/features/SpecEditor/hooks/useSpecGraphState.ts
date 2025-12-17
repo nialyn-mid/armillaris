@@ -61,11 +61,67 @@ export const useSpecGraphState = () => {
         });
     }, [setNodes]);
 
+    // Recursive ID regeneration helper
+    const regenerateGraphIds = useCallback((graph: any): any => {
+        if (!graph || !graph.nodes) return graph;
+
+        const newGraph = { ...graph };
+        const idMap = new Map<string, string>();
+
+        // 1. Generate new IDs for all nodes
+        newGraph.nodes = graph.nodes.map((node: any) => {
+            const newId = crypto.randomUUID();
+            idMap.set(node.id, newId);
+            return {
+                ...node,
+                id: newId,
+                selected: false
+            };
+        });
+
+        // 2. Update edges to point to new IDs
+        newGraph.edges = graph.edges.map((edge: any) => ({
+            ...edge,
+            id: crypto.randomUUID(),
+            source: idMap.get(edge.source) || edge.source,
+            target: idMap.get(edge.target) || edge.target
+        }));
+
+        // 3. Recurse for nested graphs (Groups within Groups)
+        newGraph.nodes = newGraph.nodes.map((node: any) => {
+            if (node.data && node.data.graph) {
+                return {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        graph: regenerateGraphIds(node.data.graph)
+                    }
+                };
+            }
+            return node;
+        });
+
+        return newGraph;
+    }, []);
+
     const handleDuplicateNode = useCallback((id: string) => {
         setNodes((nds) => {
             const node = nds.find((n) => n.id === id);
             if (!node) return nds;
+
             const clonedData = JSON.parse(JSON.stringify(node.data));
+
+            // Re-attach handlers that were stripped by JSON.stringify
+            clonedData.onUpdate = node.data.onUpdate;
+            clonedData.onDuplicate = node.data.onDuplicate;
+            clonedData.onDelete = node.data.onDelete;
+            clonedData.onEditGroup = node.data.onEditGroup;
+
+            // If it's a group with a graph, regenerate internal IDs
+            if (clonedData.graph) {
+                clonedData.graph = regenerateGraphIds(clonedData.graph);
+            }
+
             const newNode = {
                 ...node,
                 id: crypto.randomUUID(),
@@ -75,7 +131,7 @@ export const useSpecGraphState = () => {
             };
             return [...nds.map(n => ({ ...n, selected: false })), newNode];
         });
-    }, [setNodes]);
+    }, [setNodes, regenerateGraphIds]);
 
     const duplicateSelectedNodes = useCallback(() => {
         setNodes((nds) => {
@@ -84,6 +140,18 @@ export const useSpecGraphState = () => {
 
             const newNodes = selected.map(node => {
                 const clonedData = JSON.parse(JSON.stringify(node.data));
+
+                // Re-attach handlers that were stripped by JSON.stringify
+                clonedData.onUpdate = node.data.onUpdate;
+                clonedData.onDuplicate = node.data.onDuplicate;
+                clonedData.onDelete = node.data.onDelete;
+                clonedData.onEditGroup = node.data.onEditGroup;
+
+                // If it's a group with a graph, regenerate internal IDs
+                if (clonedData.graph) {
+                    clonedData.graph = regenerateGraphIds(clonedData.graph);
+                }
+
                 return {
                     ...node,
                     id: crypto.randomUUID(),
@@ -93,13 +161,12 @@ export const useSpecGraphState = () => {
                 };
             });
 
-            // Return old nodes (deselected) + new nodes (selected)
             return [
                 ...nds.map(n => ({ ...n, selected: false })),
                 ...newNodes
             ];
         });
-    }, [setNodes]);
+    }, [setNodes, regenerateGraphIds]);
 
     const handleDeleteNode = useCallback((id: string) => {
         setNodes((nds) => nds.filter((n) => n.id !== id));

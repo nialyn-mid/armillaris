@@ -6,9 +6,10 @@ interface NodeContextMenuProps {
     onClose: () => void;
     onDuplicate?: () => void;
     onDelete?: () => void;
+    onSaveCustom?: () => void;
 }
 
-export function NodeContextMenu({ x, y, onClose, onDuplicate, onDelete }: NodeContextMenuProps) {
+export function NodeContextMenu({ x, y, onClose, onDuplicate, onDelete, onSaveCustom }: NodeContextMenuProps) {
     return createPortal(
         <div
             style={{
@@ -42,6 +43,21 @@ export function NodeContextMenu({ x, y, onClose, onDuplicate, onDelete }: NodeCo
                 <span>Duplicate Node</span>
                 <span style={{ color: '#aaa', fontSize: '10px' }}>Shift+D</span>
             </div>
+            {onSaveCustom && (
+                <div
+                    style={{ padding: '6px 12px', cursor: 'pointer', fontSize: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    className="context-menu-item"
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#007fd4'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onSaveCustom();
+                        onClose();
+                    }}
+                >
+                    <span>Save Custom Node</span>
+                </div>
+            )}
             <div
                 style={{ padding: '6px 12px', cursor: 'pointer', color: '#ff6b6b', fontSize: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                 className="context-menu-item"

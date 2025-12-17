@@ -20,12 +20,13 @@ import NodePalette from './NodePalette';
 import SpecManagerPanel from './SpecManagerPanel';
 import { useSpecGraph } from './hooks/useSpecGraph';
 import { SpecHotkeys } from './SpecHotkeys';
+import { CustomNodesProvider } from './context/CustomNodesContext';
 
 const edgeTypes: EdgeTypes = {
     labeled: LabeledEdge,
 };
 
-export default function SpecNodeEditor() {
+export function SpecNodeEditor() {
     const { availableSpecs, activeSpec, setActiveSpec } = useData();
 
     // Use Custom Hook for Graph Logic
@@ -69,7 +70,7 @@ export default function SpecNodeEditor() {
         event.dataTransfer.dropEffect = 'move';
     }, []);
 
-    console.log("[SpecNodeEditor] Render Nodes:", nodes?.length, nodes?.[0]);
+    //console.log("[SpecNodeEditor] Render Nodes:", nodes?.length, nodes?.[0]);
 
     return (
         <ReactFlowProvider>
@@ -143,5 +144,13 @@ export default function SpecNodeEditor() {
                 <SpecHotkeys onDuplicate={duplicateSelectedNodes} />
             </div>
         </ReactFlowProvider>
+    );
+}
+
+export default function SpecNodeEditorWithProvider() {
+    return (
+        <CustomNodesProvider>
+            <SpecNodeEditor />
+        </CustomNodesProvider>
     );
 }

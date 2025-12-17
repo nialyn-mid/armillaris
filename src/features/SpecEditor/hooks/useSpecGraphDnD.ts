@@ -22,10 +22,51 @@ export const useSpecGraphDnD = ({
     const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
-    const onDragStart = (event: React.DragEvent, nodeDef: EngineSpecNodeDef) => {
-        event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeDef));
+    const onDragStart = (event: React.DragEvent, nodeDef: EngineSpecNodeDef, customData?: any) => {
+        if (customData) {
+            event.dataTransfer.setData('application/reactflow/custom', JSON.stringify(customData));
+        } else {
+            event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeDef));
+        }
         event.dataTransfer.effectAllowed = 'move';
     };
+
+    // Recursive ID regeneration helper (Duplicated here or should be shared? Shared if possible, but localized is safer for now)
+    const regenerateGraphIds = useCallback((graph: any): any => {
+        if (!graph || !graph.nodes) return graph;
+        const newGraph = { ...graph };
+        const idMap = new Map<string, string>();
+
+        // 1. New IDs
+        newGraph.nodes = graph.nodes.map((node: any) => {
+            const newId = crypto.randomUUID();
+            idMap.set(node.id, newId);
+            return { ...node, id: newId, selected: false };
+        });
+
+        // 2. Edges
+        newGraph.edges = graph.edges.map((edge: any) => ({
+            ...edge,
+            id: crypto.randomUUID(),
+            source: idMap.get(edge.source) || edge.source,
+            target: idMap.get(edge.target) || edge.target
+        }));
+
+        // 3. Recurse
+        newGraph.nodes = newGraph.nodes.map((node: any) => {
+            if (node.data && node.data.graph) {
+                return {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        graph: regenerateGraphIds(node.data.graph)
+                    }
+                };
+            }
+            return node;
+        });
+        return newGraph;
+    }, []);
 
     const onDrop = useCallback(
         (event: React.DragEvent) => {
@@ -33,14 +74,46 @@ export const useSpecGraphDnD = ({
 
             if (!reactFlowWrapper.current || !reactFlowInstance) return;
             const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
-            const typeData = event.dataTransfer.getData('application/reactflow');
-            if (!typeData) return;
 
-            const nodeDef: EngineSpecNodeDef = JSON.parse(typeData);
             const position = reactFlowInstance.project({
                 x: event.clientX - reactFlowBounds.left,
                 y: event.clientY - reactFlowBounds.top,
             });
+
+            // 1. Handle Custom Node Drop
+            const customDataStr = event.dataTransfer.getData('application/reactflow/custom');
+            if (customDataStr) {
+                const customData = JSON.parse(customDataStr);
+                // "customData" is the full "data" object of the node.
+                // We need to regenerate IDs because it's a new instance.
+                const newData = JSON.parse(JSON.stringify(customData)); // Deep clone
+
+                if (newData.graph) {
+                    newData.graph = regenerateGraphIds(newData.graph);
+                }
+
+                const newNode: Node = {
+                    id: crypto.randomUUID(),
+                    type: customData.def.type || 'Group', // Default to Group if type missing, but it should be there
+                    position,
+                    style: { width: 220, height: 100, ...customData.style }, // Preserve style?
+                    data: {
+                        ...newData,
+                        onUpdate: handleNodeUpdate,
+                        onDuplicate: handleDuplicateNode,
+                        onDelete: handleDeleteNode,
+                        onEditGroup: onEditGroup
+                    }
+                };
+                setNodes((nds) => nds.concat(newNode));
+                return;
+            }
+
+            // 2. Handle Standard Node Drop
+            const typeData = event.dataTransfer.getData('application/reactflow');
+            if (!typeData) return;
+
+            const nodeDef: EngineSpecNodeDef = JSON.parse(typeData);
 
             // Handle Group Node (Drill-Down Architecture)
             if (nodeDef.type === 'Group') {
@@ -113,7 +186,7 @@ export const useSpecGraphDnD = ({
 
             setNodes((nds) => nds.concat(newNode));
         },
-        [reactFlowInstance, setNodes, handleNodeUpdate, engineSpec, handleDuplicateNode, handleDeleteNode, onEditGroup]
+        [reactFlowInstance, setNodes, handleNodeUpdate, engineSpec, handleDuplicateNode, handleDeleteNode, onEditGroup, regenerateGraphIds]
     );
 
     const onNodeDragStop = useCallback((_event: React.MouseEvent, _node: Node, _nodes: Node[]) => {

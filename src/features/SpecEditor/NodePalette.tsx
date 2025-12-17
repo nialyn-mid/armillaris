@@ -1,15 +1,17 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { EngineSpec, EngineSpecNodeDef } from '../../lib/engine-spec-types';
 import { SYSTEM_NODES } from './nodes/SystemNodes';
+import { useCustomNodes } from './context/CustomNodesContext';
 
 interface NodePaletteProps {
     engineSpec: EngineSpec | null;
-    onDragStart: (event: React.DragEvent, nodeDef: EngineSpecNodeDef) => void;
+    onDragStart: (event: React.DragEvent, nodeDef: EngineSpecNodeDef, customData?: any) => void;
     width: number;
     setWidth: (w: number) => void;
 }
 
 export default function NodePalette({ engineSpec, onDragStart, width, setWidth }: NodePaletteProps) {
+    const { customNodes, requestDeleteCustomNode } = useCustomNodes();
     const [activeTab, setActiveTab] = useState('Input');
 
     // Filter nodes by category
@@ -23,7 +25,7 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
             if (b === 'Output') return -1;
             return a.localeCompare(b);
         });
-        return [...sorted, 'Group'];
+        return [...sorted, 'Group', 'Custom'];
     }, [engineSpec]);
 
     // Ensure activeTab is valid
@@ -41,8 +43,23 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
                 SYSTEM_NODES.GroupOutput
             ];
         }
+        if (activeTab === 'Custom') {
+            return customNodes.map(cn => ({
+                type: cn.baseType, // 'Group'
+                category: 'Custom',
+                label: cn.name,
+                properties: {}, // Not really used for display here
+                customData: cn.data, // Payload
+                id: cn.id // Store ID for delete key
+            }));
+        }
         return engineSpec?.nodes.filter(n => n.category === activeTab) || [];
-    }, [engineSpec, activeTab]);
+    }, [engineSpec, activeTab, customNodes]);
+
+    const handleDeleteCustom = (e: React.MouseEvent, id: string, name: string) => {
+        e.stopPropagation();
+        requestDeleteCustomNode(id, name);
+    };
 
     return (
         <div style={{ width: width }} className="node-palette">
@@ -85,10 +102,26 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
                                 key={`${nodeDef.type}-${idx}`}
                                 className="node-palette-card"
                                 draggable
-                                onDragStart={(event) => onDragStart(event, nodeDef)}
+                                onDragStart={(event) => onDragStart(event, nodeDef as any, (nodeDef as any).customData)}
                             >
-                                <div className="node-palette-card-title">{nodeDef.label}</div>
-                                <div className="node-palette-card-type">{nodeDef.type}</div>
+                                <div style={{ display: 'flex', height: '100%' }}>
+                                    <div style={{ flex: 1, padding: '8px' }}>
+                                        <div className="node-palette-card-title">{nodeDef.label}</div>
+                                        <div className="node-palette-card-type">{nodeDef.type}</div>
+                                    </div>
+                                    {activeTab === 'Custom' && (
+                                        <div
+                                            className="delete-custom-btn"
+                                            onClick={(e) => handleDeleteCustom(e, (nodeDef as any).id, nodeDef.label)}
+                                            title="Delete Custom Node"
+                                        >
+                                            {/* Trash Icon (SVG) */}
+                                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                                            </svg>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )) : (
                             <div style={{ gridColumn: '1/-1', padding: '20px', color: 'var(--text-secondary)', fontSize: '0.8rem', textAlign: 'center' }}>
