@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
-import { useData } from '../context/DataContext';
+import { useData } from '../../context/DataContext';
 
 interface TemplateViewProps {
     onDirtyChange?: (isDirty: boolean) => void;

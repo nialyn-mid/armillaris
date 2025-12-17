@@ -9,7 +9,6 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    /* height: 100%; - Removed to allow natural growth for groups */
 
     /* Default variables */
     --node-accent-color: #007fd4;
@@ -18,19 +17,16 @@
 
 .spec-node.selected {
     border-color: var(--node-accent-color);
-    /* Ensure border width stays 1px to match standard nodes */
     border-width: 1px;
     box-shadow: 0 0 0 1px var(--node-accent-color);
 }
 
 .spec-node.group-node {
-    /* Group specific overrides */
     min-width: 220px;
     background: var(--node-bg-color, #1e1e1e);
     border-color: var(--node-accent-color);
 }
 
-/* If group is not selected, we might want a dimmer border? */
 .spec-node.group-node:not(.selected) {
     border-color: var(--node-accent-color);
     opacity: 0.9;
@@ -38,6 +34,34 @@
 
 .spec-node-body {
     padding: 8px;
+    display: flex;
+    gap: 8px;
+    flex: 1;
+}
+
+.spec-node-body.column {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.spec-node-body.row {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.spec-node-separator-h {
+    height: 1px;
+    background: #444;
+    margin: 2px 0;
+}
+
+.spec-node-separator-v {
+    width: 1px;
+    background: #444;
+    align-self: stretch;
+}
+
+.spec-node-props {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -57,17 +81,15 @@
     align-items: flex-end;
 }
 
-/* Specific adjustments for handles to align with standard nodes */
+/* Group Node specifics */
 .group-ports-container {
     position: relative;
     flex: 1;
     display: flex;
     justify-content: space-between;
     padding: 10px 8px;
-    /* Added horizontal padding to pull handles to edge */
 }
 
-/* Fix Group Node Header Container to match SpecNode width logic */
 .group-header-container {
     display: flex;
     align-items: center;

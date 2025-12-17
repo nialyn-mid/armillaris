@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useData } from '../context/DataContext';
-import PropertyEditor from './PropertyEditor';
-import MetaSchemaEditor from './MetaSchemaEditor';
+import { useData } from '../../context/DataContext';
+import PropertyEditor from './components/PropertyEditor';
+import MetaSchemaEditor from './components/MetaSchemaEditor';
 
 interface DataViewProps {
     showSchema: boolean;

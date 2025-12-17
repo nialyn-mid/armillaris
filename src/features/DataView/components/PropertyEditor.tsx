@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { HighlightedTextarea } from '../shared/ui/HighlightedTextarea';
-import { useData } from '../context/DataContext';
-import type { MetaPropertyType } from '../lib/types';
+import { HighlightedTextarea } from '../../../shared/ui/HighlightedTextarea';
+import { useData } from '../../../context/DataContext';
+import type { MetaPropertyType } from '../../../lib/types';
 
 interface PropertyEditorProps {
     properties: Record<string, any>;

@@ -1,4 +1,4 @@
-import { useData } from '../context/DataContext';
+import { useData } from '../../context/DataContext';
 
 export default function NotificationBar() {
     const { notification } = useData();

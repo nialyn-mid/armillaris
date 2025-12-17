@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
-import { useData } from '../context/DataContext';
-import { Generator } from '../lib/generator';
+import { useData } from '../../context/DataContext';
+import { Generator } from '../../lib/generator';
 
 export default function CodeView() {
     const { graphData, showNotification } = useData();

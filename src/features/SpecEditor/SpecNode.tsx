@@ -51,23 +51,17 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
             />
 
             {/* Body */}
-            <div style={{
-                padding: '8px',
-                display: 'flex',
-                flexDirection: isSideBySide ? 'row' : 'column',
-                gap: '8px',
-                alignItems: isSideBySide ? 'flex-start' : 'stretch'
-            }}>
+            <div className={`spec-node-body ${isSideBySide ? 'row' : 'column'}`}>
 
                 <SpecNodeInputPorts inputs={inputs} isSideBySide={isSideBySide} />
 
                 {(!isSideBySide && inputs.length > 0 && (outputs.length > 0 || properties.length > 0)) &&
-                    <div style={{ height: '1px', background: '#444', margin: '2px 0' }} />}
+                    <div className="spec-node-separator-h" />}
 
-                {isSideBySide && <div style={{ width: '1px', background: '#444', alignSelf: 'stretch' }} />}
+                {isSideBySide && <div className="spec-node-separator-v" />}
 
                 {/* Properties */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                <div className="spec-node-props">
                     <RecursiveProperties
                         definitions={def.properties}
                         values={values}
@@ -82,7 +76,7 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
                 </div>
 
                 {(!isSideBySide && outputs.length > 0 && properties.length > 0) &&
-                    <div style={{ height: '1px', background: '#444', margin: '2px 0' }} />}
+                    <div className="spec-node-separator-h" />}
 
                 <SpecNodeOutputPorts outputs={outputs} isSideBySide={isSideBySide} />
             </div>

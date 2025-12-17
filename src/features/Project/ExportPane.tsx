@@ -1,5 +1,5 @@
-import { useData } from '../context/DataContext';
-import SidePane from '../shared/ui/SidePane';
+import { useData } from '../../context/DataContext';
+import SidePane from '../../shared/ui/SidePane';
 
 interface ExportPaneProps {
     onClose: () => void;
@@ -10,7 +10,7 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
 
     const handleDownload = () => {
         if (!graphData) return;
-        import('../lib/generator').then(async m => {
+        import('../../lib/generator').then(async m => {
             let engineTemplate: string | undefined;
             let jsonSpec: any | undefined;
             const ipc = (window as any).ipcRenderer;

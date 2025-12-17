@@ -1,4 +1,4 @@
-import type { ViewMode } from '../App';
+import type { ViewMode } from '../../App';
 
 interface TabBarProps {
     currentView: ViewMode;

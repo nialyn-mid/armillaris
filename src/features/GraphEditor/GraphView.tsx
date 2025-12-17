@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import ReactFlow, {
     Background,
     Controls,
@@ -9,6 +9,8 @@ import { ChatOverlay } from './components/ChatOverlay';
 import { useGraphData } from './hooks/useGraphData';
 import { LabeledEdge } from './graph/LabeledEdge';
 import SpecNodeEditor from '../SpecEditor/SpecNodeEditor';
+import { ResizeHandle } from '../../shared/ui/ResizeHandle';
+import './GraphEditor.css';
 
 const edgeTypes = {
     labeled: LabeledEdge,
@@ -85,14 +87,18 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
         }
     };
 
+    // Resize Refs
+    const startValRef = useRef<number>(0);
+    const containerRef = useRef<HTMLDivElement>(null);
+
     return (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'row', height: '100%', position: 'relative', overflow: 'hidden' }}>
+        <div className="graph-view-root">
 
             {/* Left Column: Graph + Chat + Spec Editor */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative' }}>
+            <div className="graph-column-left">
 
                 {/* Graph Area */}
-                <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                <div className="graph-area">
                     <ReactFlow
                         id="main-graph-view"
                         nodes={nodes}
@@ -121,28 +127,18 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
 
                 {/* Bottom Panel (Spec Editor) */}
                 {showSpecEditor && (
-                    <div style={{
-                        height: bottomPanelHeight,
-                        position: 'relative',
-                        zIndex: 20,
-                    }} className="panel bottom">
-                        {/* Height Resize Handle (Top Edge) */}
-                        <div
-                            style={{
-                                position: 'absolute', left: 0, top: -4, right: 0, height: '8px', cursor: 'ns-resize', zIndex: 30
-                            }}
-                            onMouseDown={(e) => {
-                                const startY = e.clientY;
-                                const startHeight = bottomPanelHeight;
-                                const handleMouseMove = (ev: MouseEvent) => {
-                                    setBottomPanelHeight(Math.max(150, Math.min(800, startHeight + (startY - ev.clientY))));
-                                };
-                                const handleMouseUp = () => {
-                                    window.removeEventListener('mousemove', handleMouseMove);
-                                    window.removeEventListener('mouseup', handleMouseUp);
-                                };
-                                window.addEventListener('mousemove', handleMouseMove);
-                                window.addEventListener('mouseup', handleMouseUp);
+                    <div
+                        className="spec-editor-panel"
+                        style={{ height: bottomPanelHeight }}
+                    >
+                        <ResizeHandle
+                            orientation="vertical"
+                            className="handle-top" // Add styling if needed, default is invisible hitbox
+                            style={{ top: -4, height: 8, cursor: 'ns-resize' }}
+                            onDragStart={() => startValRef.current = bottomPanelHeight}
+                            onResize={(delta) => {
+                                // Dragging down (positive delta) decreases height (panel is at bottom)
+                                setBottomPanelHeight(Math.max(150, Math.min(800, startValRef.current - delta)));
                             }}
                         />
                         <SpecNodeEditor />
@@ -152,71 +148,55 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
 
             {/* Right Panel (Output) */}
             {showOutput && (
-                <div style={{
-                    width: rightPanelWidth,
-                    position: 'relative',
-                    zIndex: 20,
-                    borderLeft: '1px solid var(--border-color)',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }} className="panel right">
-                    {/* Width Resize Handle (Left Edge) */}
-                    <div
-                        style={{
-                            position: 'absolute', left: -4, top: 0, bottom: 0, width: '8px', cursor: 'ew-resize', zIndex: 30
-                        }}
-                        onMouseDown={(e) => {
-                            const startX = e.clientX;
-                            const startWidth = rightPanelWidth;
-                            const handleMouseMove = (ev: MouseEvent) => {
-                                setRightPanelWidth(Math.max(200, Math.min(1000, startWidth + (startX - ev.clientX))));
-                            };
-                            const handleMouseUp = () => {
-                                window.removeEventListener('mousemove', handleMouseMove);
-                                window.removeEventListener('mouseup', handleMouseUp);
-                            };
-                            window.addEventListener('mousemove', handleMouseMove);
-                            window.addEventListener('mouseup', handleMouseUp);
+                <div
+                    ref={containerRef}
+                    className="output-panel"
+                    style={{ width: rightPanelWidth }}
+                >
+                    <ResizeHandle
+                        orientation="horizontal"
+                        style={{ left: -4, width: 8, cursor: 'ew-resize' }}
+                        onDragStart={() => startValRef.current = rightPanelWidth}
+                        onResize={(delta) => {
+                            // Dragging left (negative delta) increases width (panel is at right)
+                            setRightPanelWidth(Math.max(200, Math.min(1000, startValRef.current - delta)));
                         }}
                     />
 
-                    <div className="panel-header">
-                        <span className="unselectable">Activation Outputs</span>
+                    <div className="output-panel-header unselectable">
+                        <span>Activation Outputs</span>
                     </div>
 
-                    <div style={{ flex: splitRatio, display: 'flex', flexDirection: 'column', minHeight: '50px' }}>
-                        <div className="panel-subheader">Personality</div>
+                    <div className="output-textarea-container" style={{ flex: splitRatio }}>
+                        <div className="output-subheader">Personality</div>
                         <textarea
                             readOnly
                             value={outputs.personality}
-                            style={{ flex: 1, resize: 'none', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: 'none', padding: '10px', fontSize: '0.9rem' }}
+                            className="output-textarea"
                         />
                     </div>
 
-                    <div
-                        style={{ height: '4px', background: 'var(--border-color)', cursor: 'ns-resize' }}
-                        onMouseDown={(e) => {
-                            const startY = e.clientY;
-                            const startRatio = splitRatio;
-                            const containerHeight = e.currentTarget.parentElement?.offsetHeight || 600;
-                            const handleMouseMove = (ev: MouseEvent) => {
-                                setSplitRatio(Math.max(0.1, Math.min(0.9, startRatio + (ev.clientY - startY) / containerHeight)));
-                            };
-                            const handleMouseUp = () => {
-                                window.removeEventListener('mousemove', handleMouseMove);
-                                window.removeEventListener('mouseup', handleMouseUp);
-                            };
-                            window.addEventListener('mousemove', handleMouseMove);
-                            window.addEventListener('mouseup', handleMouseUp);
-                        }}
-                    />
+                    {/* Splitter */}
+                    <div style={{ position: 'relative', height: 4, background: 'var(--border-color)' }}>
+                        <ResizeHandle
+                            orientation="vertical"
+                            style={{ top: -2, height: 8, cursor: 'ns-resize' }}
+                            onDragStart={() => startValRef.current = splitRatio}
+                            onResize={(delta) => {
+                                const containerH = containerRef.current?.offsetHeight || 600;
+                                // Normalized delta
+                                const ratioDelta = delta / containerH;
+                                setSplitRatio(Math.max(0.1, Math.min(0.9, startValRef.current + ratioDelta)));
+                            }}
+                        />
+                    </div>
 
-                    <div style={{ flex: 1 - splitRatio, display: 'flex', flexDirection: 'column', minHeight: '50px' }}>
-                        <div className="panel-subheader">Scenario</div>
+                    <div className="output-textarea-container" style={{ flex: 1 - splitRatio }}>
+                        <div className="output-subheader">Scenario</div>
                         <textarea
                             readOnly
                             value={outputs.scenario}
-                            style={{ flex: 1, resize: 'none', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: 'none', padding: '10px', fontSize: '0.9rem' }}
+                            className="output-textarea"
                         />
                     </div>
                 </div>

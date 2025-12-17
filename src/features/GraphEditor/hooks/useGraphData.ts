@@ -7,7 +7,7 @@ import {
 } from 'reactflow';
 import { useData } from '../../../context/DataContext';
 import { Engine } from '../../../lib/engine';
-import { getLayoutedElements, nodeWidth } from '../../../lib/layout';
+import { getLayoutedElements, nodeWidth } from '../lib/layout';
 
 export function useGraphData() {
     const { graphData } = useData();

@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import './App.css';
-import Toolbar from './components/Toolbar';
-import ImportPane from './components/ImportPane';
-import ExportPane from './components/ExportPane';
-import EnginePane from './components/EnginePane';
-import TabBar from './components/TabBar';
+import Toolbar from './shared/ui/Toolbar';
+import ImportPane from './features/Project/ImportPane';
+import ExportPane from './features/Project/ExportPane';
+import EnginePane from './features/Project/EnginePane';
+import TabBar from './shared/ui/TabBar';
 import GraphView from './features/GraphEditor/GraphView';
-import CodeView from './components/CodeView';
-import TemplateView from './components/TemplateView';
-import DataView from './components/DataView';
-import NotificationBar from './components/NotificationBar';
-import RightActivityBar from './components/RightActivityBar';
+import CodeView from './features/CodeView/CodeView';
+import TemplateView from './features/TemplateView/TemplateView';
+import DataView from './features/DataView/DataView';
+import NotificationBar from './shared/ui/NotificationBar';
+import RightActivityBar from './shared/ui/RightActivityBar';
 
 export type ViewMode = 'template' | 'data' | 'graph' | 'code';
 export type PaneMode = 'import' | 'export' | 'engine' | null;

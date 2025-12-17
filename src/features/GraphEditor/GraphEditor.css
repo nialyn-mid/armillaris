@@ -1,0 +1,76 @@
+.graph-view-root {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.graph-column-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+}
+
+.graph-area {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.spec-editor-panel {
+    position: relative;
+    z-index: 20;
+    background-color: var(--bg-secondary);
+    /* Assuming default */
+    border-top: 1px solid var(--border-color);
+}
+
+.output-panel {
+    position: relative;
+    z-index: 20;
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-secondary);
+}
+
+.output-panel-header {
+    padding: 8px;
+    background: #252526;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.output-textarea-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 50px;
+}
+
+.output-subheader {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    text-transform: uppercase;
+}
+
+.output-textarea {
+    flex: 1;
+    resize: none;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: none;
+    padding: 10px;
+    font-size: 0.9rem;
+}

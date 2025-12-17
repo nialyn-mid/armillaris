@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { useData } from '../context/DataContext';
-import type { MetaPropertyType } from '../lib/types';
+import { useData } from '../../../context/DataContext';
+import type { MetaPropertyType } from '../../../lib/types';
 
 export default function MetaSchemaEditor() {
     const { metaDefinitions, updateMetaDefinitions } = useData();
