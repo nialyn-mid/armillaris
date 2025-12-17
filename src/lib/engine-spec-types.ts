@@ -14,6 +14,14 @@ export interface EngineSpecNodeDef {
     inputs: PortDef[] | ExpansionDef<PortDef>;
     outputs: PortDef[] | ExpansionDef<PortDef>;
     properties: PropertyDef[] | ExpansionDef<PropertyDef>; // Can be an array OR an expansion object
+    typeConstraints?: TypeConstraint[];
+}
+
+export interface TypeConstraint {
+    id: string; // ID for the constraint group
+    ports: string[]; // List of port IDs (inputs or outputs) that are linked
+    subtype_of?: string; // The generic type that valid connections must be a subtype of (e.g. "List")
+    expansions?: { pattern: string, for: string }[]; // Configuration for dynamic port resolution
 }
 
 export interface ExpansionDef<T> {

@@ -13,6 +13,7 @@ const getHandleStyle = (type: string, isLeft: boolean) => {
 
     if (lowerType.includes('entry')) bg = '#009688';
     else if (lowerType.includes('attribute')) bg = '#9c27b0';
+    else if (lowerType.includes('message')) bg = '#2131bbff';
     else if (['string', 'boolean', 'date', 'number'].some(t => lowerType.includes(t))) bg = '#888';
 
     const isList = lowerType.includes('list');

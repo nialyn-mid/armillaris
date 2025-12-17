@@ -40,6 +40,8 @@ export function SpecNodeEditor() {
         onNodeDragStop,
         onSelectionDrag,
         onSelectionDragStop,
+        isValidConnection,
+        onEdgeDoubleClick,
         reactFlowWrapper,
         setReactFlowInstance,
         engineSpec,
@@ -125,6 +127,8 @@ export function SpecNodeEditor() {
                         onNodeDrag={onNodeDrag as any}
                         onSelectionDrag={onSelectionDrag as any}
                         onSelectionDragStop={onSelectionDragStop as any}
+                        isValidConnection={isValidConnection}
+                        onEdgeDoubleClick={onEdgeDoubleClick}
                     >
                         <Background color="#30363d" gap={20} />
                         <Controls />

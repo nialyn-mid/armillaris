@@ -114,7 +114,7 @@ export const useSpecGraph = () => {
     }, [viewPath, masterGraph, setNodes, setEdges, handleNodeUpdate, handleDuplicateNode, handleDeleteNode, onEditGroup, rfInstance]);
 
     // 3. Connections (Logic for Group/Proxy bi-directional sync)
-    const { onConnect } = useSpecGraphConnections({
+    const { onConnect, isValidConnection, onEdgeDoubleClick } = useSpecGraphConnections({
         edges,
         setEdges,
         nodes,
@@ -137,7 +137,6 @@ export const useSpecGraph = () => {
         onEditGroup
     });
 
-    // 5. Move Nodes Logic (Move Into Group)
     // 5. Move Nodes Logic (Move Into Group & Move Up)
 
     const onMoveNodesUp = useCallback((nodesToMove: Node[]) => {
@@ -196,11 +195,12 @@ export const useSpecGraph = () => {
 
     }, [masterGraph, viewPath, nodes, edges, saveSpec, setMasterGraph]);
 
-
     return {
         nodes, onNodesChange,
         edges, onEdgesChange,
         onConnect,
+        isValidConnection,
+        onEdgeDoubleClick,
         onDragStart,
         onDrop,
         onNodeDrag,

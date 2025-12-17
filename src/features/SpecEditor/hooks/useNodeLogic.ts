@@ -38,9 +38,42 @@ export function useNodeLogic(id: string, data: SpecNodeData) {
     // 2. Resolve Schema (Top Level)
     const resolvedSchema = useMemo(() => resolveNodeSchema(def, values), [def, values]);
 
-    // Allow overrides from data (for Group Proxies) or fallback to def resolution
-    const inputs = (data as any).inputs?.length ? (data as any).inputs : resolvedSchema.inputs;
-    const outputs = (data as any).outputs?.length ? (data as any).outputs : resolvedSchema.outputs;
+    // Merge logic: Use resolvedSchema for structure (ports list), but override Types from data.inputs/outputs where ID matches.
+    // This allows dynamic ports (from values) to exist, while keeping persisted Type updates.
+
+    // Fallback for Group Nodes/Proxies which might rely entirely on data.inputs (if no def logic)
+    // But for "Join List", we want the merge.
+
+    const inputs = useMemo(() => {
+        const baseInputs = resolvedSchema.inputs;
+        const storedInputs = (data as any).inputs || [];
+
+        if (baseInputs.length === 0 && storedInputs.length > 0) return storedInputs; // Use stored if base is empty (e.g. some proxy cases?)
+
+        return baseInputs.map(port => {
+            const stored = storedInputs.find((p: any) => p.id === port.id);
+            if (stored && stored.type !== port.type) {
+                return { ...port, type: stored.type };
+            }
+            return port;
+        });
+    }, [resolvedSchema.inputs, (data as any).inputs]);
+
+    const outputs = useMemo(() => {
+        const baseOutputs = resolvedSchema.outputs;
+        const storedOutputs = (data as any).outputs || [];
+
+        if (baseOutputs.length === 0 && storedOutputs.length > 0) return storedOutputs;
+
+        return baseOutputs.map(port => {
+            const stored = storedOutputs.find((p: any) => p.id === port.id);
+            if (stored && stored.type !== port.type) {
+                return { ...port, type: stored.type };
+            }
+            return port;
+        });
+    }, [resolvedSchema.outputs, (data as any).outputs]);
+
     const properties = resolvedSchema.properties;
 
     const handleUpdate = useCallback((newValues: any) => {

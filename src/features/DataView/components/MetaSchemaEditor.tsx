@@ -53,7 +53,7 @@ export default function MetaSchemaEditor() {
     };
 
     const handleDeleteMeta = (name: string) => {
-        if (!window.confirm(`Delete schema definition for "${name}"?`)) return;
+        if (!window.confirm(`Delete entry type definition for "${name}"?`)) return;
         updateMetaDefinitions(metaDefinitions.filter(d => d.name !== name));
         if (selectedMeta === name) setSelectedMeta(null);
     };
@@ -119,7 +119,7 @@ export default function MetaSchemaEditor() {
     return (
         <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div style={{ fontWeight: 'bold', fontSize: '1.1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', marginBottom: '10px' }}>
-                Schema Definition
+                Entry Type Definition
             </div>
 
             {/* Meta Types List */}

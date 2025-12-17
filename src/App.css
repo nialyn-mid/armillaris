@@ -214,8 +214,17 @@
 /* Graph Viewer Styles*/
 
 .react-flow__panel>button.react-flow__controls-button {
-  background-color: var(--accent-color);
-  border: none;
+  background-color: var(--bg-secondary);
+  border: solid 1px var(--border-color);
+  transition: background-color 0.3s ease;
+}
+
+.react-flow__panel>button.react-flow__controls-button:hover {
+  background-color: var(--border-color);
+}
+
+.react-flow__panel>button.react-flow__controls-button>svg {
+  filter: invert(1);
 }
 
 /* Property Blocks */
