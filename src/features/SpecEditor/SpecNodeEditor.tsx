@@ -94,7 +94,7 @@ export function SpecNodeEditor() {
                     {/* Breadcrumbs Navigation */}
                     <div style={{ padding: '0', background: '#252526', borderBottom: '1px solid #333' }}>
                         <Breadcrumbs
-                            path={[{ id: 'root', label: 'Root' }, ...viewPath]}
+                            path={[{ id: 'root', label: 'Behavior' }, ...viewPath]}
                             onNavigate={navigateTo}
                             masterGraph={masterGraph}
                         />

@@ -6,14 +6,14 @@ export interface CustomNodeDef {
     baseType: string;
     data: any; // Full node data (inputs, outputs, properties, graph)
     created: number;
+    description?: string;
 }
 
 interface CustomNodesContextType {
     customNodes: CustomNodeDef[];
-    addCustomNode: (nodeData: any, name: string) => void;
-
+    addCustomNode: (nodeData: any, name: string, description?: string) => void;
     removeCustomNode: (id: string) => void;
-    saveCustomNode: (nodeData: any, name: string) => void;
+    saveCustomNode: (nodeData: any, name: string, description?: string) => void;
     requestDeleteCustomNode: (id: string, name: string) => void;
 }
 
@@ -38,7 +38,7 @@ export function CustomNodesProvider({ children }: { children: React.ReactNode })
         localStorage.setItem(STORAGE_KEY, JSON.stringify(customNodes));
     }, [customNodes]);
 
-    const addCustomNode = useCallback((nodeData: any, name: string) => {
+    const addCustomNode = useCallback((nodeData: any, name: string, description?: string) => {
         // Create a deep copy of data to ensure we snapshot it
         const dataSnapshot = JSON.parse(JSON.stringify(nodeData));
 
@@ -53,7 +53,8 @@ export function CustomNodesProvider({ children }: { children: React.ReactNode })
             name,
             baseType: 'Group', // Currently only groups supported for custom nodes? User implied groups.
             data: dataSnapshot,
-            created: Date.now()
+            created: Date.now(),
+            description: description || 'Custom saved group node'
         };
 
         setCustomNodes(prev => [...prev, newNode]);
@@ -63,8 +64,8 @@ export function CustomNodesProvider({ children }: { children: React.ReactNode })
         setCustomNodes(prev => prev.filter(n => n.id !== id));
     }, []);
 
-    const saveCustomNode = useCallback((nodeData: any, name: string) => {
-        addCustomNode(nodeData, name);
+    const saveCustomNode = useCallback((nodeData: any, name: string, description?: string) => {
+        addCustomNode(nodeData, name, description);
     }, [addCustomNode]);
 
     const requestDeleteCustomNode = useCallback((id: string, name: string) => {

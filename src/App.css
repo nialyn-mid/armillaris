@@ -85,7 +85,6 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  height: 80px;
   justify-content: center;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -115,6 +114,19 @@
 .node-palette-card-type {
   font-size: 0.65rem;
   color: var(--text-secondary);
+}
+
+.node-palette-card-desc {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 4px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  line-clamp: 6;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
 }
 
 .delete-custom-btn {

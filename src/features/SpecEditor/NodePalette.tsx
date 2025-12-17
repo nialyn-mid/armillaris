@@ -44,13 +44,16 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
             ];
         }
         if (activeTab === 'Custom') {
-            return customNodes.map(cn => ({
-                type: cn.baseType, // 'Group'
+            return customNodes.map((cn): EngineSpecNodeDef & { id: string, customData: any } => ({
+                type: cn.baseType as 'Group',
                 category: 'Custom',
                 label: cn.name,
-                properties: {}, // Not really used for display here
+                description: cn.description,
+                inputs: [], // Should maybe be populated from data? For palette display it might not matter much yet.
+                outputs: [],
+                properties: [],
                 customData: cn.data, // Payload
-                id: cn.id // Store ID for delete key
+                id: cn.id
             }));
         }
         return engineSpec?.nodes.filter(n => n.category === activeTab) || [];
@@ -108,6 +111,9 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
                                     <div style={{ flex: 1, padding: '8px' }}>
                                         <div className="node-palette-card-title">{nodeDef.label}</div>
                                         <div className="node-palette-card-type">{nodeDef.type}</div>
+                                        {nodeDef.description && (
+                                            <div className="node-palette-card-desc">{nodeDef.description}</div>
+                                        )}
                                     </div>
                                     {activeTab === 'Custom' && (
                                         <div

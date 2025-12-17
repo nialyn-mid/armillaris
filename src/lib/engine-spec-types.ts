@@ -9,7 +9,8 @@ export interface EngineSpec {
 export interface EngineSpecNodeDef {
     type: string;
     label: string;
-    category: 'Input' | 'Transformation' | 'Output' | 'Utility' | 'Filter' | 'Graph' | 'System';
+    description?: string;
+    category: 'Input' | 'Transformation' | 'Output' | 'Utility' | 'Filter' | 'Graph' | 'System' | 'Custom';
     inputs: PortDef[] | ExpansionDef<PortDef>;
     outputs: PortDef[] | ExpansionDef<PortDef>;
     properties: PropertyDef[] | ExpansionDef<PropertyDef>; // Can be an array OR an expansion object

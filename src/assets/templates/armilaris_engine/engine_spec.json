@@ -23,6 +23,7 @@
             "type": "InputSource",
             "label": "Input Entry List",
             "category": "Input",
+            "description": "The full list of entries from Data.",
             "inputs": [],
             "outputs": [
                 {
@@ -37,6 +38,7 @@
             "type": "InputSource",
             "label": "Input Chat",
             "category": "Input",
+            "description": "All chat fields provided by the system.",
             "inputs": [],
             "outputs": [
                 {
@@ -86,6 +88,7 @@
             "type": "InputSource",
             "label": "Character Input",
             "category": "Input",
+            "description": "All character fields provided by the system.",
             "inputs": [],
             "outputs": [
                 {
@@ -125,6 +128,7 @@
             "type": "InputSource",
             "label": "Custom Attributes Input",
             "category": "Input",
+            "description": "Create a custom attribute list from names and values.",
             "inputs": [
                 {
                     "id": "names",
@@ -198,6 +202,7 @@
             "type": "InputSource",
             "label": "Custom Value List Input",
             "category": "Input",
+            "description": "Create a custom value list by defining the type and values.",
             "inputs": [
                 {
                     "id": "type",
@@ -252,6 +257,7 @@
             "type": "Filter",
             "label": "Entry Filter",
             "category": "Filter",
+            "description": "Filter entries based on attribute values.",
             "inputs": [
                 {
                     "id": "entries",
@@ -350,6 +356,7 @@
             "type": "Filter",
             "label": "Keyword Filter",
             "category": "Filter",
+            "description": "Filter entries based on their associated keywords' presence in the input messages.",
             "inputs": [
                 {
                     "id": "entries",
@@ -439,6 +446,7 @@
             "type": "Filter",
             "label": "Message Filter",
             "category": "Filter",
+            "description": "Filter messages based on conditions about message content.",
             "inputs": [
                 {
                     "id": "messages",
@@ -453,13 +461,23 @@
             ],
             "outputs": [
                 {
-                    "id": "messages",
-                    "label": "Messages",
+                    "id": "matched_messages",
+                    "label": "Matched Messages",
                     "type": "Message List"
                 },
                 {
                     "id": "matched_conditions",
                     "label": "Matched Conditions",
+                    "type": "String List"
+                },
+                {
+                    "id": "unmatched_messages",
+                    "label": "Unmatched Messages",
+                    "type": "Message List"
+                },
+                {
+                    "id": "unmatched_conditions",
+                    "label": "Unmatched Conditions",
                     "type": "String List"
                 }
             ],
@@ -473,12 +491,6 @@
                 {
                     "name": "wordbreak_sensitive",
                     "label": "Match Inside Word",
-                    "type": "Boolean",
-                    "default": false
-                },
-                {
-                    "name": "is_regex",
-                    "label": "Use As RegEx",
                     "type": "Boolean",
                     "default": false
                 },
@@ -501,6 +513,12 @@
                         }
                     ],
                     "default": "all"
+                },
+                {
+                    "name": "is_regex",
+                    "label": "Use As RegEx",
+                    "type": "Boolean",
+                    "default": false
                 }
             ]
         },
@@ -508,17 +526,18 @@
             "type": "Filter",
             "label": "List Filter",
             "category": "Filter",
+            "description": "Filter a list based on numeric patterns.",
             "inputs": [
                 {
                     "id": "list",
-                    "label": "List",
+                    "label": "Input List",
                     "type": "List"
                 }
             ],
             "outputs": [
                 {
                     "id": "list",
-                    "label": "List",
+                    "label": "Output List",
                     "type": "List"
                 }
             ],
@@ -547,6 +566,7 @@
             "type": "AttributeExtractor",
             "label": "Attribute",
             "category": "Utility",
+            "description": "Extract attributes from an entry.",
             "inputs": [
                 {
                     "id": "entry",
@@ -570,6 +590,7 @@
             "type": "AttributeExtractor",
             "label": "Attribute List",
             "category": "Utility",
+            "description": "Extract attributes from a list of entries.",
             "inputs": [
                 {
                     "id": "entries",
@@ -593,6 +614,7 @@
             "type": "DataUtility",
             "label": "Join List",
             "category": "Utility",
+            "description": "Join multiple lists of the same type into a single list.",
             "inputs": {
                 "$for": "node.expandable_inputs",
                 "$item": {
@@ -614,6 +636,7 @@
             "type": "DataUtility",
             "label": "Value Map",
             "category": "Utility",
+            "description": "Map values from one list to another.",
             "inputs": {
                 "values": {
                     "label": "Values",
@@ -658,6 +681,7 @@
             "type": "Adjacency",
             "label": "Graph Adjacency",
             "category": "Graph",
+            "description": "Output the entries which are a distance from the input entries.",
             "inputs": [
                 {
                     "id": "entries",
