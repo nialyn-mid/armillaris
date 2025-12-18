@@ -1,42 +1,37 @@
-/* Armillaris Engine v3.0 */
-const behavior_input = "{{BEHAVIOR_INJECT}}";
-const data_input = "{{DATA_INJECT}}";
+/* Armillaris Engine v3.0 Verification Script */
 
-//some placeholder code
+// Summary of inputs
+const char = context.character;
+const chat = context.chat;
 
-/* Armillaris exports */
-activated_ids = ["2c70e740-a465-8015-a173-cf6413864a4d"]
+// Populate outputs from inputs for verification
+context.character.personality = `CHARACTER INPUTS:
+Name: ${char.name || '[empty]'}
+Chat Name: ${char.chat_name || '[empty]'}
+Personality (Read): ${char.personality || '[empty]'}
+Scenario (Read): ${char.scenario || '[empty]'}
+Prompt Override: ${char.custom_prompt_complete || '[empty]'}`;
+
+context.character.scenario = `CHAT INPUTS:
+User Name: ${chat.user_name || '[empty]'}
+Persona Name: ${chat.persona_name || '[empty]'}
+Message Count: ${chat.message_count}
+Currently Writing: "${chat.last_message}"
+First Msg Date: ${chat.first_message_date || '[not set]'}
+Last Bot Date: ${chat.last_bot_message_date || '[not set]'}`;
+
+context.character.example_dialogs = `LAST 10 MESSAGES (Chronological):
+${chat.last_messages.map((m, i) => `${i + 1}. [${m.is_bot ? 'BOT' : 'USER'}] ${m.message}`).join('\n')}`;
+
+// Node highlights
+activated_ids = ["2c70e740-a465-8015-a173-cf6413864a4d"];
+
+// Highlight the currently typed text in red
 chat_highlights = [
     [
         {
             color: "#ff0000",
-            ranges: [[1, 5], [10, 15]]
-        },
-        {
-            color: "#00ff00",
-            ranges: [[23, 25], [28, 30]]
-        },
-        {
-            color: "#0000ff",
-            ranges: [[3, 20]]
-        },
-    ],
-    [
-        {
-            color: "#ff0000",
-            ranges: [[1, 5], [10, 35]]
-        },
-        {
-            color: "#00ff00",
-            ranges: [[23, 35], [28, 35]]
-        },
-        {
-            color: "#0000ff",
-            ranges: [[3, 20], [29, 30]]
-        },
-    ],
-]
-
-context.character.personality += "some personality readable by sandbox";
-context.character.scenario += "some scenario readable by sandbox";
-context.character.example_dialogs += "some example_dialogs readable by sandbox";
+            ranges: [[0, chat.last_message.length]]
+        }
+    ]
+];

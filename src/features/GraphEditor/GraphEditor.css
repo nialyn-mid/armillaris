@@ -27,7 +27,6 @@
     position: relative;
     z-index: 20;
     background-color: var(--bg-secondary);
-    /* Assuming default */
     border-top: 1px solid var(--border-color);
 }
 
@@ -49,12 +48,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    user-select: none;
 }
 
 .output-textarea-container {
     display: flex;
     flex-direction: column;
     min-height: 50px;
+    position: relative;
 }
 
 .output-subheader {
@@ -63,6 +64,7 @@
     color: var(--text-secondary);
     background: var(--bg-tertiary);
     text-transform: uppercase;
+    user-select: none;
 }
 
 .output-textarea {
@@ -73,4 +75,90 @@
     border: none;
     padding: 10px;
     font-size: 0.9rem;
+    font-family: inherit;
+}
+
+/* Input Panel (Left) */
+.input-panel-left {
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex-shrink: 0;
+}
+
+.metadata-inputs-container {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+.metadata-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.metadata-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+    user-select: none;
+}
+
+.metadata-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.metadata-field label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.metadata-field input,
+.metadata-field textarea {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 6px 8px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    outline: none;
+}
+
+.metadata-field textarea {
+    min-height: 60px;
+    resize: vertical;
+}
+
+.metadata-field input:focus,
+.metadata-field textarea:focus {
+    border-color: var(--accent-color);
+}
+
+.metadata-field input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+/* Resize Handle Overrides */
+.handle-left-panel {
+    border-right: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+
+.handle-left-panel:hover {
+    background: var(--accent-color) !important;
+    opacity: 0.5;
 }

@@ -116,6 +116,7 @@ function App() {
               <GraphView
                 showOutput={activeTools.includes('output')}
                 showSpecEditor={activeTools.includes('spec_editor')}
+                showInputPanel={activeTools.includes('engine_context')}
               />
             )}
             {activeTab === 'data' && (

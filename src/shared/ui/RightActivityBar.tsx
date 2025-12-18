@@ -2,7 +2,8 @@
 import {
     MdDataObject,  // Output
     MdSchema,      // Node Editor / Spec
-    MdDescription  // Schema / Docs
+    MdDescription, // Schema / Docs
+    MdAssignment   // Context Inputs
 } from 'react-icons/md';
 
 interface RightActivityBarProps {
@@ -18,6 +19,7 @@ export default function RightActivityBar({ activeTab, activeTools, onToggleTool 
         switch (activeTab) {
             case 'graph':
                 return [
+                    { id: 'engine_context', icon: <MdAssignment />, title: 'Engine Context Inputs' },
                     { id: 'output', icon: <MdDataObject />, title: 'Activation Outputs' },
                     { id: 'spec_editor', icon: <MdSchema />, title: 'Spec Node Editor' }
                 ];

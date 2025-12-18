@@ -20,11 +20,12 @@ const edgeTypes = {
 interface GraphViewProps {
     showOutput: boolean;
     showSpecEditor: boolean;
+    showInputPanel: boolean;
 }
 
 
 
-export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps) {
+export default function GraphView({ showOutput, showSpecEditor, showInputPanel }: GraphViewProps) {
     const { activeEngine, activeSpec, entries } = useData();
     // Graph Data Hook
     const { nodes, edges, onNodesChange, onEdgesChange, updateHighlights } = useGraphData();
@@ -35,16 +36,37 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
     // Chat & Graph Interaction State
     const [matches, setMatches] = useState<any[]>([]);
 
-    // Panel & Output System
-    const [outputs, setOutputs] = useState({ personality: '', scenario: '' });
+    // Character & Chat Metadata (Persistent)
+    const [character, setCharacter] = useState(() => {
+        const saved = localStorage.getItem('graphview_character');
+        return saved ? JSON.parse(saved) : {
+            name: '',
+            chat_name: '',
+            example_dialogs: '',
+            personality: '',
+            scenario: '',
+            custom_prompt_complete: ''
+        };
+    });
 
-    // Character Metadata (Defaults for context)
-    const [character] = useState({
-        name: 'Character Name',
-        chat_name: 'Bot',
-        example_dialogs: '',
+    const [chatMeta, setChatMeta] = useState(() => {
+        const saved = localStorage.getItem('graphview_chat_meta');
+        return saved ? JSON.parse(saved) : {
+            user_name: '',
+            persona_name: '',
+            first_message_date: undefined,
+            last_bot_message_date: undefined,
+        };
+    });
+
+    useEffect(() => { localStorage.setItem('graphview_character', JSON.stringify(character)); }, [character]);
+    useEffect(() => { localStorage.setItem('graphview_chat_meta', JSON.stringify(chatMeta)); }, [chatMeta]);
+
+    // Panel & Output System
+    const [outputs, setOutputs] = useState({
         personality: '',
         scenario: '',
+        example_dialogs: ''
     });
 
     // Persistence: Panel Dimensions
@@ -58,9 +80,19 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
         return isNaN(saved) ? 300 : saved;
     });
 
-    const [splitRatio, setSplitRatio] = useState(() => {
-        const saved = parseFloat(localStorage.getItem('graphview_split_ratio') || '0.5');
-        return isNaN(saved) ? 0.5 : saved;
+    const [leftPanelWidth, setLeftPanelWidth] = useState(() => {
+        const saved = parseInt(localStorage.getItem('graphview_left_panel_width') || '300', 10);
+        return isNaN(saved) ? 300 : saved;
+    });
+
+    // Output Pane Ratios (Independent Heights)
+    const [personalityHeight, setPersonalityHeight] = useState(() => {
+        const saved = parseInt(localStorage.getItem('graphview_p_height') || '200', 10);
+        return isNaN(saved) ? 200 : saved;
+    });
+    const [exampleHeight, setExampleHeight] = useState(() => {
+        const saved = parseInt(localStorage.getItem('graphview_e_height') || '200', 10);
+        return isNaN(saved) ? 200 : saved;
     });
 
     // Persistence: Viewport
@@ -75,7 +107,9 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
     // Persistence Effects
     useEffect(() => { localStorage.setItem('graphview_right_panel_width', String(rightPanelWidth)); }, [rightPanelWidth]);
     useEffect(() => { localStorage.setItem('graphview_bottom_panel_height', String(bottomPanelHeight)); }, [bottomPanelHeight]);
-    useEffect(() => { localStorage.setItem('graphview_split_ratio', String(splitRatio)); }, [splitRatio]);
+    useEffect(() => { localStorage.setItem('graphview_left_panel_width', String(leftPanelWidth)); }, [leftPanelWidth]);
+    useEffect(() => { localStorage.setItem('graphview_p_height', String(personalityHeight)); }, [personalityHeight]);
+    useEffect(() => { localStorage.setItem('graphview_e_height', String(exampleHeight)); }, [exampleHeight]);
 
     const onMoveEnd = useCallback((_: any, viewport: any) => {
         localStorage.setItem('graphview_viewport', JSON.stringify(viewport));
@@ -112,16 +146,23 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
         if (!ipc || !activeEngine) return;
 
         // Build Context
+        const historyWindow = session.chatHistory.slice(-9).map(m => ({
+            is_bot: m.role === 'system',
+            date: undefined, // Add timestamp to chatHistory if needed
+            message: m.content,
+        }));
+
         const chat = {
             last_message: currentInput,
-            last_messages: session.chatHistory.map(m => ({
-                is_bot: m.role === 'system',
-                message: m.content,
-                date: new Date() // Placeholder date
-            })),
-            message_count: session.chatHistory.length,
-            user_name: 'User',
-            persona_name: character.name
+            last_messages: [
+                ...historyWindow,
+                { is_bot: false, date: new Date(), message: currentInput }
+            ],
+            first_message_date: chatMeta.first_message_date,
+            last_bot_message_date: chatMeta.last_bot_message_date,
+            message_count: session.chatHistory.length + 1,
+            user_name: chatMeta.user_name,
+            persona_name: chatMeta.persona_name
         };
 
         const context = {
@@ -141,8 +182,9 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
 
             if (response.success) {
                 setOutputs({
-                    personality: response.personality,
-                    scenario: response.scenario
+                    personality: response.personality || '',
+                    scenario: response.scenario || '',
+                    example_dialogs: response.example_dialogs || ''
                 });
                 if (response.activatedIds) updateHighlights(response.activatedIds);
                 setChatHighlights(response.chatHighlights);
@@ -152,7 +194,7 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
         } catch (e) {
             console.error("Failed to execute engine sandbox", e);
         }
-    }, [activeEngine, activeSpec, entries, session.chatHistory, character, updateHighlights, refreshMeta]);
+    }, [activeEngine, activeSpec, entries, session.chatHistory, character, chatMeta, updateHighlights, refreshMeta]);
 
     const onChatInputChange = (val: string) => {
         runEngine(val);
@@ -161,13 +203,13 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
         }
     };
 
-    // Re-run engine when history changes (e.g. after sending) to refresh highlights/outputs
+    // Re-run engine when history, character, or meta changes
     useEffect(() => {
         runEngine(session.chatInput);
-    }, [session.chatHistory.length, runEngine]);
+    }, [session.chatHistory.length, character, chatMeta, runEngine]);
 
-    // Resize Refs
-    const startValRef = useRef<number>(0);
+    // Resize Handling
+    const startStateRef = useRef({ p: 0, s: 0, e: 0, left: 0, right: 0, bottom: 0, pHeight: 0, eHeight: 0 });
     const containerRef = useRef<HTMLDivElement>(null);
 
     return (
@@ -176,40 +218,61 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
             {/* Left Column: Graph + Chat + Spec Editor */}
             <div className="graph-column-left">
 
-                {/* Graph Area */}
-                <div className="graph-area">
-                    <ReactFlow
-                        id="main-graph-view"
-                        nodes={nodes}
-                        edges={edges}
-                        edgeTypes={edgeTypes}
-                        onNodesChange={onNodesChange}
-                        onEdgesChange={onEdgesChange}
-                        defaultViewport={defaultViewport}
-                        onMoveEnd={onMoveEnd}
-                        className="dark-theme"
-                    >
-                        <Background color="#30363d" gap={16} />
-                        <Controls />
-                        <Panel position="top-right" style={{ color: '#8b949e', fontSize: '11px', textAlign: 'right', pointerEvents: 'none' }}>
-                            <div>{nodes.length} nodes, {edges.length} edges</div>
-                            {engineMeta && (
-                                <div style={{ opacity: 0.8, marginTop: '2px' }}>
-                                    Last Compiled: {new Date(engineMeta.lastCompiled).toLocaleString()}
-                                    <br />
-                                    Active Behavior: {engineMeta.specName.replace('.behavior', '').replace('.json', '')}
-                                </div>
-                            )}
-                        </Panel>
-                    </ReactFlow>
+                <div style={{ display: 'flex', flex: 1, minHeight: 0, position: 'relative' }}>
+                    {/* Input Panel (Side-by-Side) */}
+                    {showInputPanel && (
+                        <div className="input-panel-left" style={{ width: leftPanelWidth, position: 'relative' }}>
+                            <CharacterChatInputs
+                                character={character} setCharacter={setCharacter}
+                                chatMeta={chatMeta} setChatMeta={setChatMeta}
+                            />
+                            <ResizeHandle
+                                orientation="horizontal"
+                                className="handle-left-panel"
+                                style={{ right: -4, width: 8, cursor: 'ew-resize', zIndex: 110 }}
+                                onDragStart={() => startStateRef.current.left = leftPanelWidth}
+                                onResize={(delta) => {
+                                    setLeftPanelWidth(Math.max(200, Math.min(600, startStateRef.current.left + delta)));
+                                }}
+                            />
+                        </div>
+                    )}
 
-                    {/* Chat Sandbox */}
-                    <ChatOverlay
-                        session={session}
-                        matches={matches}
-                        onInputChange={onChatInputChange}
-                        highlights={chatHighlights}
-                    />
+                    {/* Graph Area */}
+                    <div className="graph-area">
+                        <ReactFlow
+                            id="main-graph-view"
+                            nodes={nodes}
+                            edges={edges}
+                            edgeTypes={edgeTypes}
+                            onNodesChange={onNodesChange}
+                            onEdgesChange={onEdgesChange}
+                            defaultViewport={defaultViewport}
+                            onMoveEnd={onMoveEnd}
+                            className="dark-theme"
+                        >
+                            <Background color="#30363d" gap={16} />
+                            <Controls />
+                            <Panel position="top-right" style={{ color: '#8b949e', fontSize: '11px', textAlign: 'right', pointerEvents: 'none' }}>
+                                <div>{nodes.length} nodes, {edges.length} edges</div>
+                                {engineMeta && (
+                                    <div style={{ opacity: 0.8, marginTop: '2px' }}>
+                                        Last Compiled: {new Date(engineMeta.lastCompiled).toLocaleString()}
+                                        <br />
+                                        Active Behavior: {engineMeta.specName.replace('.behavior', '').replace('.json', '')}
+                                    </div>
+                                )}
+                            </Panel>
+                        </ReactFlow>
+
+                        {/* Chat Sandbox */}
+                        <ChatOverlay
+                            session={session}
+                            matches={matches}
+                            onInputChange={onChatInputChange}
+                            highlights={chatHighlights}
+                        />
+                    </div>
                 </div>
 
                 {/* Bottom Panel (Spec Editor) */}
@@ -220,12 +283,11 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
                     >
                         <ResizeHandle
                             orientation="vertical"
-                            className="handle-top" // Add styling if needed, default is invisible hitbox
+                            className="handle-top"
                             style={{ top: -4, height: 8, cursor: 'ns-resize' }}
-                            onDragStart={() => startValRef.current = bottomPanelHeight}
+                            onDragStart={() => startStateRef.current.bottom = bottomPanelHeight}
                             onResize={(delta) => {
-                                // Dragging down (positive delta) decreases height (panel is at bottom)
-                                setBottomPanelHeight(Math.max(150, Math.min(800, startValRef.current - delta)));
+                                setBottomPanelHeight(Math.max(300, Math.min(1200, startStateRef.current.bottom - delta)));
                             }}
                         />
                         <SpecNodeEditor />
@@ -243,10 +305,9 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
                     <ResizeHandle
                         orientation="horizontal"
                         style={{ left: -4, width: 8, cursor: 'ew-resize' }}
-                        onDragStart={() => startValRef.current = rightPanelWidth}
+                        onDragStart={() => startStateRef.current.right = rightPanelWidth}
                         onResize={(delta) => {
-                            // Dragging left (negative delta) increases width (panel is at right)
-                            setRightPanelWidth(Math.max(200, Math.min(1000, startValRef.current - delta)));
+                            setRightPanelWidth(Math.max(200, Math.min(1200, startStateRef.current.right - delta)));
                         }}
                     />
 
@@ -254,8 +315,8 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
                         <span>Activation Outputs</span>
                     </div>
 
-                    <div className="output-textarea-container" style={{ flex: splitRatio }}>
-                        <div className="output-subheader">Personality</div>
+                    <div className="output-textarea-container" style={{ height: personalityHeight }}>
+                        <div className="output-subheader unselectable">Personality</div>
                         <textarea
                             readOnly
                             value={outputs.personality}
@@ -263,31 +324,111 @@ export default function GraphView({ showOutput, showSpecEditor }: GraphViewProps
                         />
                     </div>
 
-                    {/* Splitter */}
-                    <div style={{ position: 'relative', height: 4, background: 'var(--border-color)' }}>
+                    {/* Splitter 1 (Personality / Scenario) */}
+                    <div style={{ position: 'relative', height: 4, background: 'var(--border-color)', flexShrink: 0 }}>
                         <ResizeHandle
                             orientation="vertical"
                             style={{ top: -2, height: 8, cursor: 'ns-resize' }}
-                            onDragStart={() => startValRef.current = splitRatio}
+                            onDragStart={() => {
+                                startStateRef.current.pHeight = personalityHeight;
+                            }}
                             onResize={(delta) => {
-                                const containerH = containerRef.current?.offsetHeight || 600;
-                                // Normalized delta
-                                const ratioDelta = delta / containerH;
-                                setSplitRatio(Math.max(0.1, Math.min(0.9, startValRef.current + ratioDelta)));
+                                setPersonalityHeight(Math.max(50, Math.min(1200, startStateRef.current.pHeight + delta)));
                             }}
                         />
                     </div>
 
-                    <div className="output-textarea-container" style={{ flex: 1 - splitRatio }}>
-                        <div className="output-subheader">Scenario</div>
+                    <div className="output-textarea-container" style={{ flex: 1 }}>
+                        <div className="output-subheader unselectable">Scenario</div>
                         <textarea
                             readOnly
                             value={outputs.scenario}
                             className="output-textarea"
                         />
                     </div>
+
+                    {/* Splitter 2 (Scenario / Example Dialogs) */}
+                    <div style={{ position: 'relative', height: 4, background: 'var(--border-color)', flexShrink: 0 }}>
+                        <ResizeHandle
+                            orientation="vertical"
+                            style={{ top: -2, height: 8, cursor: 'ns-resize' }}
+                            onDragStart={() => {
+                                startStateRef.current.eHeight = exampleHeight;
+                            }}
+                            onResize={(delta) => {
+                                // Dragging up (negative delta) increases height (it's at the bottom)
+                                setExampleHeight(Math.max(50, Math.min(1200, startStateRef.current.eHeight - delta)));
+                            }}
+                        />
+                    </div>
+
+                    <div className="output-textarea-container" style={{ height: exampleHeight }}>
+                        <div className="output-subheader unselectable">Example Dialogs</div>
+                        <textarea
+                            readOnly
+                            value={outputs.example_dialogs}
+                            className="output-textarea"
+                        />
+                    </div>
                 </div>
             )}
+        </div>
+    );
+}
+
+function CharacterChatInputs({ character, setCharacter, chatMeta, setChatMeta }: any) {
+    const updateChar = (field: string, val: string) => setCharacter((prev: any) => ({ ...prev, [field]: val }));
+    const updateMeta = (field: string, val: string) => setChatMeta((prev: any) => ({ ...prev, [field]: val }));
+
+    return (
+        <div className="metadata-inputs-container">
+            <div className="metadata-section">
+                <div className="metadata-section-title unselectable">Character Metadata</div>
+                <div className="metadata-field">
+                    <label className="unselectable">Name</label>
+                    <input placeholder="Aria" value={character.name} onChange={e => updateChar('name', e.target.value)} />
+                </div>
+                <div className="metadata-field">
+                    <label className="unselectable">Chat Name</label>
+                    <input placeholder="BOT" value={character.chat_name} onChange={e => updateChar('chat_name', e.target.value)} />
+                </div>
+                <div className="metadata-field">
+                    <label className="unselectable">Personality</label>
+                    <textarea placeholder="Calm and analytical..." value={character.personality} onChange={e => updateChar('personality', e.target.value)} />
+                </div>
+                <div className="metadata-field">
+                    <label className="unselectable">Scenario</label>
+                    <textarea placeholder="A cozy library..." value={character.scenario} onChange={e => updateChar('scenario', e.target.value)} />
+                </div>
+                <div className="metadata-field">
+                    <label className="unselectable">Example Dialogs</label>
+                    <textarea placeholder="User: Hello!\nBot: Greetings." value={character.example_dialogs} onChange={e => updateChar('example_dialogs', e.target.value)} />
+                </div>
+                <div className="metadata-field">
+                    <label className="unselectable">Custom Prompt Complete</label>
+                    <textarea placeholder="Manual prompt template override..." value={character.custom_prompt_complete} onChange={e => updateChar('custom_prompt_complete', e.target.value)} />
+                </div>
+            </div>
+
+            <div className="metadata-section">
+                <div className="metadata-section-title unselectable">Chat Metadata</div>
+                <div className="metadata-field">
+                    <label className="unselectable">User Name</label>
+                    <input placeholder="User" value={chatMeta.user_name} onChange={e => updateMeta('user_name', e.target.value)} />
+                </div>
+                <div className="metadata-field">
+                    <label className="unselectable">Persona Name</label>
+                    <input placeholder="Bot" value={chatMeta.persona_name} onChange={e => updateMeta('persona_name', e.target.value)} />
+                </div>
+                <div className="metadata-field">
+                    <label className="unselectable">First Message Date</label>
+                    <input type="datetime-local" value={chatMeta.first_message_date || ''} onChange={e => updateMeta('first_message_date', e.target.value)} />
+                </div>
+                <div className="metadata-field">
+                    <label className="unselectable">Last Bot Message Date</label>
+                    <input type="datetime-local" value={chatMeta.last_bot_message_date || ''} onChange={e => updateMeta('last_bot_message_date', e.target.value)} />
+                </div>
+            </div>
         </div>
     );
 }

@@ -244,6 +244,7 @@ export function registerEngineHandlers() {
             // Extract outputs
             const personality = sandbox.context?.character?.personality || '';
             const scenario = sandbox.context?.character?.scenario || '';
+            const example_dialogs = sandbox.context?.character?.example_dialogs || '';
 
             // Extract raw IDs from specified variable
             let rawIds: string[] = [];
@@ -276,7 +277,7 @@ export function registerEngineHandlers() {
                 }
             }
 
-            return { success: true, personality, scenario, activatedIds, chatHighlights };
+            return { success: true, personality, scenario, example_dialogs, activatedIds, chatHighlights };
 
         } catch (e: any) {
             console.error('Engine Execution Failed:', e);
