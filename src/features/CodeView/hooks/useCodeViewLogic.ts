@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useData } from '../../../context/DataContext';
 
 export function useCodeViewLogic() {
-    const { entries, showNotification, activeEngine, activeSpec } = useData();
+    const {
+        activeEngine, activeSpec, entries, showNotification,
+        minifyEnabled, compressEnabled, mangleEnabled, includeComments
+    } = useData();
     const [code, setCode] = useState<string>('// Loading...');
     const [isCompiling, setIsCompiling] = useState(false);
     const [errors, setErrors] = useState<any[]>([]);
@@ -39,18 +42,24 @@ export function useCodeViewLogic() {
             }
 
             // Call Backend Handler
-            const result = await ipc.invoke('compile-engine', activeEngine, activeSpec, entries);
+            const generated = await ipc.invoke('compile-engine', activeEngine, activeSpec, entries || [], {
+                minify: minifyEnabled,
+                compress: compressEnabled,
+                mangle: mangleEnabled,
+                comments: includeComments,
+                useDevEngine: false // Always production-ready in CodeView/Output
+            });
 
-            if (result && typeof result === 'object') {
-                if (result.success) {
-                    setCode(result.code || '');
+            if (generated && typeof generated === 'object') {
+                if (generated.success) {
+                    setCode(generated.code || '');
                     setErrors([]);
                 } else {
-                    setCode(result.code || '// Compilation Failed with errors.');
-                    setErrors(result.errors || []);
+                    setCode(generated.code || '// Compilation Failed with errors.');
+                    setErrors(generated.errors || []);
                 }
             } else {
-                setCode(result); // Fallback for legacy
+                setCode(generated as any); // Fallback for legacy
                 setErrors([]);
             }
 
@@ -61,7 +70,7 @@ export function useCodeViewLogic() {
         } finally {
             setIsCompiling(false);
         }
-    }, [entries, activeEngine, activeSpec]);
+    }, [entries, activeEngine, activeSpec, minifyEnabled, compressEnabled, mangleEnabled, includeComments]);
 
     // Format Logic
     // Since output is minified, "Pretty" might just mean formatting the minified string JSON/JS?

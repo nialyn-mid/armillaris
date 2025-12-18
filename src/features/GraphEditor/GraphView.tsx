@@ -26,7 +26,11 @@ interface GraphViewProps {
 
 
 export default function GraphView({ showOutput, showSpecEditor, showInputPanel }: GraphViewProps) {
-    const { activeEngine, activeSpec, entries } = useData();
+    const {
+        activeEngine, activeSpec, entries,
+        minifyEnabled, compressEnabled, mangleEnabled, includeComments,
+        simulateUsingDevEngine
+    } = useData();
     // Graph Data Hook
     const { nodes, edges, onNodesChange, onEdgesChange, updateHighlights } = useGraphData();
 
@@ -133,13 +137,19 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
     useEffect(() => {
         const ipc = (window as any).ipcRenderer;
         if (ipc && activeEngine && activeSpec) {
-            ipc.invoke('compile-engine', activeEngine, activeSpec, entries).then(() => {
+            ipc.invoke('compile-engine', activeEngine, activeSpec, entries, {
+                minify: minifyEnabled,
+                compress: compressEnabled,
+                mangle: mangleEnabled,
+                comments: includeComments,
+                useDevEngine: simulateUsingDevEngine
+            }).then(() => {
                 refreshMeta();
                 // Optionally re-run engine for current input? 
                 // runEngine(session.chatInput); // Dependency loop if not careful
             });
         }
-    }, [activeSpec, activeEngine, entries, refreshMeta]);
+    }, [activeSpec, activeEngine, entries, refreshMeta, minifyEnabled, compressEnabled, mangleEnabled, includeComments, simulateUsingDevEngine]);
 
 
     const runEngine = useCallback(async (currentInput: string) => {
@@ -172,13 +182,27 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
         };
 
         try {
-            let response = await ipc.invoke('engine:execute', { engineName: activeEngine, context });
+            let response = await ipc.invoke('engine:execute', {
+                engineName: activeEngine,
+                context,
+                useDevEngine: simulateUsingDevEngine
+            });
 
             // Auto-compile if missing
             if (!response.success && response.error?.includes('not found')) {
-                await ipc.invoke('compile-engine', activeEngine, activeSpec, entries);
+                await ipc.invoke('compile-engine', activeEngine, activeSpec, entries, {
+                    minify: minifyEnabled,
+                    compress: compressEnabled,
+                    mangle: mangleEnabled,
+                    comments: includeComments,
+                    useDevEngine: simulateUsingDevEngine
+                });
                 await refreshMeta();
-                response = await ipc.invoke('engine:execute', { engineName: activeEngine, context });
+                response = await ipc.invoke('engine:execute', {
+                    engineName: activeEngine,
+                    context,
+                    useDevEngine: simulateUsingDevEngine
+                });
             }
 
             if (response.success) {
@@ -197,7 +221,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
         } catch (e) {
             console.error("Failed to execute engine sandbox", e);
         }
-    }, [activeEngine, activeSpec, entries, session.chatHistory, character, chatMeta, updateHighlights, refreshMeta]);
+    }, [activeEngine, activeSpec, entries, session.chatHistory, character, chatMeta, updateHighlights, refreshMeta, simulateUsingDevEngine, minifyEnabled, compressEnabled, mangleEnabled, includeComments]);
 
     const onChatInputChange = (val: string) => {
         runEngine(val);
@@ -281,6 +305,11 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
                                         Last Compiled: {new Date(engineMeta.lastCompiled).toLocaleString()}
                                         <br />
                                         Active Behavior: {engineMeta.specName.replace('.behavior', '').replace('.json', '')}
+                                        {!simulateUsingDevEngine && (
+                                            <div style={{ color: '#f85169', fontWeight: 600, marginTop: '2px' }}>
+                                                Simulation: Production Engine
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </Panel>

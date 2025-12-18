@@ -46,7 +46,7 @@ export const useSpecGraphLoader = ({
         if (!ipc || !activeEngine) return;
         ipc.invoke('get-engine-details', activeEngine).then((data: any) => {
             try {
-                const parsed = JSON.parse(data.devSpec);
+                const parsed = JSON.parse(data.spec);
                 if (parsed && parsed.nodes && parsed.nodes.length > 0) {
                     setEngineSpec(parsed);
                 } else {

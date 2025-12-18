@@ -82,6 +82,7 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
 
                 if (leftFocused) {
                     if (leftTab === 'script') cur.handleSaveEngineScript();
+                    else if (leftTab === 'dev_script') cur.handleSaveDevEngineScript();
                     else if (leftTab === 'spec') cur.handleSaveEngineSpec();
                     else if (leftTab === 'adapter') cur.handleSaveAdapter();
                 } else if (rightFocused) {
@@ -129,8 +130,8 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
 
     // Trigger Compilation on tab switches
     useEffect(() => {
-        if (rightTab === 'adapter_out') logic.compileBehavior();
-        if (rightTab === 'data') logic.compileData();
+        if (rightTab === 'adapter_out') logic.handleSaveAdapter();
+        if (rightTab === 'data_out') logic.compileData();
     }, [rightTab, logic.specCode, logic.activeEngine, logic.compileBehavior, logic.compileData]);
 
     return (
@@ -146,15 +147,28 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                         onTabChange={setLeftTab}
                         engineCode={logic.engineCode}
                         onEngineCodeChange={logic.setEngineCode}
+                        devEngineCode={logic.devEngineCode}
+                        onDevEngineCodeChange={logic.setDevEngineCode}
                         engineSpecCode={logic.engineSpecCode}
                         onEngineSpecCodeChange={logic.setEngineSpecCode}
                         adapterCode={logic.adapterCode}
                         onAdapterCodeChange={logic.setAdapterCode}
                         isEngineDirty={logic.isEngineDirty}
+                        isDevEngineDirty={logic.isDevEngineDirty}
                         isEngineSpecDirty={logic.isEngineSpecDirty}
                         isAdapterDirty={logic.isAdapterDirty}
-                        onSave={logic.handleSaveEngineScript /* This is just a fallback for PaneHeader toggle */}
-                        onDiscard={logic.handleDiscardEngineScript}
+                        onSave={() => {
+                            if (leftTab === 'script') logic.handleSaveEngineScript();
+                            else if (leftTab === 'dev_script') logic.handleSaveDevEngineScript();
+                            else if (leftTab === 'spec') logic.handleSaveEngineSpec();
+                            else if (leftTab === 'adapter') logic.handleSaveAdapter();
+                        }}
+                        onDiscard={() => {
+                            if (leftTab === 'script') logic.handleDiscardEngineScript();
+                            else if (leftTab === 'dev_script') logic.handleDiscardDevEngineScript();
+                            else if (leftTab === 'spec') logic.handleDiscardEngineSpec();
+                            else if (leftTab === 'adapter') logic.handleDiscardAdapter();
+                        }}
                         onMount={handleLeftMount}
                     />
                 </div>

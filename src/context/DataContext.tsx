@@ -28,6 +28,23 @@ interface DataContextType {
   refreshEngineLists: () => void;
   refreshSpecList: () => void;
   deleteSpec: (name: string) => Promise<boolean>;
+
+  // Compilation & Simulation Settings
+  minifyEnabled: boolean;
+  setMinifyEnabled: (enabled: boolean) => void;
+  compressEnabled: boolean;
+  setCompressEnabled: (enabled: boolean) => void;
+  mangleEnabled: boolean;
+  setMangleEnabled: (enabled: boolean) => void;
+  includeComments: boolean;
+  setIncludeComments: (val: boolean) => void;
+  simulateUsingDevEngine: boolean;
+  setSimulateUsingDevEngine: (val: boolean) => void;
+  hasDevEngine: boolean;
+  setHasDevEngine: (has: boolean) => void;
+  engineErrors: any[];
+  setEngineErrors: (errors: any[]) => void;
+  reloadEngine: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -45,6 +62,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [activeSpec, setActiveSpec] = useState<string>(() => localStorage.getItem('active_spec') || 'default_spec.behavior');
   const [availableEngines, setAvailableEngines] = useState<string[]>([]);
   const [availableSpecs, setAvailableSpecs] = useState<string[]>([]);
+
+  // Compilation & Simulation Settings
+  const [minifyEnabled, setMinifyEnabled] = useState(() => localStorage.getItem('minify_enabled') === 'true');
+  const [compressEnabled, setCompressEnabled] = useState(() => localStorage.getItem('compress_enabled') !== 'false'); // Default true
+  const [mangleEnabled, setMangleEnabled] = useState(() => localStorage.getItem('mangle_enabled') !== 'false'); // Default true
+  const [includeComments, setIncludeComments] = useState<boolean>(() => localStorage.getItem('minify_comments') === 'true');
+  const [simulateUsingDevEngine, setSimulateUsingDevEngine] = useState<boolean>(() => localStorage.getItem('simulate_dev') === 'true');
+  const [hasDevEngine, setHasDevEngine] = useState(false);
+  const [engineErrors, setEngineErrors] = useState<any[]>([]);
 
   const showNotification = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
     setNotification({ message: msg, type });
@@ -204,18 +230,40 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [activeEngine, activeSpec, refreshSpecList]);
 
-  // When active engine changes, load its specs
+  // When active engine changes, load its specs and check health
   useEffect(() => {
+    if (!activeEngine) return;
     localStorage.setItem('active_engine', activeEngine);
     const ipc = (window as any).ipcRenderer;
     if (!ipc) return;
 
+    // Load available behavior specs
     ipc.invoke('get-specs', activeEngine).then((list: string[]) => {
       setAvailableSpecs(list);
-      if (list.length > 0 && !list.includes(activeSpec)) {
+      if (list.length > 0 && (!activeSpec || !list.includes(activeSpec))) {
         setActiveSpec(list[0]);
       } else if (list.length === 0) {
         setActiveSpec(''); // No specs found
+      }
+    }).catch(console.error);
+
+    // Initial health check and dev engine check
+    ipc.invoke('get-engine-details', activeEngine).then((details: any) => {
+      setHasDevEngine(!!details.devJs);
+
+      // Map health errors to engineErrors state
+      if (details.errors && details.errors.length > 0) {
+        const healthErrs = details.errors.map((msg: string) => ({
+          source: 'System',
+          message: msg
+        }));
+        setEngineErrors(prev => {
+          // Keep existing compilation errors but replace health errors
+          const nonHealth = prev.filter(e => e.source !== 'System');
+          return [...nonHealth, ...healthErrs];
+        });
+      } else {
+        setEngineErrors(prev => prev.filter(e => e.source !== 'System'));
       }
     }).catch(console.error);
 
@@ -224,6 +272,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (activeSpec) localStorage.setItem('active_spec', activeSpec);
   }, [activeSpec]);
+
+  // Persist Compilation Settings
+  useEffect(() => localStorage.setItem('minify_enabled', String(minifyEnabled)), [minifyEnabled]);
+  useEffect(() => localStorage.setItem('compress_enabled', String(compressEnabled)), [compressEnabled]);
+  useEffect(() => localStorage.setItem('mangle_enabled', String(mangleEnabled)), [mangleEnabled]);
+  useEffect(() => localStorage.setItem('minify_comments', String(includeComments)), [includeComments]);
+  useEffect(() => localStorage.setItem('simulate_dev', String(simulateUsingDevEngine)), [simulateUsingDevEngine]);
+
+  const reloadEngine = async () => {
+    if (!activeEngine) return;
+    const current = activeEngine;
+    setActiveEngine('');
+    setTimeout(() => setActiveEngine(current), 10);
+  };
 
   return (
     <DataContext.Provider value={{
@@ -249,7 +311,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
       availableSpecs,
       refreshEngineLists,
       refreshSpecList,
-      deleteSpec
+      deleteSpec,
+      minifyEnabled, setMinifyEnabled,
+      compressEnabled, setCompressEnabled,
+      mangleEnabled, setMangleEnabled,
+      includeComments, setIncludeComments,
+      simulateUsingDevEngine, setSimulateUsingDevEngine,
+      hasDevEngine, setHasDevEngine,
+      engineErrors, setEngineErrors,
+      reloadEngine
     }}>
       {children}
     </DataContext.Provider>

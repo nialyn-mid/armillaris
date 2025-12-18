@@ -1,6 +1,6 @@
-import React from 'react';
-import Editor, { type OnMount } from '@monaco-editor/react';
+import { type OnMount } from '@monaco-editor/react';
 import { PaneHeader } from './PaneHeader';
+import { MonacoEditor } from '../../../shared/ui/MonacoEditor';
 import { type TemplateTabRight } from '../hooks/useTemplateLogic';
 
 interface RightEditorPaneProps {
@@ -14,7 +14,7 @@ interface RightEditorPaneProps {
     isCompiling: boolean;
     onSave: () => void;
     onDiscard: () => void;
-    onMount: OnMount;
+    onMount?: OnMount;
 }
 
 export const RightEditorPane: React.FC<RightEditorPaneProps> = ({
@@ -33,7 +33,7 @@ export const RightEditorPane: React.FC<RightEditorPaneProps> = ({
     const tabs = [
         { id: 'behavior', label: 'Behavior', isDirty: isSpecDirty },
         { id: 'adapter_out', label: 'Adapted Behavior', readOnly: true },
-        { id: 'data', label: 'Adapted Data', readOnly: true }
+        { id: 'data_out', label: 'Adapted Data', readOnly: true }
     ] as const;
 
     return (
@@ -50,35 +50,35 @@ export const RightEditorPane: React.FC<RightEditorPaneProps> = ({
 
             <div style={{ flex: 1 }}>
                 {activeTab === 'behavior' && (
-                    <Editor
+                    <MonacoEditor
                         key="behavior-json"
                         height="100%"
-                        defaultLanguage="json"
+                        language="json"
                         theme="vs-dark"
                         value={specCode}
+                        onSave={onSave}
                         onMount={onMount}
                         onChange={(val) => onSpecCodeChange(val || '')}
-                        options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true }}
                     />
                 )}
                 {activeTab === 'adapter_out' && (
-                    <Editor
+                    <MonacoEditor
                         key="adapter-out"
                         height="100%"
-                        defaultLanguage="json"
+                        language="json"
                         theme="vs-dark"
                         value={isCompiling ? '// Compiling...' : compiledCode}
-                        options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true, readOnly: true }}
+                        options={{ readOnly: true }}
                     />
                 )}
-                {activeTab === 'data' && (
-                    <Editor
+                {activeTab === 'data_out' && (
+                    <MonacoEditor
                         key="data-json"
                         height="100%"
-                        defaultLanguage="json"
+                        language="json"
                         theme="vs-dark"
                         value={dataCode}
-                        options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true, readOnly: true }}
+                        options={{ readOnly: true }}
                     />
                 )}
             </div>

@@ -145,8 +145,8 @@ export function useBehaviorFiles(ipc: any, activeEngine: string, activeSpec: str
 
     const handleDiscardBehavior = () => setSpecCode(originalSpecCode.current);
 
-    const markSaved = () => { originalSpecCode.current = specCode; };
-    const discard = () => { setSpecCode(originalSpecCode.current); };
+    const markAllSaved = () => { originalSpecCode.current = specCode; };
+    const discardAll = () => { setSpecCode(originalSpecCode.current); };
 
     return {
         specCode, setSpecCode,
@@ -159,6 +159,6 @@ export function useBehaviorFiles(ipc: any, activeEngine: string, activeSpec: str
         compileData,
         handleSaveBehavior,
         handleDiscardBehavior,
-        markSaved, discard
+        markAllSaved, discardAll
     };
 }
