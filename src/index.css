@@ -8,6 +8,8 @@
   --accent-hover: #79c0ff;
   --border-color: #30363d;
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --warning-color: #ffaa11;
+  --danger-color: #f85169;
 }
 
 * {
@@ -206,11 +208,16 @@ h3 {
   padding: 0px 8px;
 }
 
-.btn-secondary:hover,
+.btn-secondary:hover {
+  background-color: var(--bg-primary);
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
 .btn-secondary.active {
   background-color: var(--accent-color);
   color: var(--bg-primary);
-  border-color: var(--accent-color);
+  border-color: var(--bg-primary);
 }
 
 .btn-primary {
@@ -231,6 +238,8 @@ h3 {
   align-items: center;
   gap: 6px;
   height: 24px;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .panel-subheader {

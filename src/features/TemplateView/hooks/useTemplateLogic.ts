@@ -190,7 +190,7 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
     const handleSaveBehavior = async () => {
         if (!ipc) return;
         try {
-            await ipc.invoke('save-spec', activeEngine, activeSpec, specCode);
+            await ipc.invoke('save-behavior', activeEngine, activeSpec, specCode);
             originalSpecCode.current = specCode;
             forceUpdate();
             showNotification('Behavior Saved', 'success');

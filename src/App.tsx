@@ -18,7 +18,16 @@ export type ViewMode = 'develop' | 'data' | 'graph' | 'output';
 export type PaneMode = 'import' | 'export' | 'engine' | null;
 
 
+import { useDataValidator } from './features/DataView/hooks/useDataValidator';
+import { useGraphValidator } from './features/GraphEditor/hooks/useGraphValidator';
+import { useTemplateValidator } from './features/TemplateView/hooks/useTemplateValidator';
+
 function App() {
+  // Global Validators
+  useDataValidator();
+  useGraphValidator();
+  useTemplateValidator();
+
   const [activeTab, setActiveTab] = useState('data');
   const [activePane, setActivePane] = useState<PaneMode>(null);
   // Persistence: Active Tools (Panels)

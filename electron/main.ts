@@ -1,5 +1,6 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import path from 'path';
+import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
 
@@ -73,4 +74,15 @@ app.whenReady().then(() => {
     registerSandboxHandlers();
 
     ipcMain.handle('get-app-version', () => app.getVersion());
+
+    // File System & Dialogs
+    ipcMain.handle('dialog:save', async (_, options) => {
+        const result = await dialog.showSaveDialog(win!, options);
+        return result;
+    });
+
+    ipcMain.handle('fs:write', async (_, filePath, content) => {
+        await fs.writeFile(filePath, content, 'utf-8');
+        return true;
+    });
 });

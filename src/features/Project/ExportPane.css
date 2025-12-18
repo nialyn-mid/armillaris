@@ -1,0 +1,106 @@
+.export-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+    /* Remove padding here, add to content/footer */
+}
+
+.export-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.export-description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+}
+
+.validation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.validation-issue {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--warning-color);
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 0.85rem;
+}
+
+.validation-issue.error {
+    background-color: var(--bg-primary);
+    border-color: var(--danger-color);
+}
+
+.issue-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    color: var(--warning-color);
+}
+
+.validation-issue.error .issue-header {
+    color: var(--danger-color);
+}
+
+.issue-title {
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.issue-message {
+    color: var(--text-primary);
+}
+
+.issue-context {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.issue-icon {
+    margin-right: 8px;
+    font-size: 1.1rem;
+}
+
+.validation-success {
+    padding: 15px;
+    background-color: rgba(46, 160, 67, 0.1);
+    border: 1px solid #2ea043;
+    border-radius: 4px;
+    color: #2ea043;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.success-icon {
+    font-size: 1.2rem;
+}
+
+.export-footer {
+    padding: 20px;
+    background-color: var(--bg-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.export-actions {
+    margin-top: 20px;
+}
+
+.export-actions>button {
+    background-color: var(--accent-color);
+    color: var(--bg-secondary);
+}

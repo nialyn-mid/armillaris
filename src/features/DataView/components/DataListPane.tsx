@@ -73,9 +73,7 @@ export function DataListPane({
             <div style={{ flex: 1, overflowY: 'auto' }}>
                 {filteredEntries.length === 0 && (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)', textAlign: 'center' }}>
-                        Import or create entries
-                        <br />
-                        Open left sidebar
+                        Open left sidebar to import or create entries
                     </div>
                 )}
                 {filteredEntries.map(entry => {
