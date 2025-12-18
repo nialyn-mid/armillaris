@@ -1,5 +1,5 @@
-import React from 'react';
-import { MdQuestionAnswer, MdUnfoldLess, MdUnfoldMore, MdAdd } from 'react-icons/md';
+import { useRef, useState, useEffect } from 'react';
+import { MdQuestionAnswer, MdUnfoldLess, MdUnfoldMore, MdAdd, MdLastPage, MdChevronLeft } from 'react-icons/md';
 import { GoDotFill } from 'react-icons/go';
 import { HighlightedTextarea } from '../../../shared/ui/HighlightedTextarea';
 import { useChatSession } from '../hooks/useChatSession';
@@ -24,6 +24,23 @@ export function ChatOverlay({ session, matches, onInputChange }: ChatOverlayProp
         insertBotMessage
     } = session;
 
+    const historyRef = useRef<HTMLDivElement>(null);
+
+    const [isRightAligned, setIsRightAligned] = useState(() => {
+        return localStorage.getItem('chat_sandbox_aligned_right') === 'true';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('chat_sandbox_aligned_right', String(isRightAligned));
+    }, [isRightAligned]);
+
+    // Auto-scroll to bottom of history
+    useEffect(() => {
+        if (historyRef.current) {
+            historyRef.current.scrollTop = historyRef.current.scrollHeight;
+        }
+    }, [chatHistory, isChatHistoryOpen]);
+
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setChatInput(e.target.value);
         onInputChange(e.target.value);
@@ -34,29 +51,15 @@ export function ChatOverlay({ session, matches, onInputChange }: ChatOverlayProp
             e.preventDefault();
             submitUserMessage();
             onInputChange(""); // Clear matches/highlights?
-            // Wait, in GraphView processInput just cleared chatInput.
-            // It did NOT call updateGraphHighlights([]).
-            // But handleChatChange handles the typing.
-            // When submit happens, input becomes empty. 
-            // handleChatChange is NOT called on submit (manual setChatInput).
-            // So we might need to clear matches manually?
-            // GraphView logic: setChatInput('');
-            // It doesn't clear matches. 
-            // Do matches persist for empty string?
-            // handleChatChange: if (val.length === 0) setMatches([]).
-            // So if setChatInput('') happens without triggering handleChatChange, matches might stay?
-            // But React state `chatInput` changes -> re-render.
-            // `matches` is separate state.
-            // So yes, we should probably clear matches.
-            // I'll call onInputChange("") to trigger that logic in parent.
         }
     };
 
     return (
         <div className="floating-island" style={{
             bottom: isChatCollapsed ? '0px' : '30px',
-            left: '50%',
-            transform: 'translateX(-50%)',
+            left: isRightAligned ? 'auto' : '50%',
+            right: isRightAligned ? '20px' : 'auto',
+            transform: isRightAligned ? 'none' : 'translateX(-50%)',
             width: '70%',
             maxWidth: '800px',
             minWidth: '400px',
@@ -67,6 +70,7 @@ export function ChatOverlay({ session, matches, onInputChange }: ChatOverlayProp
             borderBottomLeftRadius: isChatCollapsed ? 0 : 8,
             borderBottomRightRadius: isChatCollapsed ? 0 : 8,
             background: 'rgba(37, 37, 38, 0.95)',
+            boxShadow: isChatCollapsed ? 'none' : '0 8px 24px rgba(0, 0, 0, 0.4)',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'visible'
@@ -100,6 +104,13 @@ export function ChatOverlay({ session, matches, onInputChange }: ChatOverlayProp
                     </button>
                     <button
                         className="btn-icon"
+                        onClick={() => setIsRightAligned(!isRightAligned)}
+                        title={isRightAligned ? "Center Sandbox" : "Align Sandbox Right"}
+                    >
+                        {isRightAligned ? <MdChevronLeft /> : <MdLastPage />}
+                    </button>
+                    <button
+                        className="btn-icon"
                         onClick={() => setIsChatCollapsed(!isChatCollapsed)}
                         title={isChatCollapsed ? "Expand" : "Collapse"}
                     >
@@ -119,7 +130,7 @@ export function ChatOverlay({ session, matches, onInputChange }: ChatOverlayProp
                     minHeight: '50px',
                     display: 'flex',
                     flexDirection: 'column'
-                }}>
+                }} ref={historyRef}>
                     <div className="unselectable" style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginBottom: '5px' }}>History</div>
                     {chatHistory.length === 0 && <div className="unselectable" style={{ opacity: 0.5, fontSize: '0.8rem' }}>No history</div>}
 
@@ -140,6 +151,7 @@ export function ChatOverlay({ session, matches, onInputChange }: ChatOverlayProp
                                         onChange={(e) => setEditContent(e.target.value)}
                                         onBlur={() => saveEdit(msg.id)}
                                         onKeyDown={(e) => e.key === 'Enter' && saveEdit(msg.id)}
+                                        placeholder="Type bot message..."
                                         style={{ background: 'var(--bg-primary)', border: '1px solid var(--accent-color)', color: 'var(--text-primary)', marginLeft: '5px', width: '80%' }}
                                     />
                                 ) : (

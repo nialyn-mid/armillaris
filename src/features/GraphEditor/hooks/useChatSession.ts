@@ -12,7 +12,12 @@ export function useChatSession() {
         return localStorage.getItem('graphview_chat_input') || '';
     });
 
-    const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+    const [chatHistory, setChatHistory] = useState<ChatMessage[]>(() => {
+        try {
+            const saved = localStorage.getItem('graphview_chat_history');
+            return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+    });
     const [isChatHistoryOpen, setIsChatHistoryOpen] = useState(true);
     const [isChatCollapsed, setIsChatCollapsed] = useState(false);
 
@@ -24,6 +29,10 @@ export function useChatSession() {
     useEffect(() => {
         localStorage.setItem('graphview_chat_input', chatInput);
     }, [chatInput]);
+
+    useEffect(() => {
+        localStorage.setItem('graphview_chat_history', JSON.stringify(chatHistory));
+    }, [chatHistory]);
 
     // Actions
     const addMessage = useCallback((role: 'user' | 'system', content: string) => {
@@ -53,7 +62,7 @@ export function useChatSession() {
     }, []);
 
     const insertBotMessage = useCallback((index: number) => {
-        const newMsg: ChatMessage = { id: crypto.randomUUID(), role: 'system', content: 'New Bot Message' };
+        const newMsg: ChatMessage = { id: crypto.randomUUID(), role: 'system', content: '' };
         setChatHistory(prev => {
             const next = [...prev];
             next.splice(index + 1, 0, newMsg);
