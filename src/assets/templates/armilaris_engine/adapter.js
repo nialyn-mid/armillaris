@@ -216,10 +216,20 @@ function adaptData(entries) {
     return JSON.stringify(result);
 }
 
+/**
+ * Adapts the activated IDs from the engine to the format expected by the editor.
+ * @param {string[]} ids - The list of activated IDs from the engine.
+ * @returns {string[]} The adapted list of activated IDs.
+ */
+function adaptActivatedIds(ids) {
+    return ids;
+}
+
 // Export for Node.js/Test environments if needed, or simply expose to scope
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         adapt: adapt,
-        adaptData: adaptData
+        adaptData: adaptData,
+        adaptActivatedIds: adaptActivatedIds
     };
 }

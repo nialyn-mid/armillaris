@@ -72,48 +72,83 @@ export const HighlightedTextarea = ({
         }
 
         // Default Mode (Search Matches in Chat)
-        // Sort matches by index
-        const sorted = [...matches].sort((a, b) => a.index - b.index);
+        if (matches.length === 0) return [value];
 
-        // Flatten matches to avoid overlap (simple greedy: skip if overlaps previous)
-        const flatMatches: any[] = [];
-        let lastEnd = 0;
-        for (const m of sorted) {
-            if (m.index >= lastEnd) {
-                flatMatches.push(m);
-                lastEnd = m.index + m.length;
+        let allMatches = matches.map((m, mIdx) => {
+            const color = m.color || (m.type === 'specific' ? '#d2a8ff' : '#58a6ff');
+            return { start: m.index, end: m.index + m.length, color, mIdx, id: `${mIdx}-${m.index}-${m.length}`, length: m.length };
+        });
+
+        // Sort by end position (Earliest End Time) to pack tracks optimally
+        allMatches.sort((a, b) => a.end - b.end);
+
+        let trackLastEnd = [-1, -1, -1];
+        let rangeToTrack = new Map<string, number>();
+        allMatches.forEach(r => {
+            for (let i = 0; i < 3; i++) {
+                if (trackLastEnd[i] <= r.start) {
+                    trackLastEnd[i] = r.end;
+                    rangeToTrack.set(r.id, i);
+                    break;
+                }
             }
-        }
+        });
+
+        // Points for segment boundary changes
+        let points: { pos: number, type: 'start' | 'end', r: any }[] = [];
+        allMatches.forEach(r => {
+            if (rangeToTrack.has(r.id)) {
+                points.push({ pos: r.start, type: 'start', r });
+                points.push({ pos: r.end, type: 'end', r });
+            }
+        });
+        points.sort((a, b) => a.pos - b.pos || (a.type === 'end' ? -1 : 1));
 
         const elements = [];
         let cursor = 0;
+        let activeMatches = new Set<any>();
 
-        flatMatches.forEach((m, i) => {
-            // Text before match
-            if (m.index > cursor) {
-                elements.push(<span key={`text-${i}`}>{value.substring(cursor, m.index)}</span>);
+        for (let i = 0; i < points.length; i++) {
+            const p = points[i];
+            if (p.pos > cursor) {
+                const chunk = value.substring(cursor, p.pos);
+                if (activeMatches.size === 0) {
+                    elements.push(<span key={cursor}>{chunk}</span>);
+                } else {
+                    const activeList = Array.from(activeMatches).map(r => ({ ...r, track: rangeToTrack.get(r.id)! }));
+                    activeList.sort((a, b) => a.track - b.track);
+
+                    const winner = activeList[0];
+                    const shadows: string[] = [];
+                    const maxTrack = Math.max(...activeList.map(a => a.track));
+
+                    for (let t = 0; t <= maxTrack; t++) {
+                        const rangeInTrack = activeList.find(a => a.track === t);
+                        const color = rangeInTrack ? rangeInTrack.color : 'transparent';
+                        shadows.push(`0 ${(t + 1) * 3}px 0 ${color}`);
+                    }
+
+                    const style: React.CSSProperties = {
+                        backgroundColor: `${winner.color}33`,
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        borderRadius: '1px',
+                        boxShadow: shadows.join(', '),
+                        paddingBottom: '1px'
+                    };
+
+                    elements.push(<span key={cursor} style={style}>{chunk}</span>);
+                }
             }
-            // Match
-            // Specific color logic moved directly to style or simplified
-            elements.push(
-                <span key={`match-${i}`} style={{
-                    backgroundColor: m.type === 'specific' ? 'rgba(210, 168, 255, 0.2)' : 'rgba(56, 139, 253, 0.2)',
-                    borderBottom: m.type === 'specific' ? '1px solid #d2a8ff' : '1px solid #58a6ff',
-                    color: '#fff',
-                    fontWeight: 'bold'
-                }}>
-                    {value.substring(m.index, m.index + m.length)}
-                </span>
-            );
-            cursor = m.index + m.length;
-        });
+            if (p.type === 'start') activeMatches.add(p.r);
+            else activeMatches.delete(p.r);
+            cursor = p.pos;
+        }
 
-        // Remaining text
         if (cursor < value.length) {
             elements.push(<span key="text-end">{value.substring(cursor)}</span>);
         }
 
-        // Add a space/break to ensure height matches if ends with newline
         if (value.endsWith('\n')) elements.push(<br key="br-end" />);
 
         return elements;
@@ -125,7 +160,7 @@ export const HighlightedTextarea = ({
             width: '100%',
             fontFamily: 'monospace',
             fontSize: '14px',
-            lineHeight: '20px',
+            lineHeight: '24px',
             borderRadius: 'inherit'
         }}>
             {/* Backdrop for highlights - Dictates Height */}
@@ -136,7 +171,8 @@ export const HighlightedTextarea = ({
                 wordWrap: 'break-word',
                 color: '#fff',
                 backgroundColor: '#0d1117',
-                minHeight: '120px', // Match min-height expectation
+                minHeight: '140px', // Extra for underlines
+                lineHeight: '24px', // Extra breathing room
                 pointerEvents: 'none',
                 borderRadius: 'inherit',
                 boxSizing: 'border-box'
@@ -170,7 +206,7 @@ export const HighlightedTextarea = ({
                     outline: 'none',
                     fontFamily: 'inherit',
                     fontSize: 'inherit',
-                    lineHeight: 'inherit',
+                    lineHeight: '24px',
                     whiteSpace: 'pre-wrap',
                     wordWrap: 'break-word',
                     overflow: 'hidden', // Grow with parent, no scrollbar

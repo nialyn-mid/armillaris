@@ -166,14 +166,26 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         }
     }, [ipc, activeEngine, entries]);
 
+    const compileFullEngine = useCallback(async () => {
+        if (!ipc || !activeEngine || !activeSpec) return;
+        try {
+            await ipc.invoke('compile-engine', activeEngine, activeSpec, entries);
+            console.log("Full engine compiled successfully.");
+        } catch (e) {
+            console.error("Full engine compilation failed", e);
+        }
+    }, [ipc, activeEngine, activeSpec, entries]);
+
     // ---- Save Handlers ----
     const handleSaveEngineScript = async () => {
         if (!ipc) return;
         try {
-            await ipc.invoke('save-engine', activeEngine, engineCode);
+            await ipc.invoke('save-engine-js', activeEngine, engineCode);
             originalEngineCode.current = engineCode;
             forceUpdate();
             showNotification('Engine Script Saved', 'success');
+            // Re-compile after save
+            await compileFullEngine();
         } catch (e) { console.error(e); showNotification('Failed to save', 'error'); }
     };
 
@@ -184,6 +196,8 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
             originalEngineSpecCode.current = engineSpecCode;
             forceUpdate();
             showNotification('Engine Spec Saved', 'success');
+            // Re-compile after save
+            await compileFullEngine();
         } catch (e) { console.error(e); showNotification('Failed to save', 'error'); }
     };
 
@@ -194,6 +208,8 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
             originalSpecCode.current = specCode;
             forceUpdate();
             showNotification('Behavior Saved', 'success');
+            // Re-compile after save
+            await compileFullEngine();
         } catch (e) { console.error(e); showNotification('Failed to save', 'error'); }
     };
 

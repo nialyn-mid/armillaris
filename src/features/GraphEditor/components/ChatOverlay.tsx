@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { MdQuestionAnswer, MdUnfoldLess, MdUnfoldMore, MdAdd, MdLastPage, MdChevronLeft } from 'react-icons/md';
 import { GoDotFill } from 'react-icons/go';
 import { HighlightedTextarea } from '../../../shared/ui/HighlightedTextarea';
@@ -8,9 +8,101 @@ interface ChatOverlayProps {
     session: ReturnType<typeof useChatSession>;
     matches: any[];
     onInputChange: (val: string) => void;
+    highlights: any;
 }
 
-export function ChatOverlay({ session, matches, onInputChange }: ChatOverlayProps) {
+function RenderHighlightedText({ text, highlights }: { text: string, highlights?: any[] }) {
+    if (!highlights || !Array.isArray(highlights) || highlights.length === 0) {
+        return <span>{text}</span>;
+    }
+
+    // Solve for tracks (up to 3 layers)
+    let allRanges: { start: number, end: number, color: string, hIdx: number, id: string, length: number }[] = [];
+    highlights.forEach((h, hIdx) => {
+        if (!h.ranges || !Array.isArray(h.ranges)) return;
+        h.ranges.forEach(([s, e]: [number, number]) => {
+            allRanges.push({ start: s, end: e, color: h.color, hIdx, id: `${hIdx}-${s}-${e}`, length: e - s });
+        });
+    });
+
+    // Sort by end position (Earliest End Time) to pack tracks optimally
+    allRanges.sort((a, b) => a.end - b.end);
+
+    let trackLastEnd = [-1, -1, -1];
+    let rangeToTrack = new Map<string, number>();
+    allRanges.forEach(r => {
+        for (let i = 0; i < 3; i++) {
+            if (trackLastEnd[i] <= r.start) {
+                trackLastEnd[i] = r.end;
+                rangeToTrack.set(r.id, i);
+                break;
+            }
+        }
+    });
+
+    // Points for segment boundary changes
+    let points: { pos: number, type: 'start' | 'end', r: any }[] = [];
+    allRanges.forEach(r => {
+        if (rangeToTrack.has(r.id)) {
+            points.push({ pos: r.start, type: 'start', r });
+            points.push({ pos: r.end, type: 'end', r });
+        }
+    });
+
+    // Sort: earliest points first. If same pos, end before start
+    points.sort((a, b) => a.pos - b.pos || (a.type === 'end' ? -1 : 1));
+
+    let result: React.ReactNode[] = [];
+    let lastPos = 0;
+    let activeRanges = new Set<any>();
+
+    for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+
+        // Render segment before this point
+        if (p.pos > lastPos) {
+            const chunk = text.substring(lastPos, p.pos);
+            if (activeRanges.size === 0) {
+                result.push(<span key={lastPos}>{chunk}</span>);
+            } else {
+                const activeList = Array.from(activeRanges).map(r => ({ ...r, track: rangeToTrack.get(r.id)! }));
+                activeList.sort((a, b) => a.track - b.track);
+
+                const winner = activeList[0];
+                const shadows: string[] = [];
+                const maxTrack = Math.max(...activeList.map(a => a.track));
+
+                for (let t = 0; t <= maxTrack; t++) {
+                    const rangeInTrack = activeList.find(a => a.track === t);
+                    const color = rangeInTrack ? rangeInTrack.color : 'transparent';
+                    shadows.push(`0 ${(t + 1) * 3}px 0 ${color}`);
+                }
+
+                const style: React.CSSProperties = {
+                    backgroundColor: `${winner.color}33`,
+                    borderRadius: '1px',
+                    boxShadow: shadows.join(', '),
+                    paddingBottom: '1px'
+                };
+
+                result.push(<span key={lastPos} style={style}>{chunk}</span>);
+            }
+        }
+
+        if (p.type === 'start') activeRanges.add(p.r);
+        else activeRanges.delete(p.r);
+        lastPos = p.pos;
+    }
+
+    // Render remaining text
+    if (lastPos < text.length) {
+        result.push(<span key={lastPos}>{text.substring(lastPos)}</span>);
+    }
+
+    return <span>{result}</span>;
+}
+
+export function ChatOverlay({ session, matches, onInputChange, highlights }: ChatOverlayProps) {
     const {
         chatInput, setChatInput,
         chatHistory,
@@ -41,9 +133,10 @@ export function ChatOverlay({ session, matches, onInputChange }: ChatOverlayProp
         }
     }, [chatHistory, isChatHistoryOpen]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setChatInput(e.target.value);
-        onInputChange(e.target.value);
+    const handleChange = (e: any) => {
+        const val = e.target.value;
+        setChatInput(val);
+        onInputChange(val);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -53,6 +146,19 @@ export function ChatOverlay({ session, matches, onInputChange }: ChatOverlayProp
             onInputChange(""); // Clear matches/highlights?
         }
     };
+
+    const inputHighlights = (Array.isArray(highlights) && highlights.length > 0) ? highlights[0] : null;
+    const transformedInputMatches = useMemo(() => {
+        if (!inputHighlights) return matches;
+        const hMatches: any[] = [];
+        inputHighlights.forEach((h: any) => {
+            if (!h.ranges) return;
+            h.ranges.forEach(([start, end]: [number, number]) => {
+                hMatches.push({ index: start, length: end - start, color: h.color });
+            });
+        });
+        return [...matches, ...hMatches];
+    }, [matches, inputHighlights]);
 
     return (
         <div className="floating-island" style={{
@@ -127,46 +233,59 @@ export function ChatOverlay({ session, matches, onInputChange }: ChatOverlayProp
                     padding: '10px',
                     background: 'var(--bg-secondary)',
                     borderTop: 'none',
-                    minHeight: '50px',
+                    minHeight: '140px', // Increased for 3 layers of underlines
                     display: 'flex',
                     flexDirection: 'column'
                 }} ref={historyRef}>
                     <div className="unselectable" style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginBottom: '5px' }}>History</div>
                     {chatHistory.length === 0 && <div className="unselectable" style={{ opacity: 0.5, fontSize: '0.8rem' }}>No history</div>}
 
-                    {chatHistory.map((msg, idx) => (
-                        <div key={msg.id} style={{ display: 'flex', flexDirection: 'column' }}>
-                            {/* Message */}
-                            <div
-                                style={{ marginBottom: '4px', fontSize: '0.85rem', cursor: 'pointer' }}
-                                onClick={() => !editingMsgId && startEditing(msg)}
-                            >
-                                <span style={{ fontWeight: 600, color: msg.role === 'user' ? '#58a6ff' : '#7ee787' }}>
-                                    {msg.role === 'user' ? 'YOU' : 'BOT'}:
-                                </span>
-                                {editingMsgId === msg.id ? (
-                                    <input
-                                        autoFocus
-                                        value={editContent}
-                                        onChange={(e) => setEditContent(e.target.value)}
-                                        onBlur={() => saveEdit(msg.id)}
-                                        onKeyDown={(e) => e.key === 'Enter' && saveEdit(msg.id)}
-                                        placeholder="Type bot message..."
-                                        style={{ background: 'var(--bg-primary)', border: '1px solid var(--accent-color)', color: 'var(--text-primary)', marginLeft: '5px', width: '80%' }}
-                                    />
-                                ) : (
-                                    <span style={{ marginLeft: '5px' }}>{msg.content}</span>
-                                )}
-                            </div>
+                    {chatHistory.map((msg, idx) => {
+                        // Match highlights to messages.
+                        // If highlights is an array of 10, highlights[0] is often the most recent in engine speak,
+                        // but let's assume it maps to the last 10 messages
+                        const historyIdxFromEnd = chatHistory.length - 1 - idx;
+                        // Shift by 1 because highlights[0] is for the input box
+                        const msgHighlights = (Array.isArray(highlights) && (historyIdxFromEnd + 1) < highlights.length)
+                            ? highlights[historyIdxFromEnd + 1]
+                            : undefined;
 
-                            {/* Separator + Bot Add Button */}
-                            <div className="chat-separator">
-                                <button className="chat-add-bot-btn" onClick={() => insertBotMessage(idx)} title="Add Bot Message here">
-                                    <MdAdd /> Add Bot Message
-                                </button>
+                        return (
+                            <div key={msg.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                                {/* Message */}
+                                <div
+                                    style={{ marginBottom: '12px', fontSize: '0.85rem', cursor: 'pointer', lineHeight: '1.6' }}
+                                    onClick={() => !editingMsgId && startEditing(msg)}
+                                >
+                                    <span style={{ fontWeight: 600, color: msg.role === 'user' ? '#58a6ff' : '#7ee787' }}>
+                                        {msg.role === 'user' ? 'YOU' : 'BOT'}:
+                                    </span>
+                                    {editingMsgId === msg.id ? (
+                                        <input
+                                            autoFocus
+                                            value={editContent}
+                                            onChange={(e) => setEditContent(e.target.value)}
+                                            onBlur={() => saveEdit(msg.id)}
+                                            onKeyDown={(e) => e.key === 'Enter' && saveEdit(msg.id)}
+                                            placeholder="Type bot message..."
+                                            style={{ background: 'var(--bg-primary)', border: '1px solid var(--accent-color)', color: 'var(--text-primary)', marginLeft: '5px', width: '80%' }}
+                                        />
+                                    ) : (
+                                        <span style={{ marginLeft: '5px' }}>
+                                            <RenderHighlightedText text={msg.content} highlights={msgHighlights} />
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Separator + Bot Add Button */}
+                                <div className="chat-separator">
+                                    <button className="chat-add-bot-btn" onClick={() => insertBotMessage(idx)} title="Add Bot Message here">
+                                        <MdAdd /> Add Bot Message
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
@@ -178,7 +297,7 @@ export function ChatOverlay({ session, matches, onInputChange }: ChatOverlayProp
                             value={chatInput}
                             onChange={handleChange}
                             onKeyDown={handleKeyDown}
-                            matches={matches}
+                            matches={transformedInputMatches}
                         />
                         {/* Floating Send Button */}
                         <button

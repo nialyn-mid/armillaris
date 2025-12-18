@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import {
     type Node,
     type Edge,
@@ -6,14 +6,12 @@ import {
     useEdgesState,
 } from 'reactflow';
 import { useData } from '../../../context/DataContext';
-import { Engine } from '../../../lib/engine';
 import { getLayoutedElements, nodeWidth } from '../lib/layout';
 
 export function useGraphData() {
     const { graphData } = useData();
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-    const [engine, setEngine] = useState<Engine | null>(null);
 
     // Initial Layout Effect
     useEffect(() => {
@@ -86,9 +84,6 @@ export function useGraphData() {
             const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(initialNodes, mergedEdges);
             setNodes(layoutedNodes);
             setEdges(layoutedEdges);
-
-            const newEngine = new Engine(graphData);
-            setEngine(newEngine);
         }
     }, [graphData, setNodes, setEdges]);
 
@@ -125,7 +120,6 @@ export function useGraphData() {
     return {
         nodes, onNodesChange,
         edges, onEdgesChange,
-        engine,
         updateHighlights
     };
 }

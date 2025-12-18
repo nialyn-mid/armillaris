@@ -109,13 +109,13 @@ export function registerEngineHandlers() {
         const enginePath = path.join(ENGINES_DIR, engineName);
         const adapterPath = path.join(enginePath, 'adapter.js');
         const engineJsPath = path.join(enginePath, 'engine.js');
+        const compiledOutputPath = path.join(enginePath, 'engine.compiled.js');
 
         // Resolve spec path which might be just name or full filename
         const specFilename = specName.endsWith('.behavior') ? specName : `${specName}.behavior`;
         const specPath = path.join(enginePath, 'behavior_spec', specFilename);
 
         if (!fs.existsSync(adapterPath)) throw new Error('Adapter not found');
-        // If spec is missing, we might proceed with empty graph? But usually required.
         if (!fs.existsSync(specPath)) throw new Error(`Spec file '${specFilename}' not found`);
 
         let behaviorOutput = '{}';
@@ -156,29 +156,21 @@ export function registerEngineHandlers() {
         }
 
         // 2. Injection
-        // Handle both quoted "{{PLACEHOLDER}}" and unquoted {{PLACEHOLDER}}
-        // If quoted, we replace the whole thing with the raw JSON string (so it becomes an object literal)
-        // If unquoted, we just replace the placeholder (which might be for string injection)
-
         let compiled = engineTemplate;
-
-        // Replace Behavior
         if (compiled.includes('"{{BEHAVIOR_INJECT}}"')) {
             compiled = compiled.replace('"{{BEHAVIOR_INJECT}}"', behaviorOutput);
         } else {
             compiled = compiled.replace('{{BEHAVIOR_INJECT}}', behaviorOutput);
         }
 
-        // Replace Data
         if (compiled.includes('"{{DATA_INJECT}}"')) {
             compiled = compiled.replace('"{{DATA_INJECT}}"', dataOutput);
         } else {
             compiled = compiled.replace('{{DATA_INJECT}}', dataOutput);
         }
 
-        // Also replace JSON_DATA placeholder if it still exists from v2
+        // v2 compat
         compiled = compiled.replace('"{{JSON_DATA}}"', behaviorOutput);
-
 
         // 3. Minification
         try {
@@ -189,9 +181,106 @@ export function registerEngineHandlers() {
                     comments: false
                 }
             });
-            return minified.code || '// Minification returned empty code';
+            const code = minified.code || '// Minification returned empty code';
+
+            // Save as compiled version for later execution
+            fs.writeFileSync(compiledOutputPath, code);
+
+            // Save Metadata
+            const metaPath = path.join(enginePath, 'engine.compiled.json');
+            fs.writeFileSync(metaPath, JSON.stringify({
+                lastCompiled: new Date().toISOString(),
+                specName: specName
+            }));
+
+            return code;
         } catch (e: any) {
-            return `// Minification Failed: ${e.message}\n\n${compiled}`;
+            const fallback = `// Minification Failed: ${e.message}\n\n${compiled}`;
+            fs.writeFileSync(compiledOutputPath, fallback);
+            return fallback;
+        }
+    });
+
+    // Get Compiled Metadata
+    ipcMain.handle('engine:get-metadata', async (_, engineName: string) => {
+        const enginePath = path.join(ENGINES_DIR, engineName);
+        const metaPath = path.join(enginePath, 'engine.compiled.json');
+        if (fs.existsSync(metaPath)) {
+            return JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+        }
+        return null;
+    });
+
+    // Run Compiled Engine in Sandbox
+    ipcMain.handle('engine:execute', async (_, { engineName, context }) => {
+        const enginePath = path.join(ENGINES_DIR, engineName);
+        const compiledPath = path.join(enginePath, 'engine.compiled.js');
+        const adapterPath = path.join(enginePath, 'adapter.js');
+        const specJsonPath = path.join(enginePath, 'engine_spec.json');
+
+        if (!fs.existsSync(compiledPath)) {
+            // If missing, we might need to compile first, but for now we expect it to exist
+            // after the first save in Template View.
+            throw new Error(`Compiled engine for '${engineName}' not found. Please save in Template View first.`);
+        }
+
+        try {
+            const script = fs.readFileSync(compiledPath, 'utf-8');
+            const spec = fs.existsSync(specJsonPath) ? JSON.parse(fs.readFileSync(specJsonPath, 'utf-8')) : {};
+            const idListVarName = spec['idlist-var'] || 'activated_ids';
+            const highlightsVarName = spec['chathighlights-var'] || 'chat_highlights';
+
+            const vm = await import('node:vm');
+
+            // Deep copy context to avoid direct mutation issues between electron/node scopes if any
+            const sandbox = {
+                context: JSON.parse(JSON.stringify(context)),
+                console: console,
+            } as any;
+
+            vm.createContext(sandbox);
+            vm.runInContext(script, sandbox);
+
+            // Extract outputs
+            const personality = sandbox.context?.character?.personality || '';
+            const scenario = sandbox.context?.character?.scenario || '';
+
+            // Extract raw IDs from specified variable
+            let rawIds: string[] = [];
+            if (sandbox[idListVarName] && Array.isArray(sandbox[idListVarName])) {
+                rawIds = sandbox[idListVarName];
+            } else if (sandbox.context?.[idListVarName] && Array.isArray(sandbox.context[idListVarName])) {
+                // Fallback check in context if the user put it there
+                rawIds = sandbox.context[idListVarName];
+            }
+
+            // Extract Chat Highlights
+            let chatHighlights: any = null;
+            if (sandbox[highlightsVarName]) {
+                chatHighlights = sandbox[highlightsVarName];
+            } else if (sandbox.context?.[highlightsVarName]) {
+                chatHighlights = sandbox.context[highlightsVarName];
+            }
+
+            // Adapt IDs via adapter.js
+            let activatedIds = rawIds;
+            if (fs.existsSync(adapterPath)) {
+                const adapterScript = fs.readFileSync(adapterPath, 'utf-8');
+                const adapterSandbox = { module: { exports: {} }, console: console } as any;
+                vm.createContext(adapterSandbox);
+                vm.runInContext(adapterScript, adapterSandbox);
+
+                const exports = adapterSandbox.module.exports || {};
+                if (typeof exports.adaptActivatedIds === 'function') {
+                    activatedIds = exports.adaptActivatedIds(rawIds);
+                }
+            }
+
+            return { success: true, personality, scenario, activatedIds, chatHighlights };
+
+        } catch (e: any) {
+            console.error('Engine Execution Failed:', e);
+            return { success: false, error: e.message, stack: e.stack };
         }
     });
 

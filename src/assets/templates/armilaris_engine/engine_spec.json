@@ -1,6 +1,8 @@
 {
     "name": "Armillaris Default Engine",
     "description": "Standard Keyword & Meta Activation Engine",
+    "idlist-var": "activated_ids",
+    "chathighlights-var": "chat_highlights",
     "categories": {
         "Input": {
             "color": "#0078d4"
