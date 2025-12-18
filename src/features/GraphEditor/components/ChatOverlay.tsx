@@ -113,6 +113,7 @@ export function ChatOverlay({ session, matches, onInputChange, highlights }: Cha
         submitUserMessage,
         startEditing,
         saveEdit,
+        deleteMessage,
         insertBotMessage
     } = session;
 
@@ -233,7 +234,6 @@ export function ChatOverlay({ session, matches, onInputChange, highlights }: Cha
                     padding: '10px',
                     background: 'var(--bg-secondary)',
                     borderTop: 'none',
-                    minHeight: '140px', // Increased for 3 layers of underlines
                     display: 'flex',
                     flexDirection: 'column'
                 }} ref={historyRef}>
@@ -242,21 +242,23 @@ export function ChatOverlay({ session, matches, onInputChange, highlights }: Cha
 
                     {chatHistory.map((msg, idx) => {
                         // Match highlights to messages.
-                        // If highlights is an array of 10, highlights[0] is often the most recent in engine speak,
-                        // but let's assume it maps to the last 10 messages
                         const historyIdxFromEnd = chatHistory.length - 1 - idx;
-                        // Shift by 1 because highlights[0] is for the input box
                         const msgHighlights = (Array.isArray(highlights) && (historyIdxFromEnd + 1) < highlights.length)
                             ? highlights[historyIdxFromEnd + 1]
                             : undefined;
 
                         return (
-                            <div key={msg.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
                                 {/* Message */}
                                 <div
-                                    style={{ marginBottom: '12px', fontSize: '0.85rem', cursor: 'pointer', lineHeight: '1.6' }}
+                                    className="chat-message-row"
                                     onClick={() => !editingMsgId && startEditing(msg)}
                                 >
+                                    <button
+                                        className="chat-msg-delete-btn"
+                                        onClick={(e) => { e.stopPropagation(); deleteMessage(msg.id); }}
+                                        title="Delete Message"
+                                    >&times;</button>
                                     <span style={{ fontWeight: 600, color: msg.role === 'user' ? '#58a6ff' : '#7ee787' }}>
                                         {msg.role === 'user' ? 'YOU' : 'BOT'}:
                                     </span>
@@ -268,7 +270,7 @@ export function ChatOverlay({ session, matches, onInputChange, highlights }: Cha
                                             onBlur={() => saveEdit(msg.id)}
                                             onKeyDown={(e) => e.key === 'Enter' && saveEdit(msg.id)}
                                             placeholder="Type bot message..."
-                                            style={{ background: 'var(--bg-primary)', border: '1px solid var(--accent-color)', color: 'var(--text-primary)', marginLeft: '5px', width: '80%' }}
+                                            style={{ background: 'var(--bg-primary)', border: '1px solid var(--accent-color)', color: 'var(--text-primary)', marginLeft: '5px', width: '95%' }}
                                         />
                                     ) : (
                                         <span style={{ marginLeft: '5px' }}>
@@ -299,6 +301,13 @@ export function ChatOverlay({ session, matches, onInputChange, highlights }: Cha
                             onKeyDown={handleKeyDown}
                             matches={transformedInputMatches}
                         />
+                        {chatInput && (
+                            <button
+                                className="chat-input-clear-btn unselectable"
+                                onClick={() => { setChatInput(""); onInputChange(""); }}
+                                title="Clear Input"
+                            >&times;</button>
+                        )}
                         {/* Floating Send Button */}
                         <button
                             onClick={() => {

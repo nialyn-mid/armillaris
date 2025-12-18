@@ -226,6 +226,24 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
                                 character={character} setCharacter={setCharacter}
                                 chatMeta={chatMeta} setChatMeta={setChatMeta}
                             />
+                            <div className="input-panel-footer">
+                                <button className="btn-clear-all" onClick={() => {
+                                    setCharacter({
+                                        name: '',
+                                        chat_name: '',
+                                        example_dialogs: '',
+                                        personality: '',
+                                        scenario: '',
+                                        custom_prompt_complete: ''
+                                    });
+                                    setChatMeta({
+                                        user_name: '',
+                                        persona_name: '',
+                                        first_message_date: undefined,
+                                        last_bot_message_date: undefined
+                                    });
+                                }}>Clear All Inputs</button>
+                            </div>
                             <ResizeHandle
                                 orientation="horizontal"
                                 className="handle-left-panel"
@@ -378,7 +396,14 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
 
 function CharacterChatInputs({ character, setCharacter, chatMeta, setChatMeta }: any) {
     const updateChar = (field: string, val: string) => setCharacter((prev: any) => ({ ...prev, [field]: val }));
-    const updateMeta = (field: string, val: string) => setChatMeta((prev: any) => ({ ...prev, [field]: val }));
+    const updateMeta = (field: string, val: any) => setChatMeta((prev: any) => ({ ...prev, [field]: val }));
+
+    const clearChar = (field: string) => updateChar(field, '');
+    const clearMeta = (field: string) => updateMeta(field, field.includes('date') ? undefined : '');
+
+    const ClearButton = ({ onClick }: { onClick: () => void }) => (
+        <button className="field-clear-btn unselectable" onClick={onClick} title="Clear field">&times;</button>
+    );
 
     return (
         <div className="metadata-inputs-container">
@@ -386,27 +411,45 @@ function CharacterChatInputs({ character, setCharacter, chatMeta, setChatMeta }:
                 <div className="metadata-section-title unselectable">Character Metadata</div>
                 <div className="metadata-field">
                     <label className="unselectable">Name</label>
-                    <input placeholder="Aria" value={character.name} onChange={e => updateChar('name', e.target.value)} />
+                    <div className="field-input-wrapper">
+                        <input placeholder="Tester-chan" value={character.name} onChange={e => updateChar('name', e.target.value)} />
+                        {character.name && <ClearButton onClick={() => clearChar('name')} />}
+                    </div>
                 </div>
                 <div className="metadata-field">
                     <label className="unselectable">Chat Name</label>
-                    <input placeholder="BOT" value={character.chat_name} onChange={e => updateChar('chat_name', e.target.value)} />
+                    <div className="field-input-wrapper">
+                        <input placeholder="Tes" value={character.chat_name} onChange={e => updateChar('chat_name', e.target.value)} />
+                        {character.chat_name && <ClearButton onClick={() => clearChar('chat_name')} />}
+                    </div>
                 </div>
                 <div className="metadata-field">
                     <label className="unselectable">Personality</label>
-                    <textarea placeholder="Calm and analytical..." value={character.personality} onChange={e => updateChar('personality', e.target.value)} />
+                    <div className="field-input-wrapper">
+                        <textarea placeholder="Calm and analytical..." value={character.personality} onChange={e => updateChar('personality', e.target.value)} />
+                        {character.personality && <ClearButton onClick={() => clearChar('personality')} />}
+                    </div>
                 </div>
                 <div className="metadata-field">
                     <label className="unselectable">Scenario</label>
-                    <textarea placeholder="A cozy library..." value={character.scenario} onChange={e => updateChar('scenario', e.target.value)} />
+                    <div className="field-input-wrapper">
+                        <textarea placeholder="A cozy library..." value={character.scenario} onChange={e => updateChar('scenario', e.target.value)} />
+                        {character.scenario && <ClearButton onClick={() => clearChar('scenario')} />}
+                    </div>
                 </div>
                 <div className="metadata-field">
                     <label className="unselectable">Example Dialogs</label>
-                    <textarea placeholder="User: Hello!\nBot: Greetings." value={character.example_dialogs} onChange={e => updateChar('example_dialogs', e.target.value)} />
+                    <div className="field-input-wrapper">
+                        <textarea placeholder="{{User}}: Hello!" value={character.example_dialogs} onChange={e => updateChar('example_dialogs', e.target.value)} />
+                        {character.example_dialogs && <ClearButton onClick={() => clearChar('example_dialogs')} />}
+                    </div>
                 </div>
                 <div className="metadata-field">
                     <label className="unselectable">Custom Prompt Complete</label>
-                    <textarea placeholder="Manual prompt template override..." value={character.custom_prompt_complete} onChange={e => updateChar('custom_prompt_complete', e.target.value)} />
+                    <div className="field-input-wrapper">
+                        <textarea placeholder="Custom user instructions for the LLM..." value={character.custom_prompt_complete} onChange={e => updateChar('custom_prompt_complete', e.target.value)} />
+                        {character.custom_prompt_complete && <ClearButton onClick={() => clearChar('custom_prompt_complete')} />}
+                    </div>
                 </div>
             </div>
 
@@ -414,19 +457,31 @@ function CharacterChatInputs({ character, setCharacter, chatMeta, setChatMeta }:
                 <div className="metadata-section-title unselectable">Chat Metadata</div>
                 <div className="metadata-field">
                     <label className="unselectable">User Name</label>
-                    <input placeholder="User" value={chatMeta.user_name} onChange={e => updateMeta('user_name', e.target.value)} />
+                    <div className="field-input-wrapper">
+                        <input placeholder="Nialyn" value={chatMeta.user_name} onChange={e => updateMeta('user_name', e.target.value)} />
+                        {chatMeta.user_name && <ClearButton onClick={() => clearMeta('user_name')} />}
+                    </div>
                 </div>
                 <div className="metadata-field">
                     <label className="unselectable">Persona Name</label>
-                    <input placeholder="Bot" value={chatMeta.persona_name} onChange={e => updateMeta('persona_name', e.target.value)} />
+                    <div className="field-input-wrapper">
+                        <input placeholder="Nia" value={chatMeta.persona_name} onChange={e => updateMeta('persona_name', e.target.value)} />
+                        {chatMeta.persona_name && <ClearButton onClick={() => clearMeta('persona_name')} />}
+                    </div>
                 </div>
                 <div className="metadata-field">
                     <label className="unselectable">First Message Date</label>
-                    <input type="datetime-local" value={chatMeta.first_message_date || ''} onChange={e => updateMeta('first_message_date', e.target.value)} />
+                    <div className="field-input-wrapper">
+                        <input type="datetime-local" value={chatMeta.first_message_date || ''} onChange={e => updateMeta('first_message_date', e.target.value)} />
+                        {chatMeta.first_message_date && <ClearButton onClick={() => clearMeta('first_message_date')} />}
+                    </div>
                 </div>
                 <div className="metadata-field">
                     <label className="unselectable">Last Bot Message Date</label>
-                    <input type="datetime-local" value={chatMeta.last_bot_message_date || ''} onChange={e => updateMeta('last_bot_message_date', e.target.value)} />
+                    <div className="field-input-wrapper">
+                        <input type="datetime-local" value={chatMeta.last_bot_message_date || ''} onChange={e => updateMeta('last_bot_message_date', e.target.value)} />
+                        {chatMeta.last_bot_message_date && <ClearButton onClick={() => clearMeta('last_bot_message_date')} />}
+                    </div>
                 </div>
             </div>
         </div>

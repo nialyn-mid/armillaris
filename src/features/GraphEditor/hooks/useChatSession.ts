@@ -61,6 +61,10 @@ export function useChatSession() {
         setEditContent('');
     }, []);
 
+    const deleteMessage = useCallback((id: string) => {
+        setChatHistory(prev => prev.filter(m => m.id !== id));
+    }, []);
+
     const insertBotMessage = useCallback((index: number) => {
         const newMsg: ChatMessage = { id: crypto.randomUUID(), role: 'system', content: '' };
         setChatHistory(prev => {
@@ -88,6 +92,7 @@ export function useChatSession() {
         startEditing,
         saveEdit,
         cancelEdit,
+        deleteMessage,
         insertBotMessage
     };
 }

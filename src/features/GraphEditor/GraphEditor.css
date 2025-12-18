@@ -148,8 +148,33 @@
 }
 
 .metadata-field input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
     cursor: pointer;
+    opacity: 0.8;
+    margin-right: -2px;
+}
+
+.metadata-field input[type="datetime-local"] {
+    color-scheme: dark;
+    font-family: var(--font-family);
+    padding-right: 10px !important;
+}
+
+.metadata-field input[type="datetime-local"]::-webkit-datetime-edit {
+    padding: 0;
+}
+
+.metadata-field input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+}
+
+.metadata-field input[type="datetime-local"]::-webkit-datetime-edit-text,
+.metadata-field input[type="datetime-local"]::-webkit-datetime-edit-month-field,
+.metadata-field input[type="datetime-local"]::-webkit-datetime-edit-day-field,
+.metadata-field input[type="datetime-local"]::-webkit-datetime-edit-year-field,
+.metadata-field input[type="datetime-local"]::-webkit-datetime-edit-hour-field,
+.metadata-field input[type="datetime-local"]::-webkit-datetime-edit-minute-field,
+.metadata-field input[type="datetime-local"]::-webkit-datetime-edit-ampm-field {
+    color: var(--text-primary);
 }
 
 /* Resize Handle Overrides */
@@ -161,4 +186,141 @@
 .handle-left-panel:hover {
     background: var(--accent-color) !important;
     opacity: 0.5;
+}
+
+/* Clear Buttons & Wrappers */
+.field-input-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.field-input-wrapper input {
+    width: 100%;
+    padding-right: 32px !important;
+}
+
+.field-input-wrapper textarea {
+    width: 100%;
+    padding-right: 32px !important;
+}
+
+.field-clear-btn {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity 0.2s, background 0.2s;
+    z-index: 5;
+    height: 24px;
+    width: 24px;
+}
+
+.field-clear-btn:hover {
+    opacity: 1;
+    background: var(--bg-tertiary);
+    color: var(--accent-hover);
+}
+
+/* Adjust clear button for date inputs to avoid overlap with native icon */
+.metadata-field input[type="datetime-local"]+.field-clear-btn {
+    right: 30px;
+}
+
+.input-panel-footer {
+    padding: 15px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-clear-all {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-clear-all:hover {
+    background: #442222;
+    border-color: var(--danger-color);
+    color: #f85169;
+}
+
+/* Chat Sandbox Controls */
+.chat-message-row {
+    position: relative;
+    font-size: 0.85rem;
+    cursor: pointer;
+    line-height: 1.6;
+    padding: 6px 32px 6px 8px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.chat-message-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.chat-msg-delete-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s;
+    padding: 4px;
+    z-index: 10;
+}
+
+.chat-message-row:hover .chat-msg-delete-btn {
+    opacity: 0.6;
+}
+
+.chat-msg-delete-btn:hover {
+    opacity: 1 !important;
+    color: var(--danger-color);
+}
+
+.chat-input-clear-btn {
+    position: absolute;
+    right: 80px;
+    /* To the left of the Send button */
+    bottom: 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s, color 0.2s;
+    z-index: 15;
+    padding: 0 4px;
+}
+
+.chat-input-clear-btn:hover {
+    opacity: 1;
+    color: var(--accent-hover);
 }
