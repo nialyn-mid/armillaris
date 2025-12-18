@@ -19,11 +19,13 @@ export function registerEngineHandlers() {
 
         const jsPath = path.join(p, 'engine.js');
         const devSpecPath = path.join(p, 'engine_spec.json');
+        const adapterPath = path.join(p, 'adapter.js');
 
         const js = fs.existsSync(jsPath) ? fs.readFileSync(jsPath, 'utf-8') : '';
         const devSpec = fs.existsSync(devSpecPath) ? fs.readFileSync(devSpecPath, 'utf-8') : '';
+        const adapter = fs.existsSync(adapterPath) ? fs.readFileSync(adapterPath, 'utf-8') : '';
 
-        return { js, devSpec };
+        return { js, devSpec, adapter };
     });
 
     ipcMain.handle('save-engine-js', async (_, engineName: string, content: string) => {
@@ -42,6 +44,13 @@ export function registerEngineHandlers() {
         // We'll save to 'default.behavior' if we don't have a name, or just overwrite first one?
         // Let's save to 'dev.behavior' for now to be safe.
         fs.writeFileSync(path.join(specDir, 'dev.behavior'), content);
+        return true;
+    });
+
+    ipcMain.handle('save-adapter', async (_, engineName: string, content: string) => {
+        const enginePath = path.join(ENGINES_DIR, engineName);
+        if (!fs.existsSync(enginePath)) fs.mkdirSync(enginePath, { recursive: true });
+        fs.writeFileSync(path.join(enginePath, 'adapter.js'), content);
         return true;
     });
 
@@ -152,7 +161,14 @@ export function registerEngineHandlers() {
             }
 
         } catch (e: any) {
-            throw new Error(`Adapter Compilation Failed: ${e.message}`);
+            return {
+                success: false,
+                errors: [{
+                    source: 'Adapter',
+                    message: e.message,
+                    stack: e.stack
+                }]
+            };
         }
 
         // 2. Injection
@@ -193,11 +209,19 @@ export function registerEngineHandlers() {
                 specName: specName
             }));
 
-            return code;
+            return { success: true, code };
         } catch (e: any) {
             const fallback = `// Minification Failed: ${e.message}\n\n${compiled}`;
             fs.writeFileSync(compiledOutputPath, fallback);
-            return fallback;
+            return {
+                success: false,
+                errors: [{
+                    source: 'Minifier',
+                    message: e.message,
+                    stack: e.stack
+                }],
+                code: fallback
+            };
         }
     });
 

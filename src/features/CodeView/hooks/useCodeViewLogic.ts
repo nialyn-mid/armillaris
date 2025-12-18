@@ -5,6 +5,7 @@ export function useCodeViewLogic() {
     const { entries, showNotification, activeEngine, activeSpec } = useData();
     const [code, setCode] = useState<string>('// Loading...');
     const [isCompiling, setIsCompiling] = useState(false);
+    const [errors, setErrors] = useState<any[]>([]);
 
     // Toggles
     const [wordWrap, setWordWrap] = useState<boolean>(() => localStorage.getItem('codeview_wordwrap') === 'true');
@@ -40,11 +41,23 @@ export function useCodeViewLogic() {
             // Call Backend Handler
             const result = await ipc.invoke('compile-engine', activeEngine, activeSpec, entries);
 
-            setCode(result);
+            if (result && typeof result === 'object') {
+                if (result.success) {
+                    setCode(result.code || '');
+                    setErrors([]);
+                } else {
+                    setCode(result.code || '// Compilation Failed with errors.');
+                    setErrors(result.errors || []);
+                }
+            } else {
+                setCode(result); // Fallback for legacy
+                setErrors([]);
+            }
 
         } catch (e: any) {
             console.error(e);
             setCode(`// Compilation Failed:\n// ${e.message}`);
+            setErrors([{ source: 'System', message: e.message, stack: e.stack }]);
         } finally {
             setIsCompiling(false);
         }
@@ -104,10 +117,13 @@ export function useCodeViewLogic() {
     return {
         code,
         isCompiling,
+        errors,
         wordWrap, setWordWrap,
         pretty, setPretty,
         handleCopy,
         handleExport,
+        activeEngine,
+        activeSpec,
         refresh: compile
     };
 }

@@ -1,14 +1,18 @@
 import { useMemo, useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { useCodeViewLogic } from './hooks/useCodeViewLogic';
+import { DebugToolbar } from '../TemplateView/components/DebugToolbar';
 
 export default function CodeView() {
     const {
         code,
         isCompiling,
+        errors,
         wordWrap, setWordWrap,
         pretty, setPretty,
         handleCopy,
+        activeEngine,
+        activeSpec,
         refresh
     } = useCodeViewLogic();
 
@@ -22,9 +26,8 @@ export default function CodeView() {
 
     const handleEditorMount = (editor: any) => {
         editorRef.current = editor;
-        // Initial format if needed (though unlikely to be pretty on load)
         if (pretty) {
-            setTimeout(() => formatEditor(), 100); // Small delay to ensure model loaded
+            setTimeout(() => formatEditor(), 100);
         }
     };
 
@@ -32,14 +35,12 @@ export default function CodeView() {
         const editor = editorRef.current;
         if (!editor) return;
 
-        // Temporarily unlock to format
         editor.updateOptions({ readOnly: false });
         editor.getAction('editor.action.formatDocument').run().finally(() => {
             editor.updateOptions({ readOnly: true });
         });
     };
 
-    // Effect to handle Pretty Print toggle
     useEffect(() => {
         const editor = editorRef.current;
         if (!editor) return;
@@ -47,7 +48,6 @@ export default function CodeView() {
         if (pretty) {
             formatEditor();
         } else {
-            // Revert to original minified code
             editor.setValue(code);
         }
     }, [pretty, code]);
@@ -56,21 +56,14 @@ export default function CodeView() {
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#1e1e1e', flex: 1, minWidth: 0 }}>
             {/* Toolbar */}
             <div className="panel-toolbar unselectable" style={{ padding: '0px 8px' }}>
-
-                {/* Left Group */}
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                     <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginRight: '10px', fontSize: '0.8rem' }}>JS Output</div>
                     {isCompiling && <span style={{ color: 'var(--accent-color)', fontSize: '0.8rem' }}>Compiling...</span>}
                 </div>
 
-                {/* Right Group (Aligned to right via auto margin) */}
                 <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto', gap: '15px' }}>
-
                     <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>Size: {sizeDisplay}</span>
-
                     <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--border-color)' }}></div>
-
-                    {/* Actions Group */}
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <button
                             onClick={() => setWordWrap(!wordWrap)}
@@ -87,10 +80,7 @@ export default function CodeView() {
                         <button onClick={refresh} className="btn-secondary btn-toolbar" title="Re-compile">
                             Refresh
                         </button>
-                        <button
-                            onClick={handleCopy}
-                            className="btn-secondary btn-toolbar"
-                        >
+                        <button onClick={handleCopy} className="btn-secondary btn-toolbar">
                             Copy
                         </button>
                     </div>
@@ -98,25 +88,27 @@ export default function CodeView() {
             </div>
 
             {/* Monaco Editor */}
-            <div style={{ flex: 1 }}>
-                <Editor
-                    height="100%"
-                    defaultLanguage="javascript"
-                    theme="vs-dark"
-                    value={code} // Always bind to code, rely on internal formatting for pretty view
-                    options={{
-                        readOnly: true,
-                        wordWrap: wordWrap ? 'on' : 'off',
-                        minimap: { enabled: true },
-                        fontSize: 12,
-                        scrollBeyondLastLine: false,
-                        automaticLayout: true,
-                        formatOnType: true,
-                        formatOnPaste: true
-                    }}
-                    onMount={handleEditorMount}
-                />
-            </div>
+            <Editor
+                height="100%"
+                defaultLanguage="javascript"
+                theme="vs-dark"
+                value={code}
+                onMount={handleEditorMount}
+                options={{
+                    readOnly: true,
+                    fontSize: 12,
+                    minimap: { enabled: true },
+                    wordWrap: wordWrap ? 'on' : 'off',
+                    automaticLayout: true
+                }}
+            />
+
+            {/* SHARED DEBUG TOOLBAR */}
+            <DebugToolbar
+                errors={errors}
+                activeEngine={activeEngine}
+                activeSpec={activeSpec}
+            />
         </div>
     );
 }

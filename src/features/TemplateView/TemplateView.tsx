@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 're
 import Editor, { type OnMount } from '@monaco-editor/react';
 import { useTemplateLogic, type TemplateTabLeft, type TemplateTabRight } from './hooks/useTemplateLogic';
 import { PaneHeader } from './components/PaneHeader';
+import { DebugToolbar } from './components/DebugToolbar';
 
 interface TemplateViewProps {
     onDirtyChange?: (isDirty: boolean) => void;
@@ -89,6 +90,7 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                 if (leftFocused) {
                     if (leftTabRef.current === 'script') cur.handleSaveEngineScript();
                     else if (leftTabRef.current === 'spec') cur.handleSaveEngineSpec();
+                    else if (leftTabRef.current === 'adapter') cur.handleSaveAdapter();
                 } else if (rightFocused) {
                     if (rightTabRef.current === 'behavior') cur.handleSaveBehavior();
                 } else {
@@ -134,9 +136,9 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
         document.addEventListener('mouseup', onMouseUp);
     };
 
-    // Trigger Compilation when switching to Adapter tab or when code changes
+    // Trigger Compilation when switching to Adapter output tab or when code changes
     useEffect(() => {
-        if (rightTab === 'adapter') {
+        if (rightTab === 'adapter_out') {
             logic.compileBehavior();
         }
         if (rightTab === 'data') {
@@ -148,19 +150,29 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
 
     const leftTabs = [
         { id: 'script', label: 'Engine Script (JS)', isDirty: logic.isEngineDirty },
-        { id: 'spec', label: 'Engine Spec (JSON)', isDirty: logic.isEngineSpecDirty }
+        { id: 'spec', label: 'Engine Spec (JSON)', isDirty: logic.isEngineSpecDirty },
+        { id: 'adapter', label: 'Engine Adapter (JS)', isDirty: logic.isAdapterDirty }
     ] as const;
 
     const rightTabs = [
         { id: 'behavior', label: 'Behavior', isDirty: logic.isSpecDirty },
-        { id: 'adapter', label: 'Adapter Output', readOnly: true },
-        { id: 'data', label: 'Data', readOnly: true }
+        { id: 'adapter_out', label: 'Adapted Behavior', readOnly: true },
+        { id: 'data', label: 'Adapted Data', readOnly: true }
     ] as const;
 
     const handleLeftSave = () => {
         if (leftTab === 'script') logic.handleSaveEngineScript();
-        if (leftTab === 'spec') logic.handleSaveEngineSpec();
+        else if (leftTab === 'spec') logic.handleSaveEngineSpec();
+        else if (leftTab === 'adapter') logic.handleSaveAdapter();
     };
+
+    const handleLeftDiscard = () => {
+        if (leftTab === 'script') logic.handleDiscardEngineScript();
+        else if (leftTab === 'spec') logic.handleDiscardEngineSpec();
+        else if (leftTab === 'adapter') logic.handleDiscardAdapter();
+    };
+
+    const isLeftDirty = leftTab === 'script' ? logic.isEngineDirty : (leftTab === 'spec' ? logic.isEngineSpecDirty : logic.isAdapterDirty);
 
     const handleRightSave = () => {
         if (rightTab === 'behavior') logic.handleSaveBehavior();
@@ -179,16 +191,13 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                         activeTab={leftTab}
                         onTabChange={(t) => setLeftTab(t as TemplateTabLeft)}
                         onSave={handleLeftSave}
-                        saveDisabled={leftTab === 'script' ? !logic.isEngineDirty : !logic.isEngineSpecDirty}
-                        onDiscard={() => {
-                            if (leftTab === 'script') logic.handleDiscardEngineScript();
-                            else logic.handleDiscardEngineSpec();
-                        }}
-                        discardDisabled={leftTab === 'script' ? !logic.isEngineDirty : !logic.isEngineSpecDirty}
+                        saveDisabled={!isLeftDirty}
+                        onDiscard={handleLeftDiscard}
+                        discardDisabled={!isLeftDirty}
                     />
 
                     <div style={{ flex: 1 }}>
-                        {leftTab === 'script' ? (
+                        {leftTab === 'script' && (
                             <Editor
                                 key="engine-js"
                                 height="100%"
@@ -199,7 +208,8 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                                 onChange={(val) => logic.setEngineCode(val || '')}
                                 options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true }}
                             />
-                        ) : (
+                        )}
+                        {leftTab === 'spec' && (
                             <Editor
                                 key="engine-spec"
                                 height="100%"
@@ -208,6 +218,18 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                                 value={logic.engineSpecCode}
                                 onMount={handleEngineMount}
                                 onChange={(val) => logic.setEngineSpecCode(val || '')}
+                                options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true }}
+                            />
+                        )}
+                        {leftTab === 'adapter' && (
+                            <Editor
+                                key="engine-adapter"
+                                height="100%"
+                                defaultLanguage="javascript"
+                                theme="vs-dark"
+                                value={logic.adapterCode}
+                                onMount={handleEngineMount}
+                                onChange={(val) => logic.setAdapterCode(val || '')}
                                 options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true }}
                             />
                         )}
@@ -242,7 +264,7 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                                 options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true }}
                             />
                         )}
-                        {rightTab === 'adapter' && (
+                        {rightTab === 'adapter_out' && (
                             <Editor
                                 key="adapter-out"
                                 height="100%"
@@ -267,34 +289,15 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
 
             </div>
 
-            {/* Toolbar */}
-            <div className="panel-toolbar" style={{ justifyContent: 'space-between', padding: '0px 8px', borderTop: '1px solid var(--border-color)', gap: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
-                    {logic.lastCompileError && (
-                        <div className="unselectable" style={{ color: '#f85169', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={logic.lastCompileError}>
-                            <span style={{ fontWeight: 600 }}>Compilation Error:</span> {logic.lastCompileError}
-                        </div>
-                    )}
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <button
-                        onClick={logic.handleDiscardAll}
-                        disabled={!logic.isAnyDirty}
-                        className="btn-secondary"
-                        style={{ fontSize: '0.8rem', padding: '4px 12px', borderRadius: '2px' }}
-                    >
-                        Discard All Files
-                    </button>
-                    <button
-                        onClick={logic.handleSaveAll}
-                        disabled={!logic.isAnyDirty}
-                        className="btn-primary"
-                        style={{ fontSize: '0.8rem', padding: '4px 12px', borderRadius: '2px' }}
-                    >
-                        Save All Files
-                    </button>
-                </div>
-            </div>
+            {/* SHARED DEBUG TOOLBAR */}
+            <DebugToolbar
+                errors={logic.errors}
+                activeEngine={logic.activeEngine}
+                activeSpec={logic.activeSpec}
+                onSaveAll={logic.handleSaveAll}
+                onDiscardAll={logic.handleDiscardAll}
+                isAnyDirty={logic.isAnyDirty}
+            />
         </div>
     );
 });

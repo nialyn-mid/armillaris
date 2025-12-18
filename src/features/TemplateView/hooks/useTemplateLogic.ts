@@ -1,8 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useData } from '../../../context/DataContext';
 
-export type TemplateTabLeft = 'script' | 'spec';
-export type TemplateTabRight = 'behavior' | 'adapter' | 'data';
+export type TemplateTabLeft = 'script' | 'spec' | 'adapter';
+export type TemplateTabRight = 'behavior' | 'adapter_out' | 'data';
+
+export interface CompilationError {
+    source: string;
+    message: string;
+    stack?: string;
+}
 
 export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
     const { showNotification, activeEngine, activeSpec, entries } = useData();
@@ -11,16 +17,18 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
     // ---- Content State ----
     const [engineCode, setEngineCode] = useState<string>('');
     const [engineSpecCode, setEngineSpecCode] = useState<string>('');
+    const [adapterCode, setAdapterCode] = useState<string>('');
     const [specCode, setSpecCode] = useState<string>('');
     const [compiledCode, setCompiledCode] = useState<string>('');
     const [dataCode, setDataCode] = useState<string>('{\n  "note": "Data JSON implementation pending"\n}');
 
     const [isCompiling, setIsCompiling] = useState(false);
-    const [lastCompileError, setLastCompileError] = useState<string | null>(null);
+    const [errors, setErrors] = useState<CompilationError[]>([]);
 
     // ---- Dirty Tracking ----
     const originalEngineCode = useRef<string>('');
     const originalEngineSpecCode = useRef<string>('');
+    const originalAdapterCode = useRef<string>('');
     const originalSpecCode = useRef<string>('');
 
     // Force re-render on dirty change for UI updates
@@ -29,8 +37,9 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
 
     const isEngineDirty = engineCode !== originalEngineCode.current;
     const isEngineSpecDirty = engineSpecCode !== originalEngineSpecCode.current;
+    const isAdapterDirty = adapterCode !== originalAdapterCode.current;
     const isSpecDirty = specCode !== originalSpecCode.current;
-    const isAnyDirty = isEngineDirty || isEngineSpecDirty || isSpecDirty;
+    const isAnyDirty = isEngineDirty || isEngineSpecDirty || isAdapterDirty || isSpecDirty;
 
     // ---- Effects ----
 
@@ -53,12 +62,15 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         if (!ipc || !activeEngine) return;
 
         ipc.invoke('get-engine-details', activeEngine)
-            .then((details: { js: string, devSpec: string }) => {
+            .then((details: { js: string, devSpec: string, adapter: string }) => {
                 setEngineCode(details.js);
                 originalEngineCode.current = details.js;
 
                 setEngineSpecCode(details.devSpec);
                 originalEngineSpecCode.current = details.devSpec;
+
+                setAdapterCode(details.adapter);
+                originalAdapterCode.current = details.adapter;
 
                 forceUpdate();
             })
@@ -115,10 +127,14 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
                     } catch { }
                 }
                 setCompiledCode(result);
-                setLastCompileError(null); // Clear errors on success
+                setErrors([]); // Clear errors on success
             } else {
                 setCompiledCode(`// Compilation Failed:\n${response.error}\n${response.stack || ''}`);
-                setLastCompileError(`Adapter Error: ${response.error}`);
+                setErrors([{
+                    source: 'Adapter',
+                    message: response.error,
+                    stack: response.stack
+                }]);
             }
 
         } catch (err: any) {
@@ -157,10 +173,14 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
                     } catch { }
                 }
                 setDataCode(result);
-                setLastCompileError(null); // Clear errors on success
+                setErrors([]); // Clear errors on success
             } else {
                 setDataCode(`// Data Compilation Failed:\n${response.error}\n${response.stack || ''}`);
-                setLastCompileError(`Data Adapter Error: ${response.error}`);
+                setErrors([{
+                    source: 'Data Adapter',
+                    message: response.error,
+                    stack: response.stack
+                }]);
             }
 
         } catch (err: any) {
@@ -174,12 +194,20 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
     const compileFullEngine = useCallback(async () => {
         if (!ipc || !activeEngine || !activeSpec) return;
         try {
-            await ipc.invoke('compile-engine', activeEngine, activeSpec, entries);
-            setLastCompileError(null);
-            console.log("Full engine compiled successfully.");
+            const response = await ipc.invoke('compile-engine', activeEngine, activeSpec, entries);
+            if (response.success) {
+                setErrors([]);
+                console.log("Full engine compiled successfully.");
+            } else {
+                setErrors(response.errors);
+            }
         } catch (e: any) {
             console.error("Full engine compilation failed", e);
-            setLastCompileError(e.message);
+            setErrors([{
+                source: 'System',
+                message: e.message,
+                stack: e.stack
+            }]);
         }
     }, [ipc, activeEngine, activeSpec, entries]);
 
@@ -194,7 +222,7 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         try {
             await ipc.invoke('save-engine-js', activeEngine, engineCode);
             originalEngineCode.current = engineCode;
-            setLastCompileError(null); // Explicit clear
+            setErrors([]); // Explicit clear
             forceUpdate();
             showNotification('Engine Script Saved', 'success');
             // Re-compile after save
@@ -212,9 +240,27 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         try {
             await ipc.invoke('save-engine-spec', activeEngine, engineSpecCode);
             originalEngineSpecCode.current = engineSpecCode;
-            setLastCompileError(null); // Explicit clear
+            setErrors([]); // Explicit clear
             forceUpdate();
             showNotification('Engine Spec Saved', 'success');
+            // Re-compile after save
+            await compileFullEngine();
+        } catch (e) { console.error(e); showNotification('Failed to save', 'error'); }
+    };
+
+    const handleSaveAdapter = async () => {
+        if (!ipc) return;
+        if (!adapterCode && originalAdapterCode.current) {
+            console.warn("Attempted to save empty adapter, but original was not empty. Skipping for safety.");
+            return;
+        }
+
+        try {
+            await ipc.invoke('save-adapter', activeEngine, adapterCode);
+            originalAdapterCode.current = adapterCode;
+            setErrors([]); // Explicit clear
+            forceUpdate();
+            showNotification('Engine Adapter Saved', 'success');
             // Re-compile after save
             await compileFullEngine();
         } catch (e) { console.error(e); showNotification('Failed to save', 'error'); }
@@ -230,7 +276,7 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         try {
             await ipc.invoke('save-behavior', activeEngine, activeSpec, specCode);
             originalSpecCode.current = specCode;
-            setLastCompileError(null); // Explicit clear
+            setErrors([]); // Explicit clear
             forceUpdate();
             showNotification('Behavior Saved', 'success');
             // Re-compile after save
@@ -248,6 +294,10 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
             if (isEngineSpecDirty) {
                 await ipc.invoke('save-engine-spec', activeEngine, engineSpecCode);
                 originalEngineSpecCode.current = engineSpecCode;
+            }
+            if (isAdapterDirty) {
+                await ipc.invoke('save-adapter', activeEngine, adapterCode);
+                originalAdapterCode.current = adapterCode;
             }
             if (isSpecDirty) {
                 await ipc.invoke('save-behavior', activeEngine, activeSpec, specCode);
@@ -275,6 +325,11 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         forceUpdate();
     };
 
+    const handleDiscardAdapter = () => {
+        setAdapterCode(originalAdapterCode.current);
+        forceUpdate();
+    };
+
     const handleDiscardBehavior = () => {
         setSpecCode(originalSpecCode.current);
         forceUpdate();
@@ -283,6 +338,7 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
     const handleDiscardAll = () => {
         setEngineCode(originalEngineCode.current);
         setEngineSpecCode(originalEngineSpecCode.current);
+        setAdapterCode(originalAdapterCode.current);
         setSpecCode(originalSpecCode.current);
         forceUpdate();
         showNotification('Changes discarded', 'info');
@@ -295,15 +351,17 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
 
         engineCode, setEngineCode,
         engineSpecCode, setEngineSpecCode,
+        adapterCode, setAdapterCode,
         specCode, setSpecCode,
         compiledCode,
         dataCode,
         isCompiling,
-        lastCompileError,
+        errors,
 
         // Dirty Flags
         isEngineDirty,
         isEngineSpecDirty,
+        isAdapterDirty,
         isSpecDirty,
         isAnyDirty,
 
@@ -313,9 +371,11 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         compileData,
         handleSaveEngineScript,
         handleSaveEngineSpec,
+        handleSaveAdapter,
         handleSaveBehavior,
         handleDiscardEngineScript,
         handleDiscardEngineSpec,
+        handleDiscardAdapter,
         handleDiscardBehavior,
         handleSaveAll,
         handleDiscardAll,
