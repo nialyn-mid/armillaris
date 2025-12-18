@@ -118,6 +118,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
     // Sandbox Metadata
     const [engineMeta, setEngineMeta] = useState<{ lastCompiled: string, specName: string } | null>(null);
     const [chatHighlights, setChatHighlights] = useState<any>(null);
+    const [executionError, setExecutionError] = useState<string | null>(null);
 
     const refreshMeta = useCallback(async () => {
         const ipc = (window as any).ipcRenderer;
@@ -188,8 +189,10 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
                 });
                 if (response.activatedIds) updateHighlights(response.activatedIds);
                 setChatHighlights(response.chatHighlights);
+                setExecutionError(null);
             } else {
                 console.error("Engine execution error:", response.error);
+                setExecutionError(response.error);
             }
         } catch (e) {
             console.error("Failed to execute engine sandbox", e);
@@ -331,7 +334,25 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
 
                     <div className="output-panel-header unselectable">
                         <span>Activation Outputs</span>
+                        {executionError && (
+                            <span style={{ color: '#f85169', fontSize: '0.7rem' }}>Execution Error!</span>
+                        )}
                     </div>
+
+                    {executionError && (
+                        <div style={{
+                            padding: '8px',
+                            background: 'rgba(248, 81, 105, 0.1)',
+                            color: '#f85169',
+                            fontSize: '0.75rem',
+                            borderBottom: '1px solid rgba(248, 81, 105, 0.2)',
+                            whiteSpace: 'pre-wrap',
+                            maxHeight: '100px',
+                            overflowY: 'auto'
+                        }}>
+                            <strong>Error:</strong> {executionError}
+                        </div>
+                    )}
 
                     <div className="output-textarea-container" style={{ height: personalityHeight }}>
                         <div className="output-subheader unselectable">Personality</div>

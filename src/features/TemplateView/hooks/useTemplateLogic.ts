@@ -16,6 +16,7 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
     const [dataCode, setDataCode] = useState<string>('{\n  "note": "Data JSON implementation pending"\n}');
 
     const [isCompiling, setIsCompiling] = useState(false);
+    const [lastCompileError, setLastCompileError] = useState<string | null>(null);
 
     // ---- Dirty Tracking ----
     const originalEngineCode = useRef<string>('');
@@ -114,8 +115,10 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
                     } catch { }
                 }
                 setCompiledCode(result);
+                setLastCompileError(null); // Clear errors on success
             } else {
                 setCompiledCode(`// Compilation Failed:\n${response.error}\n${response.stack || ''}`);
+                setLastCompileError(`Adapter Error: ${response.error}`);
             }
 
         } catch (err: any) {
@@ -154,8 +157,10 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
                     } catch { }
                 }
                 setDataCode(result);
+                setLastCompileError(null); // Clear errors on success
             } else {
                 setDataCode(`// Data Compilation Failed:\n${response.error}\n${response.stack || ''}`);
+                setLastCompileError(`Data Adapter Error: ${response.error}`);
             }
 
         } catch (err: any) {
@@ -170,18 +175,26 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         if (!ipc || !activeEngine || !activeSpec) return;
         try {
             await ipc.invoke('compile-engine', activeEngine, activeSpec, entries);
+            setLastCompileError(null);
             console.log("Full engine compiled successfully.");
-        } catch (e) {
+        } catch (e: any) {
             console.error("Full engine compilation failed", e);
+            setLastCompileError(e.message);
         }
     }, [ipc, activeEngine, activeSpec, entries]);
 
     // ---- Save Handlers ----
     const handleSaveEngineScript = async () => {
         if (!ipc) return;
+        if (!engineCode && originalEngineCode.current) {
+            console.warn("Attempted to save empty engine script, but original was not empty. Skipping for safety.");
+            return;
+        }
+
         try {
             await ipc.invoke('save-engine-js', activeEngine, engineCode);
             originalEngineCode.current = engineCode;
+            setLastCompileError(null); // Explicit clear
             forceUpdate();
             showNotification('Engine Script Saved', 'success');
             // Re-compile after save
@@ -191,9 +204,15 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
 
     const handleSaveEngineSpec = async () => {
         if (!ipc) return;
+        if (!engineSpecCode && originalEngineSpecCode.current) {
+            console.warn("Attempted to save empty engine spec, but original was not empty. Skipping for safety.");
+            return;
+        }
+
         try {
             await ipc.invoke('save-engine-spec', activeEngine, engineSpecCode);
             originalEngineSpecCode.current = engineSpecCode;
+            setLastCompileError(null); // Explicit clear
             forceUpdate();
             showNotification('Engine Spec Saved', 'success');
             // Re-compile after save
@@ -203,9 +222,15 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
 
     const handleSaveBehavior = async () => {
         if (!ipc) return;
+        if (!specCode && originalSpecCode.current) {
+            console.warn("Attempted to save empty spec, but original was not empty. Skipping for safety.");
+            return;
+        }
+
         try {
             await ipc.invoke('save-behavior', activeEngine, activeSpec, specCode);
             originalSpecCode.current = specCode;
+            setLastCompileError(null); // Explicit clear
             forceUpdate();
             showNotification('Behavior Saved', 'success');
             // Re-compile after save
@@ -215,11 +240,44 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
 
     const handleSaveAll = async () => {
         if (!ipc) return;
-        const promises = [];
-        if (isEngineDirty) promises.push(handleSaveEngineScript());
-        if (isEngineSpecDirty) promises.push(handleSaveEngineSpec());
-        if (isSpecDirty) promises.push(handleSaveBehavior());
-        await Promise.all(promises);
+        try {
+            if (isEngineDirty) {
+                await ipc.invoke('save-engine-js', activeEngine, engineCode);
+                originalEngineCode.current = engineCode;
+            }
+            if (isEngineSpecDirty) {
+                await ipc.invoke('save-engine-spec', activeEngine, engineSpecCode);
+                originalEngineSpecCode.current = engineSpecCode;
+            }
+            if (isSpecDirty) {
+                await ipc.invoke('save-behavior', activeEngine, activeSpec, specCode);
+                originalSpecCode.current = specCode;
+            }
+
+            forceUpdate();
+            showNotification('All files saved', 'success');
+
+            // Re-compile ONCE after all saves are done
+            await compileFullEngine();
+        } catch (e) {
+            console.error(e);
+            showNotification('Failed to save some files', 'error');
+        }
+    };
+
+    const handleDiscardEngineScript = () => {
+        setEngineCode(originalEngineCode.current);
+        forceUpdate();
+    };
+
+    const handleDiscardEngineSpec = () => {
+        setEngineSpecCode(originalEngineSpecCode.current);
+        forceUpdate();
+    };
+
+    const handleDiscardBehavior = () => {
+        setSpecCode(originalSpecCode.current);
+        forceUpdate();
     };
 
     const handleDiscardAll = () => {
@@ -241,6 +299,7 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         compiledCode,
         dataCode,
         isCompiling,
+        lastCompileError,
 
         // Dirty Flags
         isEngineDirty,
@@ -255,7 +314,11 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         handleSaveEngineScript,
         handleSaveEngineSpec,
         handleSaveBehavior,
+        handleDiscardEngineScript,
+        handleDiscardEngineSpec,
+        handleDiscardBehavior,
         handleSaveAll,
-        handleDiscardAll
+        handleDiscardAll,
+        showNotification
     };
 }

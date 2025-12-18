@@ -26,11 +26,21 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
     const [leftTab, setLeftTab] = useState<TemplateTabLeft>('script');
     const [rightTab, setRightTab] = useState<TemplateTabRight>('behavior');
 
+    // Refs for stable access in Monaco commands to avoid stale closures
+    const leftTabRef = useRef(leftTab);
+    const rightTabRef = useRef(rightTab);
+    useEffect(() => { leftTabRef.current = leftTab; }, [leftTab]);
+    useEffect(() => { rightTabRef.current = rightTab; }, [rightTab]);
+
     // Layout State
     const [editorSplitRatio, setEditorSplitRatio] = useState(() => {
         const saved = localStorage.getItem('template_editor_split');
         return saved ? parseFloat(saved) : 0.5;
     });
+
+    // logicRef to prevent stale closures in Monaco commands
+    const logicRef = useRef(logic);
+    useEffect(() => { logicRef.current = logic; }, [logic]);
 
     // Editor Refs & State Restoration
     const engineEditorRef = useRef<any>(null);
@@ -62,6 +72,36 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
         specEditorRef.current = editor;
         restoreEditorState('spec', logic.activeSpec, editor);
     };
+
+    // Master Shortcut Listener
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const cur = logicRef.current;
+                const leftFocused = engineEditorRef.current?.hasTextFocus();
+                const rightFocused = specEditorRef.current?.hasTextFocus();
+
+                console.log(`[TemplateView] Master Ctrl+S. Left Focused: ${leftFocused}, Right Focused: ${rightFocused}`);
+
+                if (leftFocused) {
+                    if (leftTabRef.current === 'script') cur.handleSaveEngineScript();
+                    else if (leftTabRef.current === 'spec') cur.handleSaveEngineSpec();
+                } else if (rightFocused) {
+                    if (rightTabRef.current === 'behavior') cur.handleSaveBehavior();
+                } else {
+                    // Fallback: Notify user that no editor is focused
+                    console.log("[TemplateView] No editor text focus detected for Ctrl+S");
+                    cur.showNotification('No editor focused to save', 'error');
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown, true); // Use capture to preempt Monaco
+        return () => window.removeEventListener('keydown', handleKeyDown, true);
+    }, []);
 
     // Auto-save view state on unmount/change
     useEffect(() => {
@@ -140,6 +180,11 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                         onTabChange={(t) => setLeftTab(t as TemplateTabLeft)}
                         onSave={handleLeftSave}
                         saveDisabled={leftTab === 'script' ? !logic.isEngineDirty : !logic.isEngineSpecDirty}
+                        onDiscard={() => {
+                            if (leftTab === 'script') logic.handleDiscardEngineScript();
+                            else logic.handleDiscardEngineSpec();
+                        }}
+                        discardDisabled={leftTab === 'script' ? !logic.isEngineDirty : !logic.isEngineSpecDirty}
                     />
 
                     <div style={{ flex: 1 }}>
@@ -161,6 +206,7 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                                 defaultLanguage="json"
                                 theme="vs-dark"
                                 value={logic.engineSpecCode}
+                                onMount={handleEngineMount}
                                 onChange={(val) => logic.setEngineSpecCode(val || '')}
                                 options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true }}
                             />
@@ -179,6 +225,8 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                         onTabChange={(t) => setRightTab(t as TemplateTabRight)}
                         onSave={rightTab === 'behavior' ? handleRightSave : undefined}
                         saveDisabled={rightTab === 'behavior' ? !logic.isSpecDirty : true}
+                        onDiscard={rightTab === 'behavior' ? logic.handleDiscardBehavior : undefined}
+                        discardDisabled={rightTab === 'behavior' ? !logic.isSpecDirty : true}
                     />
 
                     <div style={{ flex: 1 }}>
@@ -220,23 +268,32 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
             </div>
 
             {/* Toolbar */}
-            <div className="panel-toolbar" style={{ justifyContent: 'flex-end', padding: '0px 8px', borderTop: '1px solid var(--border-color)', gap: '8px' }}>
-                <button
-                    onClick={logic.handleDiscardAll}
-                    disabled={!logic.isAnyDirty}
-                    className="btn-secondary"
-                    style={{ fontSize: '0.8rem', padding: '4px 12px', borderRadius: '2px' }}
-                >
-                    Discard All Files
-                </button>
-                <button
-                    onClick={logic.handleSaveAll}
-                    disabled={!logic.isAnyDirty}
-                    className="btn-primary"
-                    style={{ fontSize: '0.8rem', padding: '4px 12px', borderRadius: '2px' }}
-                >
-                    Save All Files
-                </button>
+            <div className="panel-toolbar" style={{ justifyContent: 'space-between', padding: '0px 8px', borderTop: '1px solid var(--border-color)', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                    {logic.lastCompileError && (
+                        <div className="unselectable" style={{ color: '#f85169', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={logic.lastCompileError}>
+                            <span style={{ fontWeight: 600 }}>Compilation Error:</span> {logic.lastCompileError}
+                        </div>
+                    )}
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button
+                        onClick={logic.handleDiscardAll}
+                        disabled={!logic.isAnyDirty}
+                        className="btn-secondary"
+                        style={{ fontSize: '0.8rem', padding: '4px 12px', borderRadius: '2px' }}
+                    >
+                        Discard All Files
+                    </button>
+                    <button
+                        onClick={logic.handleSaveAll}
+                        disabled={!logic.isAnyDirty}
+                        className="btn-primary"
+                        style={{ fontSize: '0.8rem', padding: '4px 12px', borderRadius: '2px' }}
+                    >
+                        Save All Files
+                    </button>
+                </div>
             </div>
         </div>
     );
