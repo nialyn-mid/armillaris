@@ -19,13 +19,13 @@ export type PaneMode = 'import' | 'export' | 'engine' | null;
 
 
 import { useDataValidator } from './features/DataView/hooks/useDataValidator';
-import { useGraphValidator } from './features/GraphEditor/hooks/useGraphValidator';
+import { useSpecValidator } from './features/SpecEditor/hooks/useSpecValidator';
 import { useTemplateValidator } from './features/TemplateView/hooks/useTemplateValidator';
 
 function App() {
   // Global Validators
   useDataValidator();
-  useGraphValidator();
+  useSpecValidator();
   useTemplateValidator();
 
   const [activeTab, setActiveTab] = useState('data');

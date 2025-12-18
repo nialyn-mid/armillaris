@@ -36,7 +36,7 @@ export const useSpecGraphLoader = ({
     setMasterGraph,
     onEditGroup
 }: UseSpecGraphLoaderProps) => {
-    const { activeEngine, activeSpec, setActiveSpec, refreshEngineLists, showNotification } = useData();
+    const { activeEngine, activeSpec, setActiveSpec, refreshSpecList, deleteSpec, showNotification } = useData();
     const [engineSpec, setEngineSpec] = useState<EngineSpec | null>(null);
     const [targetSpecName, setTargetSpecName] = useState('');
     const ipc = (window as any).ipcRenderer;
@@ -67,7 +67,7 @@ export const useSpecGraphLoader = ({
             setNodes([]);
             setEdges([]);
             setMasterGraph({ nodes: [], edges: [] });
-            setTargetSpecName('new_spec.json');
+            setTargetSpecName('new_behavior');
             return;
         }
 
@@ -138,6 +138,14 @@ export const useSpecGraphLoader = ({
         });
     }, [activeEngine, activeSpec, handleNodeUpdate, handleDuplicateNode, handleDeleteNode, engineSpec, ipc, setNodes, setEdges, onEditGroup]);
 
+    const handleCreateNew = () => {
+        setNodes([]);
+        setEdges([]);
+        setMasterGraph({ nodes: [], edges: [] });
+        setTargetSpecName('new_behavior');
+        setActiveSpec(''); // Deselect current
+    };
+
     const saveSpec = async (overrideGraph?: any) => {
         if (!targetSpecName.trim()) {
             showNotification('Please enter a spec filename', 'error');
@@ -159,8 +167,8 @@ export const useSpecGraphLoader = ({
 
         try {
             await ipc.invoke('save-behavior', activeEngine, `${baseName}.behavior`, JSON.stringify(graphState, null, 2));
-            showNotification(`Saved ${baseName}.behavior`, 'success');
-            refreshEngineLists();
+            showNotification(`Saved ${baseName}`, 'success');
+            refreshSpecList();
             setActiveSpec(`${baseName}.behavior`);
         } catch (e: any) {
             showNotification(`Failed to save behavior: ${e.message}`, 'error');
@@ -172,6 +180,8 @@ export const useSpecGraphLoader = ({
         setEngineSpec,
         targetSpecName,
         setTargetSpecName,
-        saveSpec
+        saveSpec,
+        handleCreateNew,
+        deleteSpec
     };
 };

@@ -152,7 +152,7 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                                 value={logic.engineCode}
                                 onMount={handleEngineMount}
                                 onChange={(val) => logic.setEngineCode(val || '')}
-                                options={{ minimap: { enabled: false }, wordWrap: 'on', automaticLayout: true }}
+                                options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true }}
                             />
                         ) : (
                             <Editor
@@ -162,7 +162,7 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                                 theme="vs-dark"
                                 value={logic.engineSpecCode}
                                 onChange={(val) => logic.setEngineSpecCode(val || '')}
-                                options={{ minimap: { enabled: false }, wordWrap: 'on', automaticLayout: true }}
+                                options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true }}
                             />
                         )}
                     </div>
@@ -191,7 +191,7 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                                 value={logic.specCode}
                                 onMount={handleSpecMount}
                                 onChange={(val) => logic.setSpecCode(val || '')}
-                                options={{ minimap: { enabled: false }, wordWrap: 'on', automaticLayout: true }}
+                                options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true }}
                             />
                         )}
                         {rightTab === 'adapter' && (
@@ -201,7 +201,7 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                                 defaultLanguage="json"
                                 theme="vs-dark"
                                 value={logic.isCompiling ? '// Compiling...' : logic.compiledCode}
-                                options={{ minimap: { enabled: false }, wordWrap: 'on', automaticLayout: true, readOnly: true }}
+                                options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true, readOnly: true }}
                             />
                         )}
                         {rightTab === 'data' && (
@@ -211,7 +211,7 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                                 defaultLanguage="json"
                                 theme="vs-dark"
                                 value={logic.dataCode}
-                                options={{ minimap: { enabled: false }, wordWrap: 'on', automaticLayout: true, readOnly: true }}
+                                options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true, readOnly: true }}
                             />
                         )}
                     </div>

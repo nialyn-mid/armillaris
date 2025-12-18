@@ -66,6 +66,15 @@ export function registerEngineHandlers() {
         return true;
     });
 
+    ipcMain.handle('delete-behavior', async (_, engineName: string, specName: string) => {
+        const specPath = path.join(ENGINES_DIR, engineName, 'behavior_spec', specName);
+        if (fs.existsSync(specPath)) {
+            fs.unlinkSync(specPath);
+            return true;
+        }
+        return false;
+    });
+
     ipcMain.handle('read-adapter', async (_, engineName: string) => {
         const adapterPath = path.join(ENGINES_DIR, engineName, 'adapter.js');
         if (fs.existsSync(adapterPath)) return fs.readFileSync(adapterPath, 'utf-8');

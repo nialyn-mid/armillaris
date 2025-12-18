@@ -1,9 +1,15 @@
+import { MdAdd, MdDelete } from 'react-icons/md';
+import { useState } from 'react';
+import ConfirmModal from '../../shared/ui/ConfirmModal';
+
 interface SpecManagerPanelProps {
     width: number;
     setWidth: (w: number) => void;
     targetSpecName: string;
     setTargetSpecName: (name: string) => void;
     handleSave: () => void;
+    handleCreateNew: () => void;
+    deleteSpec: (name: string) => Promise<boolean>;
     availableSpecs: string[];
     activeSpec: string | null;
     setActiveSpec: (spec: string) => void;
@@ -17,12 +23,23 @@ export default function SpecManagerPanel({
     targetSpecName,
     setTargetSpecName,
     handleSave,
+    handleCreateNew,
+    deleteSpec,
     availableSpecs,
     activeSpec,
     setActiveSpec,
     nodeCount,
     edgeCount
 }: SpecManagerPanelProps) {
+    const [specToDelete, setSpecToDelete] = useState<string | null>(null);
+
+    const stripExtension = (name: string) => {
+        if (!name) return '';
+        return name.replace('.behavior', '').replace('.json', '');
+    };
+
+    const isValidFilename = /^[a-zA-Z0-9_-]+$/.test(stripExtension(targetSpecName));
+
     return (
         <div style={{
             width: width,
@@ -47,44 +64,97 @@ export default function SpecManagerPanel({
                 }}
             />
 
-            <div className="panel-subheader">Behavior Editor</div>
+            <div className="panel-subheader">
+                <span>Behavior Editor</span>
+            </div>
+            <div className='panel-section' style={{ padding: '0px 10px' }}>
+                <button
+                    onClick={handleCreateNew}
+                    className="btn-toolbar"
+                    title="New Behavior"
+                    style={{ marginRight: 'auto', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px' }}
+                >
+                    <MdAdd size={18} />
+                </button>
+            </div>
 
             <div className="panel-section">
                 <div className="panel-section-title">Active Behavior File</div>
                 <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
                     <input
                         type="text"
-                        value={targetSpecName}
+                        value={stripExtension(targetSpecName)}
                         onChange={(e) => setTargetSpecName(e.target.value)}
-                        placeholder="my_behavior.behavior"
-                        style={{ flex: 1, fontSize: '0.85rem' }}
+                        placeholder="my_behavior"
+                        style={{
+                            flex: 1,
+                            fontSize: '0.85rem',
+                            border: isValidFilename ? '1px solid var(--border-color)' : '1px solid var(--danger-color)'
+                        }}
                     />
-                    <button onClick={handleSave} className="btn-primary btn-toolbar" style={{ height: '100%' }}>Save</button>
+                    <button
+                        onClick={handleSave}
+                        className="btn-primary btn-toolbar"
+                        style={{ height: '100%' }}
+                        disabled={!isValidFilename}
+                    >
+                        Save
+                    </button>
                 </div>
+                {!isValidFilename && (
+                    <div style={{ color: 'var(--danger-color)', fontSize: '0.65rem', marginTop: '2px' }}>
+                        Invalid name (use alphanumeric, _ or -)
+                    </div>
+                )}
             </div>
 
             <div className="panel-section" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <div className="panel-section-title" style={{ marginBottom: '5px' }}>Available Behaviors</div>
                 <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    {availableSpecs.map(spec => (
-                        <button
-                            key={spec}
-                            onClick={() => setActiveSpec(spec)}
-                            className={`btn-secondary ${activeSpec === spec ? 'active' : ''}`}
-                            style={{
-                                textAlign: 'left',
-                                fontSize: '0.8rem',
-                                padding: '6px 8px',
-                                margin: '0',
-                                border: activeSpec === spec ? '1px solid var(--accent-color)' : '1px solid transparent',
-                                background: activeSpec === spec ? 'rgba(88, 166, 255, 0.1)' : 'transparent',
-                                color: activeSpec === spec ? '#ffffff' : 'var(--text-secondary)',
-                                justifyContent: 'flex-start'
-                            }}
-                        >
-                            {spec}
-                        </button>
-                    ))}
+                    {availableSpecs.map(spec => {
+                        const isSelected = activeSpec === spec;
+                        return (
+                            <div
+                                key={spec}
+                                className={`btn-secondary ${isSelected ? 'active' : ''}`}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontSize: '0.8rem',
+                                    padding: '2px 8px',
+                                    margin: '0',
+                                    border: isSelected ? '1px solid var(--accent-color)' : '1px solid transparent',
+                                    background: isSelected ? 'rgba(88, 166, 255, 0.1)' : 'transparent',
+                                    color: isSelected ? '#ffffff' : 'var(--text-secondary)',
+                                    cursor: 'pointer',
+                                    borderRadius: '4px'
+                                }}
+                                onClick={() => setActiveSpec(spec)}
+                            >
+                                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {stripExtension(spec)}
+                                </span>
+                                <div
+                                    onClick={(e) => { e.stopPropagation(); setSpecToDelete(spec); }}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        padding: '4px',
+                                        borderRadius: '2px',
+                                        transition: 'all 0.2s',
+                                        color: 'var(--text-secondary)'
+                                    }}
+                                    onMouseOver={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = '#d32f2f'; (e.currentTarget as HTMLElement).style.color = 'white'; }}
+                                    onMouseOut={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'; }}
+                                    title="Delete Behavior"
+                                >
+                                    <MdDelete size={14} />
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -96,6 +166,29 @@ export default function SpecManagerPanel({
                     Edges: {edgeCount}
                 </div>
             </div>
+
+            {specToDelete && (
+                <ConfirmModal
+                    title="Delete Behavior"
+                    message={`Are you sure you want to delete "${stripExtension(specToDelete)}"? This cannot be undone.`}
+                    buttons={[
+                        {
+                            label: 'Delete',
+                            variant: 'danger',
+                            onClick: async () => {
+                                await deleteSpec(specToDelete);
+                                setSpecToDelete(null);
+                            }
+                        },
+                        {
+                            label: 'Cancel',
+                            variant: 'secondary',
+                            onClick: () => setSpecToDelete(null)
+                        }
+                    ]}
+                    onClose={() => setSpecToDelete(null)}
+                />
+            )}
 
         </div>
     );

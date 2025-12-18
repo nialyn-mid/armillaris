@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, type ReactNode, useCallback, useMemo } from 'react';
 
 export type ValidationSeverity = 'error' | 'warning' | 'info';
-export type ValidationSource = 'data' | 'graph' | 'template' | 'system';
+export type ValidationSource = 'data' | 'behavior' | 'code' | 'system';
 
 export interface ValidationIssue {
     id: string; // Unique ID for deduplication

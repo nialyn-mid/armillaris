@@ -9,6 +9,8 @@ import { type Node } from 'reactflow';
 import { GroupMoveService } from '../services/GroupMoveService';
 
 import { getGraphAt, updateSpecAt } from '../utils/specTraversals';
+import { useValidation } from '../../../context/ValidationContext';
+import { validateBehaviorSpec } from '../utils/specValidation';
 
 export const useSpecGraph = () => {
     // 1. State Management (Includes ViewPath)
@@ -22,6 +24,8 @@ export const useSpecGraph = () => {
         viewPath, setViewPath,
         masterGraph, setMasterGraph // Moved masterGraph state here
     } = useSpecGraphState();
+
+    const { reportIssues } = useValidation();
 
     // 2. Navigation Logic (Needs State first)
     // 2. Navigation Logic (Needs Stable Functions to prevent Loader re-triggering)
@@ -63,7 +67,9 @@ export const useSpecGraph = () => {
         engineSpec,
         targetSpecName,
         setTargetSpecName,
-        saveSpec
+        saveSpec,
+        handleCreateNew,
+        deleteSpec
     } = useSpecGraphLoader({
         setNodes,
         setEdges,
@@ -195,6 +201,13 @@ export const useSpecGraph = () => {
 
     }, [masterGraph, viewPath, nodes, edges, saveSpec, setMasterGraph]);
 
+    // 6. Live Validation
+    useEffect(() => {
+        if (!masterGraph) return;
+        const issues = validateBehaviorSpec(masterGraph);
+        reportIssues('behavior', issues);
+    }, [masterGraph, reportIssues]);
+
     return {
         nodes, onNodesChange,
         edges, onEdgesChange,
@@ -219,6 +232,8 @@ export const useSpecGraph = () => {
         navigateUp,
         onEditGroup,
         masterGraph, // Expose for Breadcrumbs
-        duplicateSelectedNodes
+        duplicateSelectedNodes,
+        handleCreateNew,
+        deleteSpec
     };
 };

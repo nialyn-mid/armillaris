@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from 'react';
 import type { GraphData, LoreEntry, MetaDefinition, MetaPropertyDefinition } from '../lib/types';
 import { GraphBuilder } from '../lib/graph-builder';
 
@@ -26,6 +26,8 @@ interface DataContextType {
   availableEngines: string[];
   availableSpecs: string[];
   refreshEngineLists: () => void;
+  refreshSpecList: () => void;
+  deleteSpec: (name: string) => Promise<boolean>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -162,12 +164,45 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setActiveEngine(list[0]); // Fallback
       }
     }).catch(console.error);
+
   };
 
   // Initial Load
   useEffect(() => {
     refreshEngineLists();
   }, []);
+
+  const refreshSpecList = useCallback(() => {
+    const ipc = (window as any).ipcRenderer;
+    if (!ipc || !activeEngine) return;
+
+    ipc.invoke('get-specs', activeEngine).then((list: string[]) => {
+      setAvailableSpecs(list);
+      if (list.length > 0 && activeSpec && !list.includes(activeSpec)) {
+        // activeSpec might have been renamed or deleted, but usually we just want to update available list
+      }
+    }).catch(console.error);
+  }, [activeEngine, activeSpec]);
+
+  const deleteSpec = useCallback(async (specName: string) => {
+    const ipc = (window as any).ipcRenderer;
+    if (!ipc || !activeEngine) return false;
+
+    try {
+      const success = await ipc.invoke('delete-behavior', activeEngine, specName);
+      if (success) {
+        if (activeSpec === specName) {
+          setActiveSpec('');
+        }
+        refreshSpecList();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Failed to delete spec", e);
+      return false;
+    }
+  }, [activeEngine, activeSpec, refreshSpecList]);
 
   // When active engine changes, load its specs
   useEffect(() => {
@@ -212,7 +247,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setActiveSpec,
       availableEngines,
       availableSpecs,
-      refreshEngineLists
+      refreshEngineLists,
+      refreshSpecList,
+      deleteSpec
     }}>
       {children}
     </DataContext.Provider>

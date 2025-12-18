@@ -61,10 +61,8 @@ export function useDataViewEntryEditing({
 
     const handleDelete = () => {
         if (!selectedId) return;
-        if (window.confirm('Are you sure you want to delete this entry?')) {
-            deleteEntry(selectedId);
-            setSelectedId(null);
-        }
+        deleteEntry(selectedId);
+        setSelectedId(null);
     };
 
     const handleReset = () => {

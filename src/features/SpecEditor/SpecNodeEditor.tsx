@@ -52,7 +52,9 @@ export function SpecNodeEditor() {
         viewPath,
 
         masterGraph,
-        duplicateSelectedNodes
+        duplicateSelectedNodes,
+        handleCreateNew,
+        deleteSpec
     } = useSpecGraph();
 
     // UI state
@@ -144,6 +146,8 @@ export function SpecNodeEditor() {
                 targetSpecName={targetSpecName}
                 setTargetSpecName={setTargetSpecName}
                 handleSave={handleSave}
+                handleCreateNew={handleCreateNew}
+                deleteSpec={deleteSpec}
                 availableSpecs={availableSpecs}
                 activeSpec={activeSpec}
                 setActiveSpec={setActiveSpec}

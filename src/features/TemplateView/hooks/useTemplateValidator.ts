@@ -9,24 +9,6 @@ export function useTemplateValidator() {
     useEffect(() => {
         const issues: ValidationIssue[] = [];
 
-        if (!activeEngine) {
-            issues.push({
-                id: 'template-no-engine',
-                severity: 'error',
-                message: 'No active engine selected.',
-                source: 'template'
-            });
-        }
-
-        if (!activeSpec) {
-            issues.push({
-                id: 'template-no-spec',
-                severity: 'error',
-                message: 'No active behavior spec selected.',
-                source: 'template'
-            });
-        }
-
-        reportIssues('template', issues);
+        reportIssues('code', issues);
     }, [activeEngine, activeSpec, reportIssues]);
 }
