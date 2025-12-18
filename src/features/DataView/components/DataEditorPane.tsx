@@ -1,5 +1,7 @@
 import type { LoreEntry } from '../../../lib/types';
 import PropertyEditor from './PropertyEditor';
+import { EmptyState } from '../../../shared/ui/EmptyState';
+import { MdInfoOutline } from 'react-icons/md';
 
 interface DataEditorPaneProps {
     selectedEntry: LoreEntry | undefined;
@@ -22,8 +24,12 @@ export function DataEditorPane({
 }: DataEditorPaneProps) {
     if (!selectedEntry) {
         return (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-primary)' }}>
-                Select an entry to edit details
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: 'var(--bg-primary)' }}>
+                <EmptyState
+                    icon={<MdInfoOutline />}
+                    message="No Entry Selected"
+                    description="Select an entry from the list to view and edit its properties"
+                />
             </div>
         );
     }

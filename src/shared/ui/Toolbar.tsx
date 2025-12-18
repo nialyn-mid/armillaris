@@ -1,4 +1,4 @@
-import { MdDownload, MdOutput, MdSettingsApplications } from 'react-icons/md';
+import { MdDownload, MdOutput, MdSettingsApplications, MdInfoOutline } from 'react-icons/md';
 
 interface ToolbarProps {
     activePane: 'import' | 'export' | 'engine' | null;
@@ -55,6 +55,17 @@ export default function Toolbar({ activePane, onTogglePane }: ToolbarProps) {
             >
                 <MdOutput />
             </button>
+
+            {/* Bottom-aligned Info Button */}
+            <div style={{ marginTop: 'auto', marginBottom: '10px' }}>
+                <button
+                    style={btnStyle(false)}
+                    onClick={() => console.log('Tutorial clicked')}
+                    title="Tutorial & Info"
+                >
+                    <MdInfoOutline />
+                </button>
+            </div>
         </div>
     );
 }

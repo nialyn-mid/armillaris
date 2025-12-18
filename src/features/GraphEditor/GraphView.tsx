@@ -4,6 +4,8 @@ import ReactFlow, {
     Controls,
     Panel,
 } from 'reactflow';
+import { MdHub } from 'react-icons/md';
+import { EmptyState } from '../../shared/ui/EmptyState';
 import { useChatSession } from './hooks/useChatSession';
 import { ChatOverlay } from './components/ChatOverlay';
 import { useGraphData } from './hooks/useGraphData';
@@ -298,6 +300,26 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
                         >
                             <Background color="#30363d" gap={16} />
                             <Controls />
+                            {nodes.length === 0 && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    pointerEvents: 'none',
+                                    zIndex: 10
+                                }}>
+                                    <EmptyState
+                                        icon={<MdHub />}
+                                        message="No Entry Nodes Available"
+                                        description={!activeEngine ? "Select a lorebook engine in the sidebar to begin" : "Import or create data to see the activation graph"}
+                                    />
+                                </div>
+                            )}
                             <Panel position="top-right" style={{ color: '#8b949e', fontSize: '11px', textAlign: 'right', pointerEvents: 'none' }}>
                                 <div>{nodes.length} nodes, {edges.length} edges</div>
                                 {engineMeta && (

@@ -62,6 +62,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [activeSpec, setActiveSpec] = useState<string>(() => localStorage.getItem('active_spec') || 'default_spec.behavior');
   const [availableEngines, setAvailableEngines] = useState<string[]>([]);
   const [availableSpecs, setAvailableSpecs] = useState<string[]>([]);
+  const [lastSpecPerEngine, setLastSpecPerEngine] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem('last_spec_per_engine');
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
 
   // Compilation & Simulation Settings
   const [minifyEnabled, setMinifyEnabled] = useState(() => localStorage.getItem('minify_enabled') === 'true');
@@ -240,7 +246,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     // Load available behavior specs
     ipc.invoke('get-specs', activeEngine).then((list: string[]) => {
       setAvailableSpecs(list);
-      if (list.length > 0 && (!activeSpec || !list.includes(activeSpec))) {
+
+      const lastSpec = lastSpecPerEngine[activeEngine];
+      if (lastSpec && list.includes(lastSpec)) {
+        setActiveSpec(lastSpec);
+      } else if (list.length > 0) {
         setActiveSpec(list[0]);
       } else if (list.length === 0) {
         setActiveSpec(''); // No specs found
@@ -270,8 +280,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [activeEngine]);
 
   useEffect(() => {
-    if (activeSpec) localStorage.setItem('active_spec', activeSpec);
-  }, [activeSpec]);
+    if (activeSpec && activeEngine) {
+      localStorage.setItem('active_spec', activeSpec);
+      setLastSpecPerEngine(prev => {
+        if (prev[activeEngine] === activeSpec) return prev;
+        const next = { ...prev, [activeEngine]: activeSpec };
+        localStorage.setItem('last_spec_per_engine', JSON.stringify(next));
+        return next;
+      });
+    }
+  }, [activeSpec, activeEngine]);
 
   // Persist Compilation Settings
   useEffect(() => localStorage.setItem('minify_enabled', String(minifyEnabled)), [minifyEnabled]);

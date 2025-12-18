@@ -14,6 +14,8 @@ import LabelNode from './nodes/LabelNode';
 import { GroupInputNode, GroupOutputNode } from './nodes/GroupIONodes';
 import { Breadcrumbs } from './Breadcrumbs';
 import { LabeledEdge } from '../GraphEditor/graph/LabeledEdge';
+import { MdAccountTree } from 'react-icons/md';
+import { EmptyState } from '../../shared/ui/EmptyState';
 
 // Components & Hooks
 import NodePalette from './NodePalette';
@@ -134,6 +136,26 @@ export function SpecNodeEditor() {
                     >
                         <Background color="#30363d" gap={20} />
                         <Controls />
+                        {nodes.length === 0 && (
+                            <div style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                pointerEvents: 'none',
+                                zIndex: 10
+                            }}>
+                                <EmptyState
+                                    icon={<MdAccountTree />}
+                                    message="Empty Behavior Graph"
+                                    description="Drag nodes from the palette on the left or load an existing behavior to start building logic"
+                                />
+                            </div>
+                        )}
                     </ReactFlow>
                 </div>
             </div>

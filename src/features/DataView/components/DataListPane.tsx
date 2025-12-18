@@ -1,4 +1,6 @@
 import type { LoreEntry, MetaDefinition } from '../../../lib/types';
+import { EmptyState } from '../../../shared/ui/EmptyState';
+import { MdLibraryBooks } from 'react-icons/md';
 
 interface DataListPaneProps {
     filteredEntries: LoreEntry[];
@@ -72,9 +74,11 @@ export function DataListPane({
             </div>
             <div style={{ flex: 1, overflowY: 'auto' }}>
                 {filteredEntries.length === 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)', textAlign: 'center' }}>
-                        Open left sidebar to import or create entries
-                    </div>
+                    <EmptyState
+                        icon={<MdLibraryBooks />}
+                        message="No Entries Found"
+                        description={searchTerm ? "Try adjusting your search or filters" : "Import or create entries to get started"}
+                    />
                 )}
                 {filteredEntries.map(entry => {
                     const isMetaDefined = metaDefinitions.some(d => d.name === entry.properties.Meta);

@@ -3,7 +3,8 @@ import {
     MdDataObject,  // Output
     MdSchema,      // Node Editor / Spec
     MdDescription, // Schema / Docs
-    MdAssignment   // Context Inputs
+    MdAssignment,  // Context Inputs
+    MdInfoOutline  // Tutorial
 } from 'react-icons/md';
 
 interface RightActivityBarProps {
@@ -76,6 +77,17 @@ export default function RightActivityBar({ activeTab, activeTools, onToggleTool 
                     {tool.icon}
                 </button>
             ))}
+
+            {/* Bottom-aligned Info Button */}
+            <div style={{ marginTop: 'auto', marginBottom: '10px' }}>
+                <button
+                    style={btnStyle(activeTools.includes(`info_${activeTab}`))}
+                    onClick={() => onToggleTool(`info_${activeTab}`)}
+                    title="View Information & Tutorial"
+                >
+                    <MdInfoOutline />
+                </button>
+            </div>
         </div>
     );
 }
