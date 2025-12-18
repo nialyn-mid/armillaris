@@ -1,49 +1,25 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useData } from '../../../context/DataContext';
+import { useEngineFiles } from './useEngineFiles';
+import { useBehaviorFiles, type CompilationError } from './useBehaviorFiles';
 
 export type TemplateTabLeft = 'script' | 'spec' | 'adapter';
 export type TemplateTabRight = 'behavior' | 'adapter_out' | 'data';
 
-export interface CompilationError {
-    source: string;
-    message: string;
-    stack?: string;
-}
+export type { CompilationError };
 
 export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
     const { showNotification, activeEngine, activeSpec, entries } = useData();
     const ipc = (window as any).ipcRenderer;
 
-    // ---- Content State ----
-    const [engineCode, setEngineCode] = useState<string>('');
-    const [engineSpecCode, setEngineSpecCode] = useState<string>('');
-    const [adapterCode, setAdapterCode] = useState<string>('');
-    const [specCode, setSpecCode] = useState<string>('');
-    const [compiledCode, setCompiledCode] = useState<string>('');
-    const [dataCode, setDataCode] = useState<string>('{\n  "note": "Data JSON implementation pending"\n}');
+    // Compose Hooks
+    const engine = useEngineFiles(ipc, activeEngine, showNotification);
+    const behavior = useBehaviorFiles(ipc, activeEngine, activeSpec, entries, showNotification);
 
-    const [isCompiling, setIsCompiling] = useState(false);
-    const [errors, setErrors] = useState<CompilationError[]>([]);
+    // Common State
+    const isAnyDirty = engine.isEngineDirty || engine.isEngineSpecDirty || engine.isAdapterDirty || behavior.isSpecDirty;
 
-    // ---- Dirty Tracking ----
-    const originalEngineCode = useRef<string>('');
-    const originalEngineSpecCode = useRef<string>('');
-    const originalAdapterCode = useRef<string>('');
-    const originalSpecCode = useRef<string>('');
-
-    // Force re-render on dirty change for UI updates
-    const [, setTick] = useState(0);
-    const forceUpdate = () => setTick(t => t + 1);
-
-    const isEngineDirty = engineCode !== originalEngineCode.current;
-    const isEngineSpecDirty = engineSpecCode !== originalEngineSpecCode.current;
-    const isAdapterDirty = adapterCode !== originalAdapterCode.current;
-    const isSpecDirty = specCode !== originalSpecCode.current;
-    const isAnyDirty = isEngineDirty || isEngineSpecDirty || isAdapterDirty || isSpecDirty;
-
-    // ---- Effects ----
-
-    // Report dirty state up
+    // Final re-render trigger logic or effects if needed
     useEffect(() => {
         if (onDirtyChange) onDirtyChange(isAnyDirty);
 
@@ -57,290 +33,80 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [isAnyDirty, onDirtyChange]);
 
-    // Load Engine Content
-    useEffect(() => {
-        if (!ipc || !activeEngine) return;
-
-        ipc.invoke('get-engine-details', activeEngine)
-            .then((details: { js: string, devSpec: string, adapter: string }) => {
-                setEngineCode(details.js);
-                originalEngineCode.current = details.js;
-
-                setEngineSpecCode(details.devSpec);
-                originalEngineSpecCode.current = details.devSpec;
-
-                setAdapterCode(details.adapter);
-                originalAdapterCode.current = details.adapter;
-
-                forceUpdate();
-            })
-            .catch((err: any) => console.error(err));
-    }, [activeEngine, ipc]);
-
-    // Load Behavior Spec Content
-    useEffect(() => {
-        if (!ipc || !activeEngine || !activeSpec) return;
-
-        ipc.invoke('read-spec', activeEngine, activeSpec)
-            .then((content: string) => {
-                setSpecCode(content);
-                originalSpecCode.current = content;
-                forceUpdate();
-            })
-            .catch((err: any) => console.error(err));
-    }, [activeEngine, activeSpec, ipc]);
-
-    // ---- Compilaton ----
-    const compileBehavior = useCallback(async () => {
-        if (!ipc || !activeEngine || !specCode) return;
-
-        setIsCompiling(true);
-        try {
-            const adapterCode = await ipc.invoke('read-adapter', activeEngine);
-            if (!adapterCode) {
-                setCompiledCode('// No adapter.js found for this engine.');
-                return;
-            }
-
-            let graphData;
-            try {
-                graphData = JSON.parse(specCode);
-            } catch (e) {
-                setCompiledCode('// Invalid JSON in Behavior Editor.');
-                return;
-            }
-
-            const response = await ipc.invoke('sandbox:execute', {
-                script: adapterCode,
-                entryPoint: 'adapt',
-                args: [graphData]
-            });
-
-            if (response.success) {
-                let result = response.result;
-                if (typeof result !== 'string') {
-                    result = JSON.stringify(result, null, 2);
-                } else {
-                    try {
-                        const obj = JSON.parse(result);
-                        result = JSON.stringify(obj, null, 2);
-                    } catch { }
-                }
-                setCompiledCode(result);
-                setErrors([]); // Clear errors on success
-            } else {
-                setCompiledCode(`// Compilation Failed:\n${response.error}\n${response.stack || ''}`);
-                setErrors([{
-                    source: 'Adapter',
-                    message: response.error,
-                    stack: response.stack
-                }]);
-            }
-
-        } catch (err: any) {
-            console.error(err);
-            setCompiledCode(`// System Error:\n${err.message}`);
-        } finally {
-            setIsCompiling(false);
-        }
-    }, [ipc, activeEngine, specCode]);
-
-    const compileData = useCallback(async () => {
-        if (!ipc || !activeEngine || !entries) return;
-
-        setIsCompiling(true);
-        try {
-            const adapterCode = await ipc.invoke('read-adapter', activeEngine);
-            if (!adapterCode) {
-                setDataCode('// No adapter.js found for this engine.');
-                return;
-            }
-
-            const response = await ipc.invoke('sandbox:execute', {
-                script: adapterCode,
-                entryPoint: 'adaptData',
-                args: [entries]
-            });
-
-            if (response.success) {
-                let result = response.result;
-                if (typeof result !== 'string') {
-                    result = JSON.stringify(result, null, 2);
-                } else {
-                    try {
-                        const obj = JSON.parse(result);
-                        result = JSON.stringify(obj, null, 2);
-                    } catch { }
-                }
-                setDataCode(result);
-                setErrors([]); // Clear errors on success
-            } else {
-                setDataCode(`// Data Compilation Failed:\n${response.error}\n${response.stack || ''}`);
-                setErrors([{
-                    source: 'Data Adapter',
-                    message: response.error,
-                    stack: response.stack
-                }]);
-            }
-
-        } catch (err: any) {
-            console.error(err);
-            setDataCode(`// System Error:\n${err.message}`);
-        } finally {
-            setIsCompiling(false);
-        }
-    }, [ipc, activeEngine, entries]);
-
+    // Internal Coordinator logic
     const compileFullEngine = useCallback(async () => {
         if (!ipc || !activeEngine || !activeSpec) return;
         try {
             const response = await ipc.invoke('compile-engine', activeEngine, activeSpec, entries);
             if (response.success) {
-                setErrors([]);
+                behavior.setErrors([]);
                 console.log("Full engine compiled successfully.");
             } else {
-                setErrors(response.errors);
+                behavior.setErrors(response.errors);
             }
         } catch (e: any) {
             console.error("Full engine compilation failed", e);
-            setErrors([{
+            behavior.setErrors([{
                 source: 'System',
                 message: e.message,
                 stack: e.stack
             }]);
         }
-    }, [ipc, activeEngine, activeSpec, entries]);
+    }, [ipc, activeEngine, activeSpec, entries, behavior]);
 
-    // ---- Save Handlers ----
+    // Wrapped Save Handlers (triggering re-compile)
     const handleSaveEngineScript = async () => {
-        if (!ipc) return;
-        if (!engineCode && originalEngineCode.current) {
-            console.warn("Attempted to save empty engine script, but original was not empty. Skipping for safety.");
-            return;
-        }
-
-        try {
-            await ipc.invoke('save-engine-js', activeEngine, engineCode);
-            originalEngineCode.current = engineCode;
-            setErrors([]); // Explicit clear
-            forceUpdate();
-            showNotification('Engine Script Saved', 'success');
-            // Re-compile after save
-            await compileFullEngine();
-        } catch (e) { console.error(e); showNotification('Failed to save', 'error'); }
+        if (await engine.handleSaveEngineScript()) await compileFullEngine();
     };
 
     const handleSaveEngineSpec = async () => {
-        if (!ipc) return;
-        if (!engineSpecCode && originalEngineSpecCode.current) {
-            console.warn("Attempted to save empty engine spec, but original was not empty. Skipping for safety.");
-            return;
-        }
-
-        try {
-            await ipc.invoke('save-engine-spec', activeEngine, engineSpecCode);
-            originalEngineSpecCode.current = engineSpecCode;
-            setErrors([]); // Explicit clear
-            forceUpdate();
-            showNotification('Engine Spec Saved', 'success');
-            // Re-compile after save
-            await compileFullEngine();
-        } catch (e) { console.error(e); showNotification('Failed to save', 'error'); }
+        if (await engine.handleSaveEngineSpec()) await compileFullEngine();
     };
 
     const handleSaveAdapter = async () => {
-        if (!ipc) return;
-        if (!adapterCode && originalAdapterCode.current) {
-            console.warn("Attempted to save empty adapter, but original was not empty. Skipping for safety.");
-            return;
-        }
-
-        try {
-            await ipc.invoke('save-adapter', activeEngine, adapterCode);
-            originalAdapterCode.current = adapterCode;
-            setErrors([]); // Explicit clear
-            forceUpdate();
-            showNotification('Engine Adapter Saved', 'success');
-            // Re-compile after save
-            await compileFullEngine();
-        } catch (e) { console.error(e); showNotification('Failed to save', 'error'); }
+        if (await engine.handleSaveAdapter()) await compileFullEngine();
     };
 
     const handleSaveBehavior = async () => {
-        if (!ipc) return;
-        if (!specCode && originalSpecCode.current) {
-            console.warn("Attempted to save empty spec, but original was not empty. Skipping for safety.");
-            return;
-        }
-
-        try {
-            await ipc.invoke('save-behavior', activeEngine, activeSpec, specCode);
-            originalSpecCode.current = specCode;
-            setErrors([]); // Explicit clear
-            forceUpdate();
-            showNotification('Behavior Saved', 'success');
-            // Re-compile after save
-            await compileFullEngine();
-        } catch (e) { console.error(e); showNotification('Failed to save', 'error'); }
+        if (await behavior.handleSaveBehavior()) await compileFullEngine();
     };
 
     const handleSaveAll = async () => {
         if (!ipc) return;
         try {
-            if (isEngineDirty) {
-                await ipc.invoke('save-engine-js', activeEngine, engineCode);
-                originalEngineCode.current = engineCode;
+            let anySaved = false;
+            if (engine.isEngineDirty) {
+                await ipc.invoke('save-engine-js', activeEngine, engine.engineCode);
+                anySaved = true;
             }
-            if (isEngineSpecDirty) {
-                await ipc.invoke('save-engine-spec', activeEngine, engineSpecCode);
-                originalEngineSpecCode.current = engineSpecCode;
+            if (engine.isEngineSpecDirty) {
+                await ipc.invoke('save-engine-spec', activeEngine, engine.engineSpecCode);
+                anySaved = true;
             }
-            if (isAdapterDirty) {
-                await ipc.invoke('save-adapter', activeEngine, adapterCode);
-                originalAdapterCode.current = adapterCode;
+            if (engine.isAdapterDirty) {
+                await ipc.invoke('save-adapter', activeEngine, engine.adapterCode);
+                anySaved = true;
             }
-            if (isSpecDirty) {
-                await ipc.invoke('save-behavior', activeEngine, activeSpec, specCode);
-                originalSpecCode.current = specCode;
+            if (behavior.isSpecDirty) {
+                await ipc.invoke('save-behavior', activeEngine, activeSpec, behavior.specCode);
+                anySaved = true;
             }
 
-            forceUpdate();
-            showNotification('All files saved', 'success');
-
-            // Re-compile ONCE after all saves are done
-            await compileFullEngine();
+            if (anySaved) {
+                engine.markAllSaved();
+                behavior.markSaved();
+                showNotification('All files saved', 'success');
+                await compileFullEngine();
+            }
         } catch (e) {
             console.error(e);
             showNotification('Failed to save some files', 'error');
         }
     };
 
-    const handleDiscardEngineScript = () => {
-        setEngineCode(originalEngineCode.current);
-        forceUpdate();
-    };
-
-    const handleDiscardEngineSpec = () => {
-        setEngineSpecCode(originalEngineSpecCode.current);
-        forceUpdate();
-    };
-
-    const handleDiscardAdapter = () => {
-        setAdapterCode(originalAdapterCode.current);
-        forceUpdate();
-    };
-
-    const handleDiscardBehavior = () => {
-        setSpecCode(originalSpecCode.current);
-        forceUpdate();
-    };
-
     const handleDiscardAll = () => {
-        setEngineCode(originalEngineCode.current);
-        setEngineSpecCode(originalEngineSpecCode.current);
-        setAdapterCode(originalAdapterCode.current);
-        setSpecCode(originalSpecCode.current);
-        forceUpdate();
+        engine.discardAll();
+        behavior.discard();
         showNotification('Changes discarded', 'info');
     };
 
@@ -349,34 +115,33 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         activeEngine,
         activeSpec,
 
-        engineCode, setEngineCode,
-        engineSpecCode, setEngineSpecCode,
-        adapterCode, setAdapterCode,
-        specCode, setSpecCode,
-        compiledCode,
-        dataCode,
-        isCompiling,
-        errors,
+        engineCode: engine.engineCode, setEngineCode: engine.setEngineCode,
+        engineSpecCode: engine.engineSpecCode, setEngineSpecCode: engine.setEngineSpecCode,
+        adapterCode: engine.adapterCode, setAdapterCode: engine.setAdapterCode,
+        specCode: behavior.specCode, setSpecCode: behavior.setSpecCode,
+        compiledCode: behavior.compiledCode,
+        dataCode: behavior.dataCode,
+        isCompiling: behavior.isCompiling,
+        errors: behavior.errors,
 
         // Dirty Flags
-        isEngineDirty,
-        isEngineSpecDirty,
-        isAdapterDirty,
-        isSpecDirty,
+        isEngineDirty: engine.isEngineDirty,
+        isEngineSpecDirty: engine.isEngineSpecDirty,
+        isAdapterDirty: engine.isAdapterDirty,
+        isSpecDirty: behavior.isSpecDirty,
         isAnyDirty,
 
         // Actions
-        forceUpdate,
-        compileBehavior,
-        compileData,
+        compileBehavior: behavior.compileBehavior,
+        compileData: behavior.compileData,
         handleSaveEngineScript,
         handleSaveEngineSpec,
         handleSaveAdapter,
         handleSaveBehavior,
-        handleDiscardEngineScript,
-        handleDiscardEngineSpec,
-        handleDiscardAdapter,
-        handleDiscardBehavior,
+        handleDiscardEngineScript: engine.handleDiscardEngineScript,
+        handleDiscardEngineSpec: engine.handleDiscardEngineSpec,
+        handleDiscardAdapter: engine.handleDiscardAdapter,
+        handleDiscardBehavior: behavior.handleDiscardBehavior,
         handleSaveAll,
         handleDiscardAll,
         showNotification

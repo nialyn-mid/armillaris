@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
-import Editor, { type OnMount } from '@monaco-editor/react';
+import type { OnMount } from '@monaco-editor/react';
 import { useTemplateLogic, type TemplateTabLeft, type TemplateTabRight } from './hooks/useTemplateLogic';
-import { PaneHeader } from './components/PaneHeader';
 import { DebugToolbar } from './components/DebugToolbar';
+import { LeftEditorPane } from './components/LeftEditorPane';
+import { RightEditorPane } from './components/RightEditorPane';
 
 interface TemplateViewProps {
     onDirtyChange?: (isDirty: boolean) => void;
@@ -14,7 +15,7 @@ export interface TemplateViewHandle {
 }
 
 const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirtyChange }, ref) => {
-    // Logic Hook
+    // Logic Hook (composed of specialized sub-hooks)
     const logic = useTemplateLogic(onDirtyChange);
 
     // Expose actions to parent via ref
@@ -27,51 +28,45 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
     const [leftTab, setLeftTab] = useState<TemplateTabLeft>('script');
     const [rightTab, setRightTab] = useState<TemplateTabRight>('behavior');
 
-    // Refs for stable access in Monaco commands to avoid stale closures
-    const leftTabRef = useRef(leftTab);
-    const rightTabRef = useRef(rightTab);
-    useEffect(() => { leftTabRef.current = leftTab; }, [leftTab]);
-    useEffect(() => { rightTabRef.current = rightTab; }, [rightTab]);
-
     // Layout State
     const [editorSplitRatio, setEditorSplitRatio] = useState(() => {
         const saved = localStorage.getItem('template_editor_split');
         return saved ? parseFloat(saved) : 0.5;
     });
 
-    // logicRef to prevent stale closures in Monaco commands
-    const logicRef = useRef(logic);
-    useEffect(() => { logicRef.current = logic; }, [logic]);
+    // Editor Refs for focus detection
+    const leftEditorRef = useRef<any>(null);
+    const rightEditorRef = useRef<any>(null);
 
-    // Editor Refs & State Restoration
-    const engineEditorRef = useRef<any>(null);
-    const specEditorRef = useRef<any>(null);
+    // Refs for stable access in master shortcut listener to avoid stale closures
+    const stateRef = useRef({ leftTab, rightTab, logic });
+    useEffect(() => { stateRef.current = { leftTab, rightTab, logic }; }, [leftTab, rightTab, logic]);
 
-    const restoreEditorState = (type: 'engine' | 'spec', id: string, editor: any) => {
+    // Monaco Save State Logic
+    const restoreEditorState = (type: 'left' | 'right', id: string, editor: any) => {
         if (!editor || !id) return;
-        const savedJson = localStorage.getItem(`template_viewstate_${type}_${id} `);
+        const savedJson = localStorage.getItem(`template_viewstate_${type}_${id}`);
         if (savedJson) {
             try { editor.restoreViewState(JSON.parse(savedJson)); } catch { }
         }
     };
 
-    const saveEditorState = (type: 'engine' | 'spec', id: string) => {
-        const editor = type === 'engine' ? engineEditorRef.current : specEditorRef.current;
+    const saveEditorState = (type: 'left' | 'right', id: string) => {
+        const editor = type === 'left' ? leftEditorRef.current : rightEditorRef.current;
         if (editor && id) {
             const vs = editor.saveViewState();
-            if (vs) localStorage.setItem(`template_viewstate_${type}_${id} `, JSON.stringify(vs));
+            if (vs) localStorage.setItem(`template_viewstate_${type}_${id}`, JSON.stringify(vs));
         }
     };
 
-    // On Mount handlers
-    const handleEngineMount: OnMount = (editor) => {
-        engineEditorRef.current = editor;
-        restoreEditorState('engine', logic.activeEngine, editor);
+    const handleLeftMount: OnMount = (editor) => {
+        leftEditorRef.current = editor;
+        restoreEditorState('left', logic.activeEngine, editor);
     };
 
-    const handleSpecMount: OnMount = (editor) => {
-        specEditorRef.current = editor;
-        restoreEditorState('spec', logic.activeSpec, editor);
+    const handleRightMount: OnMount = (editor) => {
+        rightEditorRef.current = editor;
+        restoreEditorState('right', logic.activeSpec, editor);
     };
 
     // Master Shortcut Listener
@@ -81,41 +76,37 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                 e.preventDefault();
                 e.stopPropagation();
 
-                const cur = logicRef.current;
-                const leftFocused = engineEditorRef.current?.hasTextFocus();
-                const rightFocused = specEditorRef.current?.hasTextFocus();
-
-                console.log(`[TemplateView] Master Ctrl+S. Left Focused: ${leftFocused}, Right Focused: ${rightFocused}`);
+                const { leftTab, rightTab, logic: cur } = stateRef.current;
+                const leftFocused = leftEditorRef.current?.hasTextFocus();
+                const rightFocused = rightEditorRef.current?.hasTextFocus();
 
                 if (leftFocused) {
-                    if (leftTabRef.current === 'script') cur.handleSaveEngineScript();
-                    else if (leftTabRef.current === 'spec') cur.handleSaveEngineSpec();
-                    else if (leftTabRef.current === 'adapter') cur.handleSaveAdapter();
+                    if (leftTab === 'script') cur.handleSaveEngineScript();
+                    else if (leftTab === 'spec') cur.handleSaveEngineSpec();
+                    else if (leftTab === 'adapter') cur.handleSaveAdapter();
                 } else if (rightFocused) {
-                    if (rightTabRef.current === 'behavior') cur.handleSaveBehavior();
+                    if (rightTab === 'behavior') cur.handleSaveBehavior();
                 } else {
-                    // Fallback: Notify user that no editor is focused
-                    console.log("[TemplateView] No editor text focus detected for Ctrl+S");
                     cur.showNotification('No editor focused to save', 'error');
                 }
             }
         };
 
-        window.addEventListener('keydown', handleKeyDown, true); // Use capture to preempt Monaco
+        window.addEventListener('keydown', handleKeyDown, true);
         return () => window.removeEventListener('keydown', handleKeyDown, true);
     }, []);
 
-    // Auto-save view state on unmount/change
+    // Selection/View State Persistence
     useEffect(() => {
         return () => {
-            saveEditorState('engine', logic.activeEngine);
-            saveEditorState('spec', logic.activeSpec);
+            saveEditorState('left', logic.activeEngine);
+            saveEditorState('right', logic.activeSpec);
         }
     }, [logic.activeEngine, logic.activeSpec]);
 
-    // Resizing
     useEffect(() => localStorage.setItem('template_editor_split', String(editorSplitRatio)), [editorSplitRatio]);
 
+    // Resizing Logic
     const containerRef = useRef<HTMLDivElement>(null);
     const startResizingEditors = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -136,47 +127,11 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
         document.addEventListener('mouseup', onMouseUp);
     };
 
-    // Trigger Compilation when switching to Adapter output tab or when code changes
+    // Trigger Compilation on tab switches
     useEffect(() => {
-        if (rightTab === 'adapter_out') {
-            logic.compileBehavior();
-        }
-        if (rightTab === 'data') {
-            logic.compileData();
-        }
+        if (rightTab === 'adapter_out') logic.compileBehavior();
+        if (rightTab === 'data') logic.compileData();
     }, [rightTab, logic.specCode, logic.activeEngine, logic.compileBehavior, logic.compileData]);
-
-    // ---- Definitions for Headers ----
-
-    const leftTabs = [
-        { id: 'script', label: 'Engine Script (JS)', isDirty: logic.isEngineDirty },
-        { id: 'spec', label: 'Engine Spec (JSON)', isDirty: logic.isEngineSpecDirty },
-        { id: 'adapter', label: 'Engine Adapter (JS)', isDirty: logic.isAdapterDirty }
-    ] as const;
-
-    const rightTabs = [
-        { id: 'behavior', label: 'Behavior', isDirty: logic.isSpecDirty },
-        { id: 'adapter_out', label: 'Adapted Behavior', readOnly: true },
-        { id: 'data', label: 'Adapted Data', readOnly: true }
-    ] as const;
-
-    const handleLeftSave = () => {
-        if (leftTab === 'script') logic.handleSaveEngineScript();
-        else if (leftTab === 'spec') logic.handleSaveEngineSpec();
-        else if (leftTab === 'adapter') logic.handleSaveAdapter();
-    };
-
-    const handleLeftDiscard = () => {
-        if (leftTab === 'script') logic.handleDiscardEngineScript();
-        else if (leftTab === 'spec') logic.handleDiscardEngineSpec();
-        else if (leftTab === 'adapter') logic.handleDiscardAdapter();
-    };
-
-    const isLeftDirty = leftTab === 'script' ? logic.isEngineDirty : (leftTab === 'spec' ? logic.isEngineSpecDirty : logic.isAdapterDirty);
-
-    const handleRightSave = () => {
-        if (rightTab === 'behavior') logic.handleSaveBehavior();
-    };
 
     return (
         <div ref={containerRef} style={{ display: 'flex', height: '100%', overflow: 'hidden', flexDirection: 'column', flex: 1 }}>
@@ -185,108 +140,44 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
             <div style={{ flex: 1, display: 'flex', minWidth: 0 }}>
 
                 {/* LEFT PANE */}
-                <div style={{ flex: editorSplitRatio, display: 'flex', flexDirection: 'column', minWidth: 0, borderRight: '1px solid var(--border-color)' }}>
-                    <PaneHeader
-                        tabs={leftTabs as any}
+                <div style={{ flex: editorSplitRatio, display: 'flex', borderRight: '1px solid var(--border-color)', minWidth: 0 }}>
+                    <LeftEditorPane
                         activeTab={leftTab}
-                        onTabChange={(t) => setLeftTab(t as TemplateTabLeft)}
-                        onSave={handleLeftSave}
-                        saveDisabled={!isLeftDirty}
-                        onDiscard={handleLeftDiscard}
-                        discardDisabled={!isLeftDirty}
+                        onTabChange={setLeftTab}
+                        engineCode={logic.engineCode}
+                        onEngineCodeChange={logic.setEngineCode}
+                        engineSpecCode={logic.engineSpecCode}
+                        onEngineSpecCodeChange={logic.setEngineSpecCode}
+                        adapterCode={logic.adapterCode}
+                        onAdapterCodeChange={logic.setAdapterCode}
+                        isEngineDirty={logic.isEngineDirty}
+                        isEngineSpecDirty={logic.isEngineSpecDirty}
+                        isAdapterDirty={logic.isAdapterDirty}
+                        onSave={logic.handleSaveEngineScript /* This is just a fallback for PaneHeader toggle */}
+                        onDiscard={logic.handleDiscardEngineScript}
+                        onMount={handleLeftMount}
                     />
-
-                    <div style={{ flex: 1 }}>
-                        {leftTab === 'script' && (
-                            <Editor
-                                key="engine-js"
-                                height="100%"
-                                defaultLanguage="javascript"
-                                theme="vs-dark"
-                                value={logic.engineCode}
-                                onMount={handleEngineMount}
-                                onChange={(val) => logic.setEngineCode(val || '')}
-                                options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true }}
-                            />
-                        )}
-                        {leftTab === 'spec' && (
-                            <Editor
-                                key="engine-spec"
-                                height="100%"
-                                defaultLanguage="json"
-                                theme="vs-dark"
-                                value={logic.engineSpecCode}
-                                onMount={handleEngineMount}
-                                onChange={(val) => logic.setEngineSpecCode(val || '')}
-                                options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true }}
-                            />
-                        )}
-                        {leftTab === 'adapter' && (
-                            <Editor
-                                key="engine-adapter"
-                                height="100%"
-                                defaultLanguage="javascript"
-                                theme="vs-dark"
-                                value={logic.adapterCode}
-                                onMount={handleEngineMount}
-                                onChange={(val) => logic.setAdapterCode(val || '')}
-                                options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true }}
-                            />
-                        )}
-                    </div>
                 </div>
 
                 {/* Split Handle */}
                 <div onMouseDown={startResizingEditors} style={{ width: '4px', cursor: 'col-resize', backgroundColor: 'var(--bg-primary)', position: 'relative', zIndex: 10 }} />
 
                 {/* RIGHT PANE */}
-                <div style={{ flex: 1 - editorSplitRatio, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                    <PaneHeader
-                        tabs={rightTabs as any}
+                <div style={{ flex: 1 - editorSplitRatio, display: 'flex', minWidth: 0 }}>
+                    <RightEditorPane
                         activeTab={rightTab}
-                        onTabChange={(t) => setRightTab(t as TemplateTabRight)}
-                        onSave={rightTab === 'behavior' ? handleRightSave : undefined}
-                        saveDisabled={rightTab === 'behavior' ? !logic.isSpecDirty : true}
-                        onDiscard={rightTab === 'behavior' ? logic.handleDiscardBehavior : undefined}
-                        discardDisabled={rightTab === 'behavior' ? !logic.isSpecDirty : true}
+                        onTabChange={setRightTab}
+                        specCode={logic.specCode}
+                        onSpecCodeChange={logic.setSpecCode}
+                        isSpecDirty={logic.isSpecDirty}
+                        compiledCode={logic.compiledCode}
+                        dataCode={logic.dataCode}
+                        isCompiling={logic.isCompiling}
+                        onSave={logic.handleSaveBehavior}
+                        onDiscard={logic.handleDiscardBehavior}
+                        onMount={handleRightMount}
                     />
-
-                    <div style={{ flex: 1 }}>
-                        {rightTab === 'behavior' && (
-                            <Editor
-                                key="behavior-json"
-                                height="100%"
-                                defaultLanguage="json"
-                                theme="vs-dark"
-                                value={logic.specCode}
-                                onMount={handleSpecMount}
-                                onChange={(val) => logic.setSpecCode(val || '')}
-                                options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true }}
-                            />
-                        )}
-                        {rightTab === 'adapter_out' && (
-                            <Editor
-                                key="adapter-out"
-                                height="100%"
-                                defaultLanguage="json"
-                                theme="vs-dark"
-                                value={logic.isCompiling ? '// Compiling...' : logic.compiledCode}
-                                options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true, readOnly: true }}
-                            />
-                        )}
-                        {rightTab === 'data' && (
-                            <Editor
-                                key="data-json"
-                                height="100%"
-                                defaultLanguage="json"
-                                theme="vs-dark"
-                                value={logic.dataCode}
-                                options={{ minimap: { enabled: true }, wordWrap: 'on', automaticLayout: true, readOnly: true }}
-                            />
-                        )}
-                    </div>
                 </div>
-
             </div>
 
             {/* SHARED DEBUG TOOLBAR */}
