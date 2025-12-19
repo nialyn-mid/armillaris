@@ -82,7 +82,7 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
                 }}
             />
 
-            <div className="panel-subheader">Node Palette</div>
+            <div className="panel-header">Node Palette</div>
 
             <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
                 {/* Vertical Tabs */}

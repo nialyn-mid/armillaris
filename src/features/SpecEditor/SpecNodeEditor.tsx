@@ -16,6 +16,7 @@ import { Breadcrumbs } from './Breadcrumbs';
 import { LabeledEdge } from '../GraphEditor/graph/LabeledEdge';
 import { MdAccountTree } from 'react-icons/md';
 import { EmptyState } from '../../shared/ui/EmptyState';
+import './SpecEditor.css';
 
 // Components & Hooks
 import NodePalette from './NodePalette';
@@ -79,11 +80,8 @@ export function SpecNodeEditor() {
         event.dataTransfer.dropEffect = 'move';
     }, []);
 
-    //console.log("[SpecNodeEditor] Render Nodes:", nodes?.length, nodes?.[0]);
-
     return (
-        <div style={{ width: '100%', height: '100%', display: 'flex', position: 'relative' }}>
-
+        <div className="spec-editor-root">
 
             {/* Left: Node Palette */}
             <NodePalette
@@ -95,13 +93,13 @@ export function SpecNodeEditor() {
 
             {/* Middle: Graph Editor */}
             <div
-                style={{ flex: 1, height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}
+                className="spec-editor-middle"
                 ref={reactFlowWrapper}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
             >
                 {/* Breadcrumbs Navigation */}
-                <div style={{ padding: '0', background: '#252526', borderBottom: '1px solid #333' }}>
+                <div className="breadcrumbs-header">
                     <Breadcrumbs
                         path={[{ id: 'root', label: 'Behavior' }, ...viewPath]}
                         onNavigate={navigateTo}
@@ -109,7 +107,7 @@ export function SpecNodeEditor() {
                     />
                 </div>
 
-                <div style={{ flex: 1, width: '100%', position: 'relative' }}>
+                <div className="spec-editor-canvas-wrapper">
                     <ReactFlow
                         id="spec-node-editor"
                         nodes={nodes || []}

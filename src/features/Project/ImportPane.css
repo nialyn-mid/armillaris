@@ -9,33 +9,37 @@
 .asset-import-grid {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    margin-top: 8px;
 }
 
 .asset-import-card {
     background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    padding: 20px;
+    padding-bottom: 1.5em;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
+}
+
+.asset-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
 }
 
 .asset-info {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
 
 .asset-name {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--text-primary);
 }
 
 .asset-desc {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
     line-height: 1.4;
 }

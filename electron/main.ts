@@ -92,4 +92,9 @@ app.whenReady().then(() => {
         await fs.writeFile(filePath, content, 'utf-8');
         return true;
     });
+
+    ipcMain.handle('open-external', async (_, url) => {
+        await shell.openExternal(url);
+        return true;
+    });
 });

@@ -7,7 +7,7 @@ interface ModalButton {
 
 interface ConfirmModalProps {
     title: string;
-    message: string;
+    message: string | React.ReactNode;
     buttons: ModalButton[];
     onClose?: () => void; // For backdrop click if desired
 }
@@ -45,7 +45,7 @@ export default function ConfirmModal({
             >
                 <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--accent-color)', fontWeight: 700 }}>{title}</h3>
 
-                <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: '1.6', opacity: 0.9, whiteSpace: 'pre-wrap', marginBottom: '8px' }}>
+                <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: '1.6', opacity: 0.9, whiteSpace: typeof message === 'string' ? 'pre-wrap' : 'normal', marginBottom: '8px' }}>
                     {message}
                 </div>
 

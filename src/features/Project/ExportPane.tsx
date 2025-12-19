@@ -79,7 +79,7 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
                             <span>Description</span>
                         </div>
                         <div className="export-description">
-                            Generate a production-ready JavaScript bundle of your behavioral logic, optimized for the active engine.
+                            Export your lorebook script. You can verify the content & size in the Output View.
                         </div>
                     </div>
 
@@ -158,7 +158,7 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
                         disabled={issues.some(i => i.severity === 'error')}
                         title={issues.some(i => i.severity === 'error') ? 'Fix errors to export' : ''}
                     >
-                        <MdCloudDownload /> Export Bundle
+                        <MdCloudDownload /> Export Script
                     </button>
                     <div className="export-footer-info">
                         Target: {activeSpec?.replace('.behavior', '') || 'None'}

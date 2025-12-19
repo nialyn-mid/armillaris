@@ -34,6 +34,23 @@
     overflow: auto;
 }
 
+/* Flexbox Alignments */
+.items-center {
+    align-items: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.self-end {
+    align-self: flex-end;
+}
+
 /* Gap / Spacing */
 .gap-xs {
     gap: 4px;

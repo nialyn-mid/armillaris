@@ -3,7 +3,8 @@ import { api } from '../../api';
 import { useData } from '../../context/DataContext';
 import { NotionSource } from '../../lib/data-sources/NotionSource';
 import SidePane from '../../shared/ui/SidePane';
-import { MdLibraryBooks, MdSettingsSuggest, MdSync, MdFileUpload } from 'react-icons/md';
+import { MdLibraryBooks, MdSettingsSuggest, MdSync, MdFileUpload, MdInfoOutline, MdOpenInNew } from 'react-icons/md';
+import ConfirmModal from '../../shared/ui/ConfirmModal';
 import './ImportPane.css';
 
 interface ImportPaneProps {
@@ -21,6 +22,7 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
     const [dbIds, setDbIds] = useState<string[]>(['']);
     const [hasToken, setHasToken] = useState(false);
     const [isImporting, setIsImporting] = useState<string | null>(null);
+    const [showNotionInfo, setShowNotionInfo] = useState(false);
 
     const { setEntries, isLoading, setIsLoading, showNotification } = useData();
 
@@ -124,73 +126,93 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
     return (
         <SidePane id="panel-import" title="Import Manager" onClose={onClose}>
             <div className="import-container p-0">
-                {/* Data Section */}
-                <div className="panel-section">
-                    <div className="panel-section-title flex-row items-center justify-between">
-                        <span>Data Sources</span>
-                        <button className="btn-toolbar" onClick={handleSaveConfig}>Save Config</button>
-                    </div>
 
-                    <div className="input-group">
-                        <label className="input-label">
-                            Notion Token {hasToken && <span className="input-label-accent">(Set)</span>}
-                        </label>
-                        <input
-                            type="password"
-                            placeholder={hasToken ? "********" : "secret_..."}
-                            value={token}
-                            onChange={(e) => setToken(e.target.value)}
-                            className="form-control"
-                        />
-                    </div>
+                {/* Data Source Configuration */}
+                <div className="panel-section border-b">
+                    <div className="panel-section-title">Data Import</div>
 
-                    <div className="input-group">
-                        <label className="input-label">Notion Databases</label>
-                        <div className="flex-column gap-sm">
-                            {dbIds.map((id, idx) => (
-                                <div key={idx} className="flex-row gap-xs">
-                                    <input
-                                        type="text"
-                                        placeholder="ID or URL"
-                                        value={id}
-                                        onChange={(e) => updateDbId(idx, e.target.value)}
-                                        className="form-control form-input-sm"
-                                    />
+                    <div className="asset-import-card">
+                        <div className="asset-card-header">
+                            <div className="asset-info">
+                                <div className="flex-row items-center gap-xs">
+                                    <span className="asset-name">Notion Integration</span>
                                     <button
-                                        onClick={() => removeDbInput(idx)}
-                                        className="btn-icon"
-                                        style={{ color: 'var(--danger-color)' }}
-                                        title="Remove"
+                                        className="btn-icon-inline"
+                                        onClick={() => setShowNotionInfo(true)}
+                                        title="Database Format Requirements"
                                     >
-                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                                        </svg>
+                                        <MdInfoOutline />
                                     </button>
                                 </div>
-                            ))}
-                            <button onClick={addDbInput} className="add-item-btn">+ Add Database</button>
+                                <span className="asset-desc">Sync lorebook entries from Notion databases.</span>
+                            </div>
+                            <button className="btn-toolbar" onClick={handleSaveConfig} title="Save Changes" style={{ height: 'auto', flexDirection: 'column', padding: '1em 0.5em' }}>
+                                Save Config
+                            </button>
                         </div>
-                    </div>
 
-                    <button
-                        className="btn-action"
-                        onClick={handleFetchNotion}
-                        disabled={isLoading}
-                        style={{ marginTop: '8px' }}
-                    >
-                        <MdSync className={isLoading ? 'spin' : ''} />
-                        {isLoading ? 'Syncing...' : 'Fetch Notion Content'}
-                    </button>
+                        <div className="input-group">
+                            <label className="input-label">
+                                Notion Token {hasToken && <span className="input-label-accent">(Set)</span>}
+                            </label>
+                            <input
+                                type="password"
+                                placeholder={hasToken ? "********" : "secret_..."}
+                                value={token}
+                                onChange={(e) => setToken(e.target.value)}
+                                className="form-control"
+                            />
+                        </div>
+
+                        <div className="input-group">
+                            <label className="input-label">Notion Databases</label>
+                            <div className="flex-column gap-sm">
+                                {dbIds.map((id, idx) => (
+                                    <div key={idx} className="flex-row gap-xs">
+                                        <input
+                                            type="text"
+                                            placeholder="Database ID or URL"
+                                            value={id}
+                                            onChange={(e) => updateDbId(idx, e.target.value)}
+                                            className="form-control form-input-sm"
+                                        />
+                                        <button
+                                            onClick={() => removeDbInput(idx)}
+                                            className="btn-icon"
+                                            style={{ color: 'var(--danger-color)' }}
+                                            title="Remove"
+                                        >
+                                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                ))}
+                                <button onClick={addDbInput} className="add-item-btn">+ Add Database</button>
+                            </div>
+                        </div>
+
+                        <button
+                            className="btn-action"
+                            onClick={handleFetchNotion}
+                            disabled={isLoading}
+                            style={{ marginTop: '8px' }}
+                        >
+                            <MdSync className={isLoading ? 'spin' : ''} />
+                            {isLoading ? 'Syncing...' : 'Fetch Notion Content'}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Asset Section */}
                 <div className="panel-section">
-                    <div className="panel-section-title">External Assets</div>
+                    <div className="panel-section-title">Script Asset Import</div>
 
                     <div className="asset-import-grid">
+                        {/* Behavior File */}
                         <div className="asset-import-card">
                             <div className="asset-info">
-                                <span className="asset-name">Behavior</span>
+                                <span className="asset-name">Behavior Definition</span>
                                 <span className="asset-desc">Import existing .behavior logic files.</span>
                             </div>
                             <button
@@ -202,6 +224,7 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
                             </button>
                         </div>
 
+                        {/* Lorebook Module */}
                         <div className="asset-import-card">
                             <div className="asset-info">
                                 <span className="asset-name">Lorebook Module</span>
@@ -216,6 +239,7 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
                             </button>
                         </div>
 
+                        {/* Engine Template */}
                         <div className="asset-import-card">
                             <div className="asset-info">
                                 <span className="asset-name">Engine Template</span>
@@ -232,6 +256,60 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
                     </div>
                 </div>
             </div>
+            {showNotionInfo && (
+                <ConfirmModal
+                    title="Setting up Notion Integration"
+                    message={
+                        <div className="flex-column gap-md">
+                            <div>
+                                <div style={{ fontWeight: 600, marginBottom: '4px', color: 'var(--accent-color)' }}>1. Setup Integration</div>
+                                <div className="flex-column gap-xs">
+                                    <span>Follow the Notion Developer guide until "Setting up the demo locally":</span>
+                                    <button
+                                        className="btn-toolbar"
+                                        style={{ width: 'fit-content', height: 'auto', padding: '6px 12px', gap: '8px' }}
+                                        onClick={() => api.openExternal('https://developers.notion.com/docs/create-a-notion-integration')}
+                                    >
+                                        <MdOpenInNew size={16} /> Open Developer Guide
+                                    </button>
+                                    <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>
+                                        Copy your <strong>API Secret</strong> and paste it into the "Notion Token" field. This only grants the app access to pages you allow (see guide).
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style={{ fontWeight: 600, marginBottom: '4px', color: 'var(--accent-color)' }}>2. Database Format</div>
+                                <div style={{ fontSize: '0.9rem' }}>Each database should have these properties:</div>
+                                <div className="flex-column gap-xs" style={{ marginTop: '8px', paddingLeft: '8px', borderLeft: '2px solid var(--border-color)' }}>
+                                    <div><strong>Name</strong> (Title): Display name for the entry.</div>
+                                    <div><strong>Meta</strong> (Select): Category for the graph. Every DB should have the same Meta value for every entry.</div>
+                                    <div><strong>Keywords</strong> (Text): Comma-separated search terms.</div>
+                                    <div><strong>Description</strong> (Text): Personality text.</div>
+                                    <div>(Optional) <i>Relation properties:</i> Two-way relations between databases, preferrably each column is named the same as the database it is related to (e.g. column named "location" in "object" database)</div>
+                                    <div>(Optional) <i>Custom properties:</i> Any other columns requested by your engine.</div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style={{ fontWeight: 600, marginBottom: '4px', color: 'var(--accent-color)' }}>3. Add Databases</div>
+                                <div className="flex-column gap-xs">
+                                    <span>Copy the "Share" link of your database and paste it into the "Notion Databases" list.</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style={{ fontWeight: 600, marginBottom: '4px', color: 'var(--accent-color)' }}>4. Save</div>
+                                <span>Click <strong>Save Config</strong> to store your API Secret and database list.</span>
+                            </div>
+                        </div>
+                    }
+                    buttons={[
+                        { label: 'Got it', onClick: () => setShowNotionInfo(false), variant: 'primary' }
+                    ]}
+                    onClose={() => setShowNotionInfo(false)}
+                />
+            )}
         </SidePane>
     );
 }
