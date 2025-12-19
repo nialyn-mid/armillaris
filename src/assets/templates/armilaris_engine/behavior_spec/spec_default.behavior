@@ -836,7 +836,28 @@
                       "type": "List"
                     }
                   ],
-                  "properties": [],
+                  "properties": [
+                    {
+                      "name": "deduplicate",
+                      "label": "Deduplicate",
+                      "type": "select",
+                      "options": [
+                        {
+                          "value": "off",
+                          "label": "Off"
+                        },
+                        {
+                          "value": "first",
+                          "label": "Keep first"
+                        },
+                        {
+                          "value": "last",
+                          "label": "Keep last"
+                        }
+                      ],
+                      "default": "off"
+                    }
+                  ],
                   "typeConstraints": [
                     {
                       "id": "list_type",

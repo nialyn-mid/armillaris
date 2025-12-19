@@ -46,7 +46,7 @@ function getProps(nodeIdx) {
     for (var i = 0; i < arr.length; i += 2) {
         var key = getBStr(arr[i]);
         var val = arr[i + 1];
-        if (typeof val === 'number' && val >= 0 && val < behaviorStrings.length && (key === "label" || key === "type" || key === "attribute" || key === "message_user_type")) {
+        if (typeof val === 'number' && val >= 0 && val < behaviorStrings.length && (key === "label" || key === "type" || key === "attribute" || key === "message_user_type" || key === "deduplicate")) {
             p[key] = getBStr(val);
         } else {
             p[key] = val;
@@ -295,6 +295,34 @@ function executeNode(nodeIdx, portIdx) {
                 for (var i = 0; i < incoming.length; i++) {
                     var val = executeNode(incoming[i][0], incoming[i][1]);
                     if (Array.isArray(val)) result = result.concat(val);
+                }
+
+                var dedup = props.deduplicate || "off";
+                if (dedup !== "off") {
+                    var map = {};
+                    var finalResult = [];
+                    if (dedup === "first") {
+                        for (var i = 0; i < result.length; i++) {
+                            var item = result[i];
+                            var key = (item && typeof item === 'object' && item.id) ? item.id : item;
+                            if (!map.hasOwnProperty(key)) {
+                                map[key] = true;
+                                finalResult.push(item);
+                            }
+                        }
+                    } else if (dedup === "last") {
+                        var temp = [];
+                        for (var i = result.length - 1; i >= 0; i--) {
+                            var item = result[i];
+                            var key = (item && typeof item === 'object' && item.id) ? item.id : item;
+                            if (!map.hasOwnProperty(key)) {
+                                map[key] = true;
+                                temp.push(item);
+                            }
+                        }
+                        finalResult = temp.reverse();
+                    }
+                    result = finalResult;
                 }
             } else {
                 result = resolveInput(nodeIdx, "entries") || resolveInput(nodeIdx, "values") || null;
