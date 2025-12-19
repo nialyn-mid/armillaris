@@ -2,7 +2,15 @@ import { useData } from '../../context/DataContext';
 import { useValidation } from '../../context/ValidationContext';
 import { Toggle } from '../../shared/ui/Toggle';
 import SidePane from '../../shared/ui/SidePane';
-import { MdError, MdWarning, MdCheckCircle } from 'react-icons/md';
+import {
+    MdError,
+    MdWarning,
+    MdCheckCircle,
+    MdCloudDownload,
+    MdSettings,
+    MdDescription,
+    MdFactCheck
+} from 'react-icons/md';
 import './ExportPane.css';
 
 interface ExportPaneProps {
@@ -62,86 +70,123 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
     };
 
     return (
-        <SidePane id="panel-export" title="Export" onClose={onClose}>
-            <div className="export-container">
-                <div className="export-content">
-                    <p className="export-description">
-                        Export the lorebook as a JavaScript file.
-                    </p>
+        <SidePane id="panel-export" title="Export Manager" onClose={onClose}>
+            <div className="export-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: 0 }}>
+                <div className="export-content scrollbar-hidden" style={{ flex: 1, overflowY: 'auto' }}>
 
+                    {/* Description Section */}
                     <div className="panel-section">
-                        <div className="panel-section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="panel-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <MdDescription size={16} />
+                            <span>Description</span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4', padding: '0 4px' }}>
+                            Generate a production-ready JavaScript bundle of your behavioral logic, optimized for the active engine.
+                        </div>
+                    </div>
+
+                    {/* Settings Section */}
+                    <div className="panel-section" style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <div className="panel-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <MdSettings size={16} />
+                            <span>Compilation Settings</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '0 4px' }}>
                             <Toggle
                                 label="Minify Output"
                                 checked={minifyEnabled}
                                 onChange={setMinifyEnabled}
                             />
+                            {minifyEnabled && (
+                                <div className="settings-subset" style={{
+                                    paddingLeft: '14px',
+                                    marginTop: '4px',
+                                    borderLeft: '1px solid var(--border-color)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '10px'
+                                }}>
+                                    <Toggle
+                                        label="Enable Compression"
+                                        checked={compressEnabled}
+                                        onChange={setCompressEnabled}
+                                    />
+                                    <Toggle
+                                        label="Mangle Variable Names"
+                                        checked={mangleEnabled}
+                                        onChange={setMangleEnabled}
+                                    />
+                                    <Toggle
+                                        label="Preserve Comments"
+                                        checked={includeComments}
+                                        onChange={setIncludeComments}
+                                    />
+                                </div>
+                            )}
                         </div>
-                        {minifyEnabled && (
-                            <div className="settings-subset" style={{ paddingLeft: '10px', marginTop: '10px', borderLeft: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <Toggle
-                                    label="Compress"
-                                    checked={compressEnabled}
-                                    onChange={setCompressEnabled}
-                                />
-                                <Toggle
-                                    label="Mangle"
-                                    checked={mangleEnabled}
-                                    onChange={setMangleEnabled}
-                                />
-                                <Toggle
-                                    label="Include Comments"
-                                    checked={includeComments}
-                                    onChange={setIncludeComments}
-                                />
+                    </div>
+
+                </div>
+
+                {/* Validation Section */}
+                <div className="panel-section" style={{ border: 'none', borderTop: '1px solid var(--border-color)' }}>
+                    <div className="panel-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <MdFactCheck size={16} />
+                        <span>Validation Status</span>
+                    </div>
+                    <div style={{ padding: '0 4px' }}>
+                        {issues.length > 0 ? (
+                            <div className="validation-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {issues.sort((a, b) => {
+                                    if (a.severity === b.severity) return 0;
+                                    return a.severity === 'error' ? -1 : 1;
+                                }).map(issue => (
+                                    <div key={issue.id} style={{
+                                        padding: '10px',
+                                        borderRadius: '8px',
+                                        background: issue.severity === 'error' ? 'rgba(248, 81, 105, 0.05)' : 'rgba(255, 170, 17, 0.05)',
+                                        border: `1px solid ${issue.severity === 'error' ? 'rgba(248, 81, 105, 0.2)' : 'rgba(255, 170, 17, 0.2)'}`,
+                                        borderLeft: `3px solid ${issue.severity === 'error' ? 'var(--danger-color)' : 'var(--warning-color)'}`
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', fontWeight: 700, marginBottom: '4px', color: issue.severity === 'error' ? 'var(--danger-color)' : 'var(--warning-color)', textTransform: 'uppercase' }}>
+                                            {issue.severity === 'error' ? <MdError /> : <MdWarning />}
+                                            <span>{issue.severity} in {issue.source}</span>
+                                        </div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-primary)', opacity: 0.9, lineHeight: '1.4' }}>{issue.message}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="validation-success" style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                padding: '12px',
+                                background: 'rgba(56, 139, 253, 0.1)',
+                                border: '1px solid rgba(56, 139, 253, 0.2)',
+                                borderRadius: '8px',
+                                color: 'var(--accent-color)',
+                                fontSize: '0.8rem'
+                            }}>
+                                <MdCheckCircle size={18} />
+                                <span style={{ fontWeight: 500 }}>No issues found. Ready for deployment.</span>
                             </div>
                         )}
                     </div>
                 </div>
 
-                <div className="export-footer">
-                    {issues.length > 0 ? (
-                        <div className="validation-list">
-                            {issues.sort((a, b) => {
-                                if (a.severity === b.severity) return 0;
-                                return a.severity === 'error' ? -1 : 1;
-                            }).map(issue => (
-                                <div key={issue.id} className={`validation-issue ${issue.severity}`}>
-                                    <div className="issue-header">
-                                        {issue.severity === 'error' ? (
-                                            <MdError className="issue-icon" />
-                                        ) : (
-                                            <MdWarning className="issue-icon" />
-                                        )}
-                                        <span className="issue-title">
-                                            {issue.severity} in {issue.source}
-                                        </span>
-                                    </div>
-                                    <div className="issue-message">{issue.message}</div>
-                                    {issue.context && (
-                                        <div className="issue-context">
-                                            Context: {issue.context}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="validation-success">
-                            <MdCheckCircle className="success-icon" />
-                            No issues found. Ready to export.
-                        </div>
-                    )}
-
-                    <div className="export-actions">
-                        <button
-                            onClick={handleDownload}
-                            style={{ width: '100%' }}
-                            disabled={issues.some(i => i.severity === 'error')}
-                            title={issues.some(i => i.severity === 'error') ? 'Fix errors to export' : ''}
-                        >
-                            Export
-                        </button>
+                {/* Actions Footer */}
+                <div className="panel-section" style={{ marginTop: 'auto', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', borderBottom: 'none' }}>
+                    <button
+                        className="btn-action outline"
+                        onClick={handleDownload}
+                        disabled={issues.some(i => i.severity === 'error')}
+                        title={issues.some(i => i.severity === 'error') ? 'Fix errors to export' : ''}
+                    >
+                        <MdCloudDownload /> Export Bundle
+                    </button>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '4px', opacity: 0.8 }}>
+                        Target: {activeSpec?.replace('.behavior', '') || 'None'}
                     </div>
                 </div>
             </div>

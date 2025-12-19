@@ -5,6 +5,7 @@ import { app } from 'electron';
 import { minify } from 'terser';
 import * as vm from 'node:vm';
 import Store from 'electron-store';
+import { unzipFile } from '../utils.js';
 
 const store = new Store();
 
@@ -334,6 +335,35 @@ export function registerEngineHandlers() {
         } catch (e: any) {
             console.error('Engine Execution Failed:', e);
             return { success: false, error: e.message, stack: e.stack };
+        }
+    });
+    ipcMain.handle('import-behavior', async (_, filePath: string) => {
+        try {
+            const content = fs.readFileSync(filePath, 'utf-8');
+            const data = JSON.parse(content);
+            const engineName = data.engine || 'armillaris_engine'; // Default to armillaris_engine if not specified
+            const fileName = path.basename(filePath);
+
+            const specDir = path.join(ENGINES_DIR, engineName, 'behavior_spec');
+            if (!fs.existsSync(specDir)) fs.mkdirSync(specDir, { recursive: true });
+
+            fs.writeFileSync(path.join(specDir, fileName), content);
+            return { success: true, engine: engineName };
+        } catch (e: any) {
+            console.error(e);
+            return { success: false, error: e.message };
+        }
+    });
+
+    ipcMain.handle('import-engine-zip', async (_, filePath: string) => {
+        try {
+            // We unzip directly into ENGINES_DIR. 
+            // The zip should contain a folder named after the engine.
+            await unzipFile(filePath, ENGINES_DIR);
+            return { success: true };
+        } catch (e: any) {
+            console.error(e);
+            return { success: false, error: e.message };
         }
     });
 }

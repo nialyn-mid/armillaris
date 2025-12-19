@@ -2,6 +2,7 @@ import { ipcMain, app } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import Store from 'electron-store';
+import { unzipFile } from '../utils.js';
 
 const MODULES_DIR = path.join(app.getPath('userData'), 'Modules');
 const store = new Store();
@@ -85,5 +86,14 @@ export function registerModuleHandlers() {
             return fs.readFileSync(indexPath, 'utf-8');
         }
         return '';
+    });
+    ipcMain.handle('import-module-zip', async (_, filePath: string) => {
+        try {
+            await unzipFile(filePath, MODULES_DIR);
+            return { success: true };
+        } catch (e: any) {
+            console.error(e);
+            return { success: false, error: e.message };
+        }
     });
 }

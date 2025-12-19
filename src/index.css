@@ -236,17 +236,18 @@ h3 {
 .panel-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px;
+  gap: 12px;
+  padding: 16px;
   border-bottom: 1px solid var(--border-color);
 }
 
 .panel-section-title {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
 }
 
 .floating-island {
@@ -330,4 +331,70 @@ h3 {
   background: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-color);
   user-select: none;
+}
+
+/* Premium Action Buttons */
+.btn-action {
+  width: 100%;
+  padding: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-action:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-action:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.btn-action svg {
+  font-size: 1.2rem;
+}
+
+/* Action variants */
+.btn-action.accent {
+  background: var(--accent-color);
+  color: #0d1117;
+  border-color: var(--accent-color);
+}
+
+.btn-action.accent:hover:not(:disabled) {
+  background: var(--accent-hover);
+  color: #0d1117;
+  border-color: var(--accent-hover);
+}
+.btn-action.outline {
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+.btn-action.outline:hover:not(:disabled) {
+  background: rgba(88, 166, 255, 0.1);
+  color: var(--accent-hover);
+  border-color: var(--accent-hover);
 }

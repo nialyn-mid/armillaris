@@ -78,6 +78,11 @@ app.whenReady().then(() => {
     ipcMain.handle('get-app-version', () => app.getVersion());
 
     // File System & Dialogs
+    ipcMain.handle('dialog:open', async (_, options) => {
+        const result = await dialog.showOpenDialog(win!, options);
+        return result;
+    });
+
     ipcMain.handle('dialog:save', async (_, options) => {
         const result = await dialog.showSaveDialog(win!, options);
         return result;

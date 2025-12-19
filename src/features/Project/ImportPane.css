@@ -1,0 +1,39 @@
+.import-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.asset-import-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.asset-import-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.asset-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.asset-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.asset-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}

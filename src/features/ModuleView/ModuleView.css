@@ -127,6 +127,8 @@ Actually let's use a 3-column system where we shift the container.
     flex-direction: column;
     gap: 20px;
     height: 100%;
+    max-width: 70em;
+    align-self: center;
 }
 
 .panel-content.empty {
