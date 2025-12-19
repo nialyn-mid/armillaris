@@ -90,7 +90,7 @@ function compareValues(a, b, op) {
 
 // 4. Graph Execution Engine
 var memo = {};
-var activated_nodes = [];
+var executed_nodes = []; // For internal tracing only
 
 function getIncomingEdges(nodeIdx, targetPortIdx) {
     var edges = [];
@@ -110,11 +110,12 @@ function resolveInput(nodeIdx, portName) {
     var edges = getIncomingEdges(nodeIdx, portIdx);
     if (edges.length === 0) return null;
 
-    // We take the first connected edge for standard inputs
     return executeNode(edges[0][0], edges[0][1]);
 }
 
 function executeNode(nodeIdx, portIdx) {
+    if (nodeIdx !== -1 && executed_nodes.indexOf(nodeIdx) === -1) executed_nodes.push(nodeIdx);
+
     var cacheKey = nodeIdx + ":" + portIdx;
     if (memo.hasOwnProperty(cacheKey)) return memo[cacheKey];
 
@@ -126,15 +127,15 @@ function executeNode(nodeIdx, portIdx) {
     var props = getProps(nodeIdx);
     var label = (props.label || "").toLowerCase();
 
-    dlog("Exec Node: [" + nodeIdx + "] " + type + " (" + (props.label || 'No Label') + ") -> Port: " + portName);
-
-    if (activated_nodes.indexOf(nodeIdx) === -1) activated_nodes.push(nodeIdx);
+    // Trace logic
+    if (type !== "InputSource" || portName === "entries") {
+        dlog("Exec Node: [" + nodeIdx + "] " + type + " (" + (props.label || 'No Label') + ") -> Port: " + portName);
+    }
 
     var result = null;
 
     switch (type) {
         case "InputSource":
-            // Broad matching for Input nodes
             if (portName === "entries" || label.indexOf("entry list") !== -1) {
                 result = dataEntries;
             } else if (context.chat && context.chat.hasOwnProperty(portName)) {
@@ -155,8 +156,6 @@ function executeNode(nodeIdx, portIdx) {
                 var sourceEntries = resolveInput(nodeIdx, "entries") || dataEntries || [];
                 var messages = resolveInput(nodeIdx, "messages") || (context.chat ? context.chat.last_messages : []) || [];
 
-                dlog(" |-> Keyword Filter: " + sourceEntries.length + " entries, " + messages.length + " msgs");
-
                 var filtered = [];
                 for (var i = 0; i < sourceEntries.length; i++) {
                     var entry = sourceEntries[i];
@@ -168,14 +167,10 @@ function executeNode(nodeIdx, portIdx) {
                     for (var k = 0; k < kws.length; k++) {
                         var kw = kws[k];
                         if (!kw) continue;
-                        // Use word boundaries for Keywords
                         var pattern = "\\b" + String(kw).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "\\b";
                         var re = new RegExp(pattern, "i");
                         for (var m = 0; m < messages.length; m++) {
-                            if (re.test(String(messages[m].message))) {
-                                match = true;
-                                break;
-                            }
+                            if (re.test(String(messages[m].message))) { match = true; break; }
                         }
                         if (match) break;
                     }
@@ -192,6 +187,25 @@ function executeNode(nodeIdx, portIdx) {
                     var ep = getEntryProps(sourceEntries[i]);
                     if (compareValues(ep[attrFilter], valFilter, op)) result.push(sourceEntries[i]);
                 }
+            } else if (label.indexOf("list filter") !== -1 || type === "ListFilter") {
+                var sourceList = resolveInput(nodeIdx, "list_input") || [];
+                var trimStart = Number(props.trim_start) || 0;
+                var trimEnd = Number(props.trim_end) || 0;
+
+                var endIndex = sourceList.length;
+                if (trimEnd > 0) {
+                    endIndex = sourceList.length - trimEnd;
+                } else if (trimEnd < 0) {
+                    endIndex = trimStart + Math.abs(trimEnd);
+                }
+
+                var list = sourceList.slice(trimStart, Math.max(trimStart, endIndex));
+                var freq = Number(props.frequency) || 1;
+                result = [];
+                for (var i = 0; i < list.length; i++) {
+                    if (i % freq === 0) result.push(list[i]);
+                }
+                dlog(" |-> List Filter: Input=" + sourceList.length + ", Trimmed=" + list.length + ", Final=" + result.length + " (TrimEnd was " + trimEnd + ")");
             } else {
                 result = resolveInput(nodeIdx, "entries") || resolveInput(nodeIdx, "list_input") || null;
             }
@@ -207,10 +221,8 @@ function executeNode(nodeIdx, portIdx) {
                     var val = executeNode(incoming[i][0], incoming[i][1]);
                     if (Array.isArray(val)) result = result.concat(val);
                 }
-            } else if (label.indexOf("value map") !== -1 || type === "ValueMap") {
-                result = resolveInput(nodeIdx, "values") || [];
             } else {
-                result = resolveInput(nodeIdx, "entries") || null;
+                result = resolveInput(nodeIdx, "entries") || resolveInput(nodeIdx, "values") || null;
             }
             break;
 
@@ -219,32 +231,32 @@ function executeNode(nodeIdx, portIdx) {
             result = resolveInput(nodeIdx, "entries") || [];
             break;
 
-        case "Adjacency":
-            result = resolveInput(nodeIdx, "entries") || null;
-            break;
-
         default:
-            // CRITICAL: Return null for unknown nodes to allow fallback/OR logic to proceed
-            result = null;
+            result = resolveInput(nodeIdx, "entries") || null;
     }
 
     memo[cacheKey] = result;
     return result;
 }
 
-// 5. Build Final Output
+// 5. Execution Logic
 var rootIdx = -1;
 for (var i = 0; i < behaviorNodes.length; i++) {
     var t = getBStr(behaviorNodes[i][0]);
     if (t === "OutputRoot" || t === "ActivationOutput") { rootIdx = i; break; }
 }
 
+var activatedEntryIds = [];
+
 if (rootIdx !== -1) {
     var finalEntries = executeNode(rootIdx, -1) || [];
-    dlog("Final Activated: " + finalEntries.length);
+    dlog("Final Activated Entries: " + finalEntries.length);
     var descriptions = [];
     for (var i = 0; i < finalEntries.length; i++) {
-        var ep = getEntryProps(finalEntries[i]);
+        var entry = finalEntries[i];
+        if (entry.id) activatedEntryIds.push(entry.id);
+
+        var ep = getEntryProps(entry);
         if (ep.Description) descriptions.push(ep.Description);
     }
     context.character.personality = descriptions.join("\n\n");
@@ -252,12 +264,14 @@ if (rootIdx !== -1) {
     dlog("Error: Root node not found");
 }
 
-if (context.character) context.character.scenario = "--- DEBUG TRACE ---\n" + dtrace.join("\n");
+// 6. Highlighting Export (Entry IDs for Lore Graph)
+dlog("Highlights Exported: " + activatedEntryIds.length + " entry(s)");
 
-// Highlighting
-var activatedIds = [];
-for (var i = 0; i < activated_nodes.length; i++) {
-    var idx = activated_nodes[i];
-    if (behaviorIds[idx]) activatedIds.push(behaviorIds[idx]);
+// Always export highly visible properties for the host app
+activated_ids = activatedEntryIds;
+activatedIds = activatedEntryIds;
+if (typeof context !== 'undefined') {
+    context.activated_ids = activatedEntryIds;
+    context.activatedIds = activatedEntryIds;
+    if (context.character) context.character.scenario = "--- DEBUG TRACE ---\n" + dtrace.join("\n");
 }
-activated_ids = activatedIds;

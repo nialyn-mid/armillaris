@@ -92,7 +92,12 @@ function adapt(behaviorData) {
 
                 var finalVal = val;
                 if (typeof val === 'string') {
-                    finalVal = getStringIndex(val);
+                    // If it's a numeric string, keep it as a number literal to avoid string table indexing
+                    if (!isNaN(val) && val.trim() !== "") {
+                        finalVal = Number(val);
+                    } else {
+                        finalVal = getStringIndex(val);
+                    }
                 }
 
                 propsArray.push(getStringIndex(key));
@@ -213,13 +218,21 @@ function adaptData(entries) {
  * @param {Object} behaviorData - The original or adapted behavior data containing the ID table.
  * @returns {string[]} The adapted list of activated UUIDs.
  */
-function adaptActivatedIds(indices, behaviorData) {
-    if (!behaviorData || !behaviorData.i) return indices;
+function adaptActivatedIds(input, behaviorData) {
+    if (!input || !Array.isArray(input)) return [];
+    // If no behavior data (ID table) is available, we assume the IDs are already mapped strings.
+    if (!behaviorData || !behaviorData.i) return input;
     var ids = [];
-    for (var i = 0; i < indices.length; i++) {
-        var idx = indices[i];
-        if (behaviorData.i[idx]) {
-            ids.push(behaviorData.i[idx]);
+    for (var i = 0; i < input.length; i++) {
+        var val = input[i];
+        if (typeof val === 'string') {
+            // Already a UUID string, preserve it
+            ids.push(val);
+        } else if (typeof val === 'number') {
+            // It's an index, map it if possible
+            if (behaviorData.i[val]) {
+                ids.push(behaviorData.i[val]);
+            }
         }
     }
     return ids;
