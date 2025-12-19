@@ -4,13 +4,15 @@ export const HighlightedTextarea = ({
     onChange,
     onKeyDown,
     matches = [],
-    mode = 'default'
+    mode = 'default',
+    id
 }: {
     value: string,
     onChange: (e: any) => void,
     onKeyDown?: (e: any) => void,
     matches?: any[],
-    mode?: 'default' | 'description'
+    mode?: 'default' | 'description',
+    id?: string
 }) => {
 
     const renderHighlights = () => {
@@ -155,7 +157,7 @@ export const HighlightedTextarea = ({
     };
 
     return (
-        <div style={{
+        <div id={id} style={{
             position: 'relative',
             width: '100%',
             fontFamily: 'monospace',

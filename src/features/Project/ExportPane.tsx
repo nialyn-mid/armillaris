@@ -62,7 +62,7 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
     };
 
     return (
-        <SidePane title="Export" onClose={onClose}>
+        <SidePane id="panel-export" title="Export" onClose={onClose}>
             <div className="export-container">
                 <div className="export-content">
                     <p className="export-description">

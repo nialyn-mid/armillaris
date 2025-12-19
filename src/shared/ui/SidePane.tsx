@@ -8,11 +8,13 @@ interface SidePaneProps {
     onClose: () => void;
     children: React.ReactNode;
     position?: 'left' | 'right';
+    id?: string;
 }
 
-export default function SidePane({ title, width = 300, onClose, children, position = 'left' }: SidePaneProps) {
+export default function SidePane({ title, width = 300, onClose, children, position = 'left', id }: SidePaneProps) {
     return (
         <div
+            id={id}
             className={`panel ${position}`}
             style={{
                 width: `${width}px`,

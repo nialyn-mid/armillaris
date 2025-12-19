@@ -339,6 +339,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
 
                         {/* Chat Sandbox */}
                         <ChatOverlay
+                            id="graph-chat-input"
                             session={session}
                             matches={matches}
                             onInputChange={onChatInputChange}
@@ -350,6 +351,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
                 {/* Bottom Panel (Spec Editor) */}
                 {showSpecEditor && (
                     <div
+                        id="panel-spec-editor"
                         className="spec-editor-panel"
                         style={{ height: bottomPanelHeight }}
                     >
@@ -371,6 +373,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
             {showOutput && (
                 <div
                     ref={containerRef}
+                    id="panel-activation-output"
                     className="output-panel"
                     style={{ width: rightPanelWidth }}
                 >

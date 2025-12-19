@@ -83,7 +83,7 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
     };
 
     return (
-        <SidePane title="Import Settings" onClose={onClose}>
+        <SidePane id="panel-import" title="Import Settings" onClose={onClose}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', padding: '20px' }}>
                 <div className="config-section" style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, overflowY: 'auto' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

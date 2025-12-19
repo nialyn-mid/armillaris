@@ -21,6 +21,7 @@ export default function TabBar({ currentView, onViewChange, tabs }: TabBarProps)
             {tabs.map(tab => (
                 <button
                     key={tab}
+                    id={`tab-${tab}`}
                     onClick={() => onViewChange(tab)}
                     style={{
                         padding: '6px 16px',
@@ -32,7 +33,7 @@ export default function TabBar({ currentView, onViewChange, tabs }: TabBarProps)
                         textTransform: 'capitalize',
                         fontWeight: currentView === tab ? 600 : 400,
                         fontSize: '0.9rem',
-                        transition: 'a 0.2s ease',
+                        transition: 'all 0.2s ease',
                         height: '100%'
                     }}
                 >

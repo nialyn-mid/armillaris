@@ -35,10 +35,6 @@ export default function RightActivityBar({ activeTab, activeTools, onToggleTool 
 
     const tools = getTools();
 
-    if (tools.length === 0) {
-        // Render empty or hidden spacer
-        return <div style={{ width: '50px', backgroundColor: 'var(--bg-primary)', borderLeft: '1px solid var(--border-color)' }} />;
-    }
 
     const btnStyle = (isActive: boolean) => ({
         width: '50px',
@@ -57,7 +53,7 @@ export default function RightActivityBar({ activeTab, activeTools, onToggleTool 
     });
 
     return (
-        <div style={{
+        <div id="right-activity-bar" style={{
             width: '50px',
             backgroundColor: 'var(--bg-primary)',
             borderLeft: '1px solid var(--border-color)',
@@ -70,6 +66,7 @@ export default function RightActivityBar({ activeTab, activeTools, onToggleTool 
             {tools.map(tool => (
                 <button
                     key={tool.id}
+                    id={`right-bar-${tool.id}`}
                     style={btnStyle(activeTools.includes(tool.id))}
                     onClick={() => onToggleTool(tool.id)}
                     title={tool.title}
@@ -81,6 +78,7 @@ export default function RightActivityBar({ activeTab, activeTools, onToggleTool 
             {/* Bottom-aligned Info Button */}
             <div style={{ marginTop: 'auto', marginBottom: '10px' }}>
                 <button
+                    id="right-bar-info"
                     style={btnStyle(activeTools.includes(`info_${activeTab}`))}
                     onClick={() => onToggleTool(`info_${activeTab}`)}
                     title="View Information & Tutorial"

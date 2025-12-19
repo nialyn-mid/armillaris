@@ -1,4 +1,5 @@
 import { MdDownload, MdOutput, MdSettingsApplications, MdInfoOutline } from 'react-icons/md';
+import { useData } from '../../context/DataContext';
 
 interface ToolbarProps {
     activePane: 'import' | 'export' | 'engine' | null;
@@ -6,6 +7,8 @@ interface ToolbarProps {
 }
 
 export default function Toolbar({ activePane, onTogglePane }: ToolbarProps) {
+    const { startTutorial } = useData();
+
     const btnStyle = (isActive: boolean) => ({
         width: '50px',
         height: '50px',
@@ -34,13 +37,15 @@ export default function Toolbar({ activePane, onTogglePane }: ToolbarProps) {
             zIndex: 10
         }}>
             <button
+                id="toolbar-engine"
                 style={btnStyle(activePane === 'engine')}
                 onClick={() => onTogglePane('engine')}
-                title="Engine Settings"
+                title="Engine Configuration"
             >
                 <MdSettingsApplications />
             </button>
             <button
+                id="toolbar-import"
                 style={btnStyle(activePane === 'import')}
                 onClick={() => onTogglePane('import')}
                 title="Import Settings"
@@ -49,6 +54,7 @@ export default function Toolbar({ activePane, onTogglePane }: ToolbarProps) {
             </button>
             <div style={{ width: '30px', height: '1px', background: '#333', margin: '5px 0' }}></div>
             <button
+                id="toolbar-export"
                 style={btnStyle(activePane === 'export')}
                 onClick={() => onTogglePane('export')}
                 title="Export & Generate"
@@ -59,8 +65,9 @@ export default function Toolbar({ activePane, onTogglePane }: ToolbarProps) {
             {/* Bottom-aligned Info Button */}
             <div style={{ marginTop: 'auto', marginBottom: '10px' }}>
                 <button
+                    id="toolbar-info"
                     style={btnStyle(false)}
-                    onClick={() => console.log('Tutorial clicked')}
+                    onClick={() => startTutorial('onboarding')}
                     title="Tutorial & Info"
                 >
                     <MdInfoOutline />

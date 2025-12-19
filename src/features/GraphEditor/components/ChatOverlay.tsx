@@ -9,6 +9,7 @@ interface ChatOverlayProps {
     matches: any[];
     onInputChange: (val: string) => void;
     highlights: any;
+    id?: string;
 }
 
 function RenderHighlightedText({ text, highlights }: { text: string, highlights?: any[] }) {
@@ -102,7 +103,7 @@ function RenderHighlightedText({ text, highlights }: { text: string, highlights?
     return <span>{result}</span>;
 }
 
-export function ChatOverlay({ session, matches, onInputChange, highlights }: ChatOverlayProps) {
+export function ChatOverlay({ session, matches, onInputChange, highlights, id }: ChatOverlayProps) {
     const {
         chatInput, setChatInput,
         chatHistory,
@@ -162,7 +163,7 @@ export function ChatOverlay({ session, matches, onInputChange, highlights }: Cha
     }, [matches, inputHighlights]);
 
     return (
-        <div className="floating-island" style={{
+        <div id={id} className="floating-island" style={{
             bottom: isChatCollapsed ? '0px' : '30px',
             left: isRightAligned ? 'auto' : '50%',
             right: isRightAligned ? '20px' : 'auto',
@@ -241,7 +242,6 @@ export function ChatOverlay({ session, matches, onInputChange, highlights }: Cha
                     {chatHistory.length === 0 && <div className="unselectable" style={{ opacity: 0.5, fontSize: '0.8rem' }}>No history</div>}
 
                     {chatHistory.map((msg, idx) => {
-                        // Match highlights to messages.
                         const historyIdxFromEnd = chatHistory.length - 1 - idx;
                         const msgHighlights = (Array.isArray(highlights) && (historyIdxFromEnd + 1) < highlights.length)
                             ? highlights[historyIdxFromEnd + 1]
@@ -249,7 +249,6 @@ export function ChatOverlay({ session, matches, onInputChange, highlights }: Cha
 
                         return (
                             <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                                {/* Message */}
                                 <div
                                     className="chat-message-row"
                                     onClick={() => !editingMsgId && startEditing(msg)}
@@ -279,7 +278,6 @@ export function ChatOverlay({ session, matches, onInputChange, highlights }: Cha
                                     )}
                                 </div>
 
-                                {/* Separator + Bot Add Button */}
                                 <div className="chat-separator">
                                     <button className="chat-add-bot-btn" onClick={() => insertBotMessage(idx)} title="Add Bot Message here">
                                         <MdAdd /> Add Bot Message
@@ -308,7 +306,6 @@ export function ChatOverlay({ session, matches, onInputChange, highlights }: Cha
                                 title="Clear Input"
                             >&times;</button>
                         )}
-                        {/* Floating Send Button */}
                         <button
                             onClick={() => {
                                 submitUserMessage();

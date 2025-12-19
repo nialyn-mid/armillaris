@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './App.css';
 import Toolbar from './shared/ui/Toolbar';
 import ImportPane from './features/Project/ImportPane';
@@ -13,6 +13,8 @@ import NotificationBar from './shared/ui/NotificationBar';
 import RightActivityBar from './shared/ui/RightActivityBar';
 import ConfirmModal from './shared/ui/ConfirmModal';
 import { type TemplateViewHandle } from './features/TemplateView/TemplateView';
+import { TutorialManager } from './features/Tutorial/TutorialManager';
+import { useData } from './context/DataContext';
 
 export type ViewMode = 'develop' | 'data' | 'graph' | 'output';
 export type PaneMode = 'import' | 'export' | 'engine' | null;
@@ -27,35 +29,31 @@ function App() {
   useDataValidator();
   useSpecValidator();
   useTemplateValidator();
+  const {
+    startTutorial,
+    activeTools,
+    toggleTool,
+    activeTab,
+    setActiveTab,
+    activePane,
+    setActivePane,
+    togglePane
+  } = useData();
+  const [showWelcomePrompt, setShowWelcomePrompt] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('data');
-  const [activePane, setActivePane] = useState<PaneMode>(null);
-  // Persistence: Active Tools (Panels)
-  const [activeTools, setActiveTools] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('app_active_tools');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+  // Onboarding Logic
+  useEffect(() => {
+    const hasSeen = localStorage.getItem('tutorial_prompt_seen');
+    if (!hasSeen) {
+      setTimeout(() => {
+        setShowWelcomePrompt(true);
+        localStorage.setItem('tutorial_prompt_seen', 'true');
+      }, 1000);
+    }
+  }, []);
   const [isTemplateDirty, setIsTemplateDirty] = useState(false);
   const [pendingTab, setPendingTab] = useState<string | null>(null);
   const templateRef = useRef<TemplateViewHandle>(null);
-
-  const togglePane = (pane: PaneMode) => {
-    if (activePane === pane) {
-      setActivePane(null);
-    } else {
-      setActivePane(pane);
-    }
-  };
-
-  const toggleTool = (toolId: string) => {
-    setActiveTools(prev => {
-      const newList = prev.includes(toolId) ? prev.filter(t => t !== toolId) : [...prev, toolId];
-      localStorage.setItem('app_active_tools', JSON.stringify(newList));
-      return newList;
-    });
-  };
 
   const handleTabChange = (tab: string) => {
     if (activeTab === 'develop' && isTemplateDirty) {
@@ -142,6 +140,30 @@ function App() {
         />
       </div>
       <NotificationBar />
+      <TutorialManager />
+
+      {showWelcomePrompt && (
+        <ConfirmModal
+          title="Welcome to Armillaris!"
+          message="Armillaris is a powerful toolset which can be overwhelming to new users. Would you like a guided tutorial?"
+          buttons={[
+            {
+              label: 'Start Tutorial',
+              variant: 'primary',
+              onClick: () => {
+                setShowWelcomePrompt(false);
+                startTutorial('onboarding');
+              }
+            },
+            {
+              label: 'Maybe Later',
+              variant: 'secondary',
+              onClick: () => setShowWelcomePrompt(false)
+            }
+          ]}
+          onClose={() => setShowWelcomePrompt(false)}
+        />
+      )}
 
       {pendingTab && (
         <ConfirmModal

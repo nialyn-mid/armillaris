@@ -31,32 +31,41 @@ export default function ConfirmModal({
             <div
                 onClick={e => e.stopPropagation()}
                 style={{
-                    background: '#252526', border: '1px solid #454545', borderRadius: '4px',
-                    padding: '20px', minWidth: '350px', maxWidth: '500px',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                    color: '#eee', fontFamily: 'sans-serif',
-                    display: 'flex', flexDirection: 'column', gap: '16px'
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '12px',
+                    padding: '24px',
+                    minWidth: '380px',
+                    maxWidth: '520px',
+                    boxShadow: '0 12px 48px rgba(0,0,0,0.6)',
+                    color: 'var(--text-primary)',
+                    fontFamily: 'var(--font-family)',
+                    display: 'flex', flexDirection: 'column', gap: '20px'
                 }}
             >
-                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff' }}>{title}</h3>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--accent-color)', fontWeight: 700 }}>{title}</h3>
 
-                <div style={{ fontSize: '0.9rem', color: '#ccc', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>
+                <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: '1.6', opacity: 0.9, whiteSpace: 'pre-wrap', marginBottom: '8px' }}>
                     {message}
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
                     {buttons.map((btn, i) => {
-                        const className = btn.variant === 'danger' ? 'btn-danger' :
-                            btn.variant === 'secondary' ? 'btn-secondary' :
-                                'btn-primary';
+                        const style: React.CSSProperties = {
+                            padding: '10px 20px',
+                            borderRadius: '8px',
+                            fontSize: '0.9rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                        };
+
                         return (
                             <button
                                 key={i}
                                 onClick={btn.onClick}
-                                className={className}
-                                style={{
-                                    padding: '6px 16px', borderRadius: '2px', fontSize: '0.85rem'
-                                }}
+                                className={btn.variant === 'primary' ? 'primary' : ''}
+                                style={style}
                             >
                                 {btn.label}
                             </button>

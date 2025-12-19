@@ -18,7 +18,7 @@ export default function EnginePane({ onClose }: EnginePaneProps) {
     } = useData();
 
     return (
-        <SidePane title="Engine Config" onClose={onClose}>
+        <SidePane id="panel-engine" title="Engine Configuration" onClose={onClose}>
             <div className="panel-section">
                 <div className="panel-section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span>Active Engine</span>
