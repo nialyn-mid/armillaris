@@ -1,0 +1,37 @@
+/* Global Form Elements */
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.input-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    display: block;
+}
+
+.input-label-accent {
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    font-size: 0.85rem;
+}
+
+.form-select {
+    padding: 6px;
+    font-size: 0.85rem;
+    background-color: var(--bg-tertiary);
+}
+
+.form-input-sm {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+}

@@ -24,7 +24,7 @@ export function DataEditorPane({
 }: DataEditorPaneProps) {
     if (!selectedEntry) {
         return (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: 'var(--bg-primary)' }}>
+            <div className="data-editor-empty">
                 <EmptyState
                     icon={<MdInfoOutline />}
                     message="No Entry Selected"
@@ -35,59 +35,49 @@ export function DataEditorPane({
     }
 
     return (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-primary)', padding: '20px' }}>
-            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
-                <div style={{ flex: 1, minWidth: 0, marginRight: '10px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Label</label>
+        <div className="data-editor-pane">
+            <div className="data-editor-header">
+                <div className="data-editor-label-group">
+                    <label className="input-label">Label</label>
                     <input
                         type="text"
                         value={editLabel}
                         onChange={e => { setEditLabel(e.target.value); }}
-                        style={{ width: '100%', padding: '8px', fontSize: '1rem', fontWeight: 600, boxSizing: 'border-box' }}
+                        className="form-control"
+                        style={{ fontSize: '1.1rem', fontWeight: 600 }}
                         readOnly={true}
                     />
                 </div>
-                <div style={{ alignSelf: 'flex-end', display: 'flex', gap: '10px' }}>
+                <div className="data-editor-actions">
                     <button
                         onClick={handleDelete}
-                        style={{
-                            padding: '10px 20px',
-                            backgroundColor: 'transparent',
-                            color: '#ff6b6b',
-                            border: '1px solid #ff6b6b',
-                            cursor: 'pointer',
-                            borderRadius: '4px'
-                        }}
+                        className="btn-toolbar"
+                        style={{ height: '36px', color: 'var(--danger-color)', borderColor: 'var(--danger-color)' }}
                     >
                         Delete
                     </button>
                     <button
                         onClick={handleReset}
                         title="Revert to original import state"
-                        style={{
-                            padding: '10px 15px',
-                            backgroundColor: 'var(--bg-tertiary)',
-                            color: '#e2b340',
-                            border: '1px solid var(--border-color)',
-                            cursor: 'pointer',
-                            borderRadius: '4px'
-                        }}
+                        className="btn-toolbar"
+                        style={{ height: '36px', color: 'var(--warning-color)', borderColor: 'var(--warning-color)' }}
                     >
                         Reset
                     </button>
                 </div>
             </div>
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <label style={{ display: 'block', marginBottom: '10px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Properties</label>
-                <div style={{ flex: 1, overflowY: 'auto' }}>
+            <div className="data-editor-controls">
+                <label className="input-label">Properties</label>
+                <div className="data-editor-scroll scrollbar-hidden">
                     <PropertyEditor
                         properties={editProps}
                         onChange={setEditProps}
                     />
                 </div>
             </div>
-            <div style={{ marginTop: '10px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+
+            <div className="data-editor-id">
                 ID: {selectedEntry.id}
             </div>
         </div>

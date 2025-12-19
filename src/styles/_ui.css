@@ -1,0 +1,264 @@
+/* --- Shared Layout & Containers --- */
+
+.panel {
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel.right {
+    border-right: none;
+    border-left: 1px solid var(--border-color);
+}
+
+.panel.bottom {
+    border-right: none;
+    border-top: 2px solid var(--border-color);
+}
+
+.panel-header {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.panel-toolbar {
+    padding: 8px;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.panel-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.floating-island {
+    position: absolute;
+    background-color: rgba(22, 27, 34, 0.95);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    z-index: 20;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Shared Buttons --- */
+
+.btn-icon {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 4px;
+    font-size: 1.2rem;
+}
+
+.btn-icon:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.btn-toolbar {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+}
+
+/* Premium Action Buttons */
+.btn-action {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-action:hover:not(:disabled) {
+    background: var(--bg-tertiary);
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-action.accent {
+    background: var(--accent-color);
+    color: #0d1117;
+    border-color: var(--accent-color);
+}
+
+.btn-action.accent:hover:not(:disabled) {
+    background: var(--accent-hover);
+    color: #0d1117;
+    border-color: var(--accent-hover);
+}
+
+.btn-action.outline {
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.btn-action.outline:hover:not(:disabled) {
+    background: rgba(88, 166, 255, 0.1);
+    color: var(--accent-hover);
+    border-color: var(--accent-hover);
+}
+
+/* Property Blocks used in multiple sidebars */
+.property-block {
+    border: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    padding: 6px;
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.property-block-header {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.property-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.property-label {
+    color: #ccc;
+    font-size: 10px;
+}
+
+.property-input {
+    background: #1e1e1e;
+    border: 1px solid #444;
+    color: #fff;
+    font-size: 11px;
+    padding: 2px;
+    border-radius: 2px;
+}
+
+.property-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+/* Add Item Button (for expandable lists) */
+.add-item-btn {
+    background: var(--bg-secondary);
+    border: 1px dashed var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    padding: 4px;
+    cursor: pointer;
+    text-align: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.add-item-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--text-primary);
+    background: rgba(88, 166, 255, 0.1);
+}
+
+/* --- Navigation & Toolbar --- */
+
+.toolbar-container {
+    width: 50px;
+    background-color: var(--bg-primary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 10px;
+    z-index: 10;
+}
+
+.toolbar-btn {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-left: 3px solid transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 24px;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.toolbar-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.toolbar-btn.active {
+    background: var(--bg-secondary);
+    border-left: 3px solid var(--accent-color);
+    color: var(--accent-color);
+}
+
+.toolbar-divider {
+    width: 30px;
+    height: 1px;
+    background: var(--border-color);
+    margin: 5px 0;
+}

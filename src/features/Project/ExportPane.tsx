@@ -37,7 +37,6 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
         if (!ipc) return;
 
         try {
-            // Use the same compile pipeline as CodeView to ensure consistency
             const generated = await ipc.invoke('compile-engine', activeEngine, activeSpec, entries || [], {
                 minify: minifyEnabled,
                 compress: compressEnabled,
@@ -52,7 +51,6 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
 
             const code = generated.code;
 
-            // Electron Save Dialog
             const { canceled, filePath } = await ipc.invoke('dialog:save', {
                 defaultPath: `${activeSpec.replace('.behavior', '')}.js`,
                 filters: [{ name: 'JavaScript', extensions: ['js'] }]
@@ -71,41 +69,34 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
 
     return (
         <SidePane id="panel-export" title="Export Manager" onClose={onClose}>
-            <div className="export-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: 0 }}>
-                <div className="export-content scrollbar-hidden" style={{ flex: 1, overflowY: 'auto' }}>
+            <div className="export-container">
+                <div className="export-content scrollbar-hidden">
 
                     {/* Description Section */}
                     <div className="panel-section">
-                        <div className="panel-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div className="panel-section-title flex-row items-center gap-xs">
                             <MdDescription size={16} />
                             <span>Description</span>
                         </div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4', padding: '0 4px' }}>
+                        <div className="export-description">
                             Generate a production-ready JavaScript bundle of your behavioral logic, optimized for the active engine.
                         </div>
                     </div>
 
                     {/* Settings Section */}
-                    <div className="panel-section" style={{ borderBottom: '1px solid var(--border-color)' }}>
-                        <div className="panel-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="panel-section border-b">
+                        <div className="panel-section-title flex-row items-center gap-xs">
                             <MdSettings size={16} />
                             <span>Compilation Settings</span>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '0 4px' }}>
+                        <div className="flex-column gap-sm p-sm">
                             <Toggle
                                 label="Minify Output"
                                 checked={minifyEnabled}
                                 onChange={setMinifyEnabled}
                             />
                             {minifyEnabled && (
-                                <div className="settings-subset" style={{
-                                    paddingLeft: '14px',
-                                    marginTop: '4px',
-                                    borderLeft: '1px solid var(--border-color)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '10px'
-                                }}>
+                                <div className="settings-subset">
                                     <Toggle
                                         label="Enable Compression"
                                         checked={compressEnabled}
@@ -128,48 +119,32 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
 
                 </div>
 
-                {/* Validation Section */}
+                {/* Validation Status */}
                 <div className="panel-section" style={{ border: 'none', borderTop: '1px solid var(--border-color)' }}>
-                    <div className="panel-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="panel-section-title flex-row items-center gap-xs">
                         <MdFactCheck size={16} />
                         <span>Validation Status</span>
                     </div>
-                    <div style={{ padding: '0 4px' }}>
+                    <div className="p-sm">
                         {issues.length > 0 ? (
-                            <div className="validation-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div className="validation-list">
                                 {issues.sort((a, b) => {
                                     if (a.severity === b.severity) return 0;
                                     return a.severity === 'error' ? -1 : 1;
                                 }).map(issue => (
-                                    <div key={issue.id} style={{
-                                        padding: '10px',
-                                        borderRadius: '8px',
-                                        background: issue.severity === 'error' ? 'rgba(248, 81, 105, 0.05)' : 'rgba(255, 170, 17, 0.05)',
-                                        border: `1px solid ${issue.severity === 'error' ? 'rgba(248, 81, 105, 0.2)' : 'rgba(255, 170, 17, 0.2)'}`,
-                                        borderLeft: `3px solid ${issue.severity === 'error' ? 'var(--danger-color)' : 'var(--warning-color)'}`
-                                    }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', fontWeight: 700, marginBottom: '4px', color: issue.severity === 'error' ? 'var(--danger-color)' : 'var(--warning-color)', textTransform: 'uppercase' }}>
+                                    <div key={issue.id} className={`validation-issue-card ${issue.severity}`}>
+                                        <div className={`validation-issue-header ${issue.severity}`}>
                                             {issue.severity === 'error' ? <MdError /> : <MdWarning />}
                                             <span>{issue.severity} in {issue.source}</span>
                                         </div>
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-primary)', opacity: 0.9, lineHeight: '1.4' }}>{issue.message}</div>
+                                        <div className="validation-issue-msg">{issue.message}</div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="validation-success" style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px',
-                                padding: '12px',
-                                background: 'rgba(56, 139, 253, 0.1)',
-                                border: '1px solid rgba(56, 139, 253, 0.2)',
-                                borderRadius: '8px',
-                                color: 'var(--accent-color)',
-                                fontSize: '0.8rem'
-                            }}>
+                            <div className="validation-success-box">
                                 <MdCheckCircle size={18} />
-                                <span style={{ fontWeight: 500 }}>No issues found. Ready for deployment.</span>
+                                <span>No issues found. Ready for deployment.</span>
                             </div>
                         )}
                     </div>
@@ -185,7 +160,7 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
                     >
                         <MdCloudDownload /> Export Bundle
                     </button>
-                    <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '4px', opacity: 0.8 }}>
+                    <div className="export-footer-info">
                         Target: {activeSpec?.replace('.behavior', '') || 'None'}
                     </div>
                 </div>

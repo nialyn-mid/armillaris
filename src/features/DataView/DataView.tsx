@@ -7,6 +7,7 @@ import { DataEditorPane } from './components/DataEditorPane';
 import { DataSchemaPane } from './components/DataSchemaPane';
 import ConfirmModal from '../../shared/ui/ConfirmModal';
 import { useState } from 'react';
+import './DataView.css';
 
 interface DataViewProps {
     showSchema: boolean;
@@ -57,7 +58,7 @@ export default function DataView({ showSchema }: DataViewProps) {
     const selectedEntry = entries.find(e => e.id === selectedId);
 
     return (
-        <div style={{ display: 'flex', height: '100%', overflow: 'hidden', flex: 1 }}>
+        <div className="data-view-container">
             <DataListPane
                 filteredEntries={filteredEntries}
                 selectedId={selectedId}

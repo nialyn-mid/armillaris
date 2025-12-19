@@ -20,16 +20,15 @@ import { useData } from './context/DataContext';
 export type ViewMode = 'develop' | 'data' | 'graph' | 'output' | 'modules';
 export type PaneMode = 'import' | 'export' | 'engine' | null;
 
-
 import { useDataValidator } from './features/DataView/hooks/useDataValidator';
 import { useSpecValidator } from './features/SpecEditor/hooks/useSpecValidator';
 import { useTemplateValidator } from './features/TemplateView/hooks/useTemplateValidator';
 
 function App() {
-  // Global Validators
   useDataValidator();
   useSpecValidator();
   useTemplateValidator();
+
   const {
     startTutorial,
     activeTools,
@@ -40,9 +39,9 @@ function App() {
     setActivePane,
     togglePane
   } = useData();
+
   const [showWelcomePrompt, setShowWelcomePrompt] = useState(false);
 
-  // Onboarding Logic
   useEffect(() => {
     const hasSeen = localStorage.getItem('tutorial_prompt_seen');
     if (!hasSeen) {
@@ -52,6 +51,7 @@ function App() {
       }, 1000);
     }
   }, []);
+
   const [isTemplateDirty, setIsTemplateDirty] = useState(false);
   const [pendingTab, setPendingTab] = useState<string | null>(null);
   const templateRef = useRef<TemplateViewHandle>(null);
@@ -62,7 +62,6 @@ function App() {
       return;
     }
     setActiveTab(tab);
-    // Do not clear tools, so state persists
   };
 
   const confirmNavigation = () => {
@@ -87,15 +86,15 @@ function App() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
+    <div className="flex-column h-full w-full overflow-hidden">
+      <div className="flex-1 flex-row overflow-hidden relative">
 
         {/* Left Toolbar */}
         <Toolbar activePane={activePane} onTogglePane={togglePane as any} />
 
         {/* Left Panel Area */}
         {(activePane === 'engine' || activePane === 'import' || activePane === 'export') && (
-          <div style={{ position: 'relative', zIndex: 40, height: '100%' }}>
+          <div className="relative h-full" style={{ zIndex: 40 }}>
             {activePane === 'engine' && <EnginePane onClose={() => setActivePane(null)} />}
             {activePane === 'import' && <ImportPane onClose={() => setActivePane(null)} />}
             {activePane === 'export' && <ExportPane onClose={() => setActivePane(null)} />}
@@ -103,14 +102,14 @@ function App() {
         )}
 
         {/* Main Content Area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', minWidth: 0 }}>
+        <div className="flex-1 flex-column overflow-hidden relative" style={{ minWidth: 0 }}>
           <TabBar
             currentView={activeTab as ViewMode}
             onViewChange={(mode) => handleTabChange(mode)}
             tabs={['data', 'graph', 'modules', 'develop', 'output']}
           />
 
-          <div style={{ flex: 1, overflow: 'hidden', position: 'relative', display: 'flex' }}>
+          <div className="flex-1 overflow-hidden relative flex-row">
             {activeTab === 'graph' && (
               <GraphView
                 showOutput={activeTools.includes('output')}

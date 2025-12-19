@@ -1,9 +1,9 @@
+/* Export Pane Specific Styles */
+
 .export-container {
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding: 0;
-    /* Remove padding here, add to content/footer */
 }
 
 .export-content {
@@ -12,94 +12,91 @@
 }
 
 .export-description {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
-    margin-bottom: 15px;
+    line-height: 1.4;
+    padding: 0 4px;
 }
 
+.settings-subset {
+    padding-left: 14px;
+    margin-top: 4px;
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Validation List Styles */
 .validation-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 400px;
-    overflow-y: auto;
-    padding-right: 4px;
 }
 
-.validation-issue {
-    background-color: var(--bg-primary);
-    border: 1px solid var(--warning-color);
-    border-radius: 4px;
+.validation-issue-card {
     padding: 10px;
-    font-size: 0.85rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
 }
 
-.validation-issue.error {
-    background-color: var(--bg-primary);
-    border-color: var(--danger-color);
+.validation-issue-card.error {
+    background: rgba(248, 81, 105, 0.05);
+    border-color: rgba(248, 81, 105, 0.2);
+    border-left: 3px solid var(--danger-color);
 }
 
-.issue-header {
+.validation-issue-card.warning {
+    background: rgba(255, 170, 17, 0.05);
+    border-color: rgba(255, 170, 17, 0.2);
+    border-left: 3px solid var(--warning-color);
+}
+
+.validation-issue-header {
     display: flex;
     align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
     margin-bottom: 4px;
-    color: var(--warning-color);
+    text-transform: uppercase;
 }
 
-.validation-issue.error .issue-header {
+.validation-issue-header.error {
     color: var(--danger-color);
 }
 
-.issue-title {
-    font-weight: 600;
-    text-transform: capitalize;
+.validation-issue-header.warning {
+    color: var(--warning-color);
 }
 
-.issue-message {
+.validation-issue-msg {
+    font-size: 0.75rem;
     color: var(--text-primary);
+    opacity: 0.9;
+    line-height: 1.4;
 }
 
-.issue-context {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin-top: 2px;
-}
-
-.issue-icon {
-    margin-right: 8px;
-    font-size: 1.1rem;
-}
-
-.validation-success {
-    padding: 15px;
-    background-color: rgba(46, 160, 67, 0.1);
-    border: 1px solid #2ea043;
-    border-radius: 4px;
-    color: #2ea043;
-    font-size: 0.9rem;
+.validation-success-box {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(56, 139, 253, 0.1);
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 8px;
+    color: var(--accent-color);
+    font-size: 0.8rem;
 }
 
-.success-icon {
-    font-size: 1.2rem;
+.validation-success-box span {
+    font-weight: 500;
 }
 
-.export-footer {
-    padding: 20px;
-    background-color: var(--bg-secondary);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.export-actions {
-    margin-top: 20px;
-}
-
-.export-actions>button {
-    background-color: var(--accent-color);
-    color: var(--bg-secondary);
+.export-footer-info {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 4px;
+    opacity: 0.8;
 }

@@ -1,3 +1,5 @@
+/* Import Pane Specific Styles */
+
 .import-container {
     display: flex;
     flex-direction: column;
@@ -7,7 +9,7 @@
 .asset-import-grid {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
     margin-top: 8px;
 }
 
@@ -36,4 +38,19 @@
     font-size: 0.85rem;
     color: var(--text-secondary);
     line-height: 1.4;
+}
+
+/* Spin animation for sync icon */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
 }

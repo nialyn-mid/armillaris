@@ -14,7 +14,6 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
     const [activeRelField, setActiveRelField] = useState<string | null>(null);
     const [editingRelation, setEditingRelation] = useState<{ key: string, index: number } | null>(null);
 
-    // Auto-scroll to active relation search
     const activeSearchRef = useRef<HTMLInputElement>(null);
     useEffect(() => {
         if ((activeRelField || editingRelation) && activeSearchRef.current) {
@@ -69,8 +68,6 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
 
     const handleRelationReplace = (key: string, index: number, entryId: string) => {
         const arr = getArray(key, properties[key]);
-        // Allow replacing with same ID (no-op) or different
-        // Check uniqueness if desired, but usually flexible
         if (arr[index] !== entryId) {
             if (!arr.includes(entryId) || arr[index] === entryId) {
                 arr[index] = entryId;
@@ -84,26 +81,20 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
     const currentMeta = String(properties.Meta || '');
     const definition = metaDefinitions.find(d => d.name === currentMeta);
 
-    // Determine keys to render
     let fieldsToRender: { key: string, type?: MetaPropertyType | '', forced?: boolean }[] = [];
-
-    // Standard Fields
     fieldsToRender.push({ key: 'Meta', type: 'string', forced: true });
     fieldsToRender.push({ key: 'Description', type: 'string', forced: true });
     fieldsToRender.push({ key: 'Keywords', type: 'list', forced: true });
 
     if (definition) {
-        // Schema Driven
         definition.properties.forEach(prop => {
             fieldsToRender.push({ key: prop.name, type: prop.type, forced: true });
         });
     } else {
-        // Fallback: Show all other properties in data
         Object.entries(properties).forEach(([key, val]) => {
             if (['Meta', 'Description', 'Keywords'].includes(key)) return;
             fieldsToRender.push({ key, type: Array.isArray(val) ? 'list' : 'string', forced: false });
         });
-        // Sort explicitly for fallback mode
         fieldsToRender.sort((a, b) => {
             if (a.forced && !b.forced) return -1;
             if (!a.forced && b.forced) return 1;
@@ -111,7 +102,6 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
         });
     }
 
-    // Move Relations to Bottom
     fieldsToRender.sort((a, b) => {
         const getWeight = (k: string, t?: string) => {
             if (k === 'Meta') return 0;
@@ -126,8 +116,8 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
         return 0;
     });
 
-    const renderRelationSearch = (key: string, onSelect: (id: string) => void, _mode: 'add' | 'edit') => (
-        <div style={{ position: 'relative' }}>
+    const renderRelationSearch = (key: string, onSelect: (id: string) => void) => (
+        <div className="relation-search-container">
             <input
                 ref={activeSearchRef}
                 type="text"
@@ -135,52 +125,19 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
                 value={relationSearch[key] || ''}
                 onChange={(e) => setRelationSearch(prev => ({ ...prev, [key]: e.target.value }))}
                 onBlur={() => {
-                    // Delay so click on result works
                     setTimeout(() => {
                         setActiveRelField(null);
                         setEditingRelation(null);
                     }, 200);
                 }}
-                style={{
-                    width: '100%',
-                    padding: '6px',
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-color)',
-                    color: 'var(--text-primary)',
-                    borderRadius: '4px',
-                    boxSizing: 'border-box'
-                }}
+                className="form-control"
             />
-            <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                maxHeight: '150px',
-                overflowY: 'auto',
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
-                zIndex: 200,
-                borderRadius: '0 0 4px 4px',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
-            }}>
+            <div className="relation-results-list scrollbar-hidden">
                 {entries
-                    .filter(e =>
-                        e.label.toLowerCase().includes((relationSearch[key] || '').toLowerCase())
-                    )
+                    .filter(e => e.label.toLowerCase().includes((relationSearch[key] || '').toLowerCase()))
                     .slice(0, 50)
                     .map(e => (
-                        <div
-                            key={e.id}
-                            onMouseDown={() => onSelect(e.id)}
-                            style={{
-                                padding: '6px 8px',
-                                cursor: 'pointer',
-                                borderBottom: '1px solid var(--border-color)',
-                                fontSize: '0.9rem'
-                            }}
-                            className="hover-highlight"
-                        >
+                        <div key={e.id} onMouseDown={() => onSelect(e.id)} className="relation-result-item">
                             {e.label}
                         </div>
                     ))}
@@ -193,18 +150,12 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
 
         if (key === 'Meta') {
             return (
-                <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Meta</label>
+                <div key={key} className="property-field">
+                    <label className="property-field-label">Meta</label>
                     <select
                         value={currentMeta}
                         onChange={(e) => handleChange('Meta', e.target.value)}
-                        style={{
-                            padding: '8px',
-                            background: 'var(--bg-secondary)',
-                            border: '1px solid var(--border-color)',
-                            color: 'var(--text-primary)',
-                            borderRadius: '4px'
-                        }}
+                        className="form-control form-select"
                     >
                         <option value="" disabled>Select Meta Type...</option>
                         {metaDefinitions.map(d => (
@@ -219,7 +170,6 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
         }
 
         const isDescription = key === 'Description';
-
         let isRelation = forcedType === 'relation';
         let isArray = forcedType === 'list';
         let isString = forcedType === 'string';
@@ -230,20 +180,11 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
         }
 
         return (
-            <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                    {key}
-                </label>
+            <div key={key} className="property-field">
+                <label className="property-field-label">{key}</label>
 
                 {isDescription ? (
-                    <div style={{
-                        height: 'auto',
-                        minHeight: '120px',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: '4px',
-                        backgroundColor: 'var(--bg-secondary)',
-                        overflow: 'hidden'
-                    }}>
+                    <div className="description-editor-wrapper">
                         <HighlightedTextarea
                             value={(value || '').replace(/\\n/g, '\n')}
                             onChange={(e) => {
@@ -255,14 +196,13 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
                         />
                     </div>
                 ) : isRelation ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <div className="array-list">
                         {getArray(key, value).map((id: string, idx: number) => {
                             const isEditing = editingRelation?.key === key && editingRelation.index === idx;
-
                             if (isEditing) {
                                 return (
                                     <div key={idx} style={{ marginBottom: '5px' }}>
-                                        {renderRelationSearch(key, (newId) => handleRelationReplace(key, idx, newId), 'edit')}
+                                        {renderRelationSearch(key, (newId) => handleRelationReplace(key, idx, newId))}
                                     </div>
                                 );
                             }
@@ -270,46 +210,14 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
                             const relatedEntry = entries.find(e => e.id === id);
                             const label = relatedEntry ? relatedEntry.label : id;
                             return (
-                                <div key={idx} style={{
-                                    display: 'flex',
-                                    gap: '5px',
-                                    alignItems: 'center'
-                                }}>
-                                    <div style={{
-                                        flex: 1,
-                                        background: 'var(--bg-secondary)',
-                                        border: '1px solid var(--border-color)',
-                                        borderRadius: '4px',
-                                        padding: '4px 8px',
-                                        display: 'flex',
-                                        alignItems: 'center'
+                                <div key={idx} className="relation-chip-wrapper">
+                                    <div className="relation-chip" onClick={() => {
+                                        setEditingRelation({ key, index: idx });
+                                        setRelationSearch(prev => ({ ...prev, [key]: '' }));
                                     }}>
-                                        <span
-                                            onClick={() => {
-                                                setEditingRelation({ key, index: idx });
-                                                setRelationSearch(prev => ({ ...prev, [key]: '' }));
-                                            }}
-                                            style={{ flex: 1, fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'var(--text-secondary)' }}
-                                            title="Click to replace"
-                                        >
-                                            {label}
-                                        </span>
+                                        <span>{label}</span>
                                     </div>
-                                    <button
-                                        onClick={() => handleArrayRemove(key, idx)}
-                                        style={{
-                                            background: 'var(--bg-secondary)',
-                                            border: '1px solid var(--border-color)',
-                                            color: '#ff6b6b',
-                                            cursor: 'pointer',
-                                            padding: '0 8px',
-                                            borderRadius: '4px',
-                                            height: '28px', // Match approximate input height
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
-                                    >
+                                    <button onClick={() => handleArrayRemove(key, idx)} className="btn-remove">
                                         &times;
                                     </button>
                                 </div>
@@ -317,22 +225,10 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
                         })}
 
                         {activeRelField === key ? (
-                            renderRelationSearch(key, (id) => handleRelationAdd(key, id), 'add')
+                            renderRelationSearch(key, (id) => handleRelationAdd(key, id))
                         ) : (
                             !editingRelation && (
-                                <button
-                                    onClick={() => setActiveRelField(key)}
-                                    style={{
-                                        alignSelf: 'flex-start',
-                                        fontSize: '0.75rem',
-                                        background: 'transparent',
-                                        border: '1px dashed var(--text-secondary)',
-                                        color: 'var(--text-secondary)',
-                                        padding: '4px 8px',
-                                        cursor: 'pointer',
-                                        borderRadius: '4px'
-                                    }}
-                                >
+                                <button onClick={() => setActiveRelField(key)} className="add-item-btn">
                                     + Add Relation
                                 </button>
                             )
@@ -343,61 +239,26 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
                         type="text"
                         value={value || ''}
                         onChange={(e) => handleChange(key, e.target.value)}
-                        style={{
-                            padding: '8px',
-                            background: 'var(--bg-secondary)',
-                            border: '1px solid var(--border-color)',
-                            color: 'var(--text-primary)',
-                            borderRadius: '4px'
-                        }}
+                        className="form-control"
                     />
                 ) : null}
 
                 {isArray && !isRelation && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <div className="array-list">
                         {(Array.isArray(value) ? value : (value ? [value] : [])).map((item: any, idx: number) => (
-                            <div key={idx} style={{ display: 'flex', gap: '5px' }}>
+                            <div key={idx} className="array-row">
                                 <input
                                     type="text"
                                     value={item}
                                     onChange={(e) => handleArrayChange(key, idx, e.target.value)}
-                                    style={{
-                                        flex: 1,
-                                        padding: '6px',
-                                        background: 'var(--bg-secondary)',
-                                        border: '1px solid var(--border-color)',
-                                        color: 'var(--text-primary)',
-                                        borderRadius: '4px'
-                                    }}
+                                    className="form-control flex-1"
                                 />
-                                <button
-                                    onClick={() => handleArrayRemove(key, idx)}
-                                    style={{
-                                        background: 'var(--bg-secondary)',
-                                        border: '1px solid var(--border-color)',
-                                        color: '#ff6b6b',
-                                        cursor: 'pointer',
-                                        padding: '0 8px',
-                                        borderRadius: '4px'
-                                    }}
-                                >
+                                <button onClick={() => handleArrayRemove(key, idx)} className="btn-remove">
                                     &times;
                                 </button>
                             </div>
                         ))}
-                        <button
-                            onClick={() => handleArrayAdd(key)}
-                            style={{
-                                alignSelf: 'flex-start',
-                                fontSize: '0.75rem',
-                                background: 'transparent',
-                                border: '1px dashed var(--text-secondary)',
-                                color: 'var(--text-secondary)',
-                                padding: '4px 8px',
-                                cursor: 'pointer',
-                                borderRadius: '4px'
-                            }}
-                        >
+                        <button onClick={() => handleArrayAdd(key)} className="add-item-btn">
                             + Add Item
                         </button>
                     </div>
@@ -407,15 +268,13 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', overflowY: 'auto', paddingRight: '5px' }}>
+        <div className="property-editor-container scrollbar-hidden">
             {fieldsToRender.map(f => renderField(f.key, f.type))}
-
             {fieldsToRender.length === 0 && (
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic', textAlign: 'center' }}>
                     No properties to display
                 </div>
             )}
-            {/* Spacer for bottom scroll */}
             <div style={{ height: '50px' }}></div>
         </div>
     );

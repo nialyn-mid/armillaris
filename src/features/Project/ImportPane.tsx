@@ -10,7 +10,6 @@ interface ImportPaneProps {
     onClose: () => void;
 }
 
-// Helper to extract ID from URL or return as is
 const parseId = (input: string) => {
     const uuidPattern = /[a-f0-9]{32}/;
     const match = input.replace(/-/g, '').match(uuidPattern);
@@ -100,9 +99,6 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
 
             if (response?.success) {
                 showNotification(`Successfully imported ${type}.`);
-                if (type === 'behavior' && response.engine) {
-                    showNotification(`Associated with engine: ${response.engine}`);
-                }
             } else {
                 alert(`Import failed: ${response?.error || 'Unknown error'}`);
             }
@@ -127,43 +123,38 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
 
     return (
         <SidePane id="panel-import" title="Import Manager" onClose={onClose}>
-            <div className="import-container" style={{ padding: 0 }}>
+            <div className="import-container p-0">
                 {/* Data Section */}
                 <div className="panel-section">
-                    <div className="panel-section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div className="panel-section-title flex-row items-center justify-between">
                         <span>Data Sources</span>
-                        <button
-                            className="btn-toolbar"
-                            onClick={handleSaveConfig}
-                        >
-                            Save Config
-                        </button>
+                        <button className="btn-toolbar" onClick={handleSaveConfig}>Save Config</button>
                     </div>
 
                     <div className="input-group">
-                        <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                            Notion Token {hasToken && <span style={{ color: 'var(--accent-color)' }}>(Set)</span>}
+                        <label className="input-label">
+                            Notion Token {hasToken && <span className="input-label-accent">(Set)</span>}
                         </label>
                         <input
                             type="password"
                             placeholder={hasToken ? "********" : "secret_..."}
                             value={token}
                             onChange={(e) => setToken(e.target.value)}
-                            style={{ width: '100%', boxSizing: 'border-box' }}
+                            className="form-control"
                         />
                     </div>
 
                     <div className="input-group">
-                        <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Notion Databases</label>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label className="input-label">Notion Databases</label>
+                        <div className="flex-column gap-sm">
                             {dbIds.map((id, idx) => (
-                                <div key={idx} style={{ display: 'flex', gap: '4px' }}>
+                                <div key={idx} className="flex-row gap-xs">
                                     <input
                                         type="text"
                                         placeholder="ID or URL"
                                         value={id}
                                         onChange={(e) => updateDbId(idx, e.target.value)}
-                                        style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', fontSize: '0.8rem' }}
+                                        className="form-control form-input-sm"
                                     />
                                     <button
                                         onClick={() => removeDbInput(idx)}
@@ -171,19 +162,13 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
                                         style={{ color: 'var(--danger-color)' }}
                                         title="Remove"
                                     >
-                                        {/* Trash Icon (SVG) */}
                                         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                                             <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
                                         </svg>
                                     </button>
                                 </div>
                             ))}
-                            <button
-                                onClick={addDbInput}
-                                className="add-item-btn"
-                            >
-                                + Add Database
-                            </button>
+                            <button onClick={addDbInput} className="add-item-btn">+ Add Database</button>
                         </div>
                     </div>
 
@@ -202,7 +187,7 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
                 <div className="panel-section">
                     <div className="panel-section-title">External Assets</div>
 
-                    <div className="asset-import-grid" style={{ gap: '16px' }}>
+                    <div className="asset-import-grid">
                         <div className="asset-import-card">
                             <div className="asset-info">
                                 <span className="asset-name">Behavior</span>

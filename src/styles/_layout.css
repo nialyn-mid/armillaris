@@ -1,0 +1,99 @@
+/* Global Layout Utilities */
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.h-full {
+    height: 100%;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.relative {
+    position: relative;
+}
+
+.overflow-hidden {
+    overflow: hidden;
+}
+
+.overflow-auto {
+    overflow: auto;
+}
+
+/* Gap / Spacing */
+.gap-xs {
+    gap: 4px;
+}
+
+.gap-sm {
+    gap: 8px;
+}
+
+.gap-md {
+    gap: 12px;
+}
+
+.gap-lg {
+    gap: 20px;
+}
+
+/* Padding */
+.p-0 {
+    padding: 0;
+}
+
+.p-sm {
+    padding: 8px;
+}
+
+.p-md {
+    padding: 12px;
+}
+
+.p-lg {
+    padding: 20px;
+}
+
+/* Margin */
+.mt-auto {
+    margin-top: auto;
+}
+
+.mb-10 {
+    margin-bottom: 10px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+/* Borders */
+.border-b {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.border-t {
+    border-top: 1px solid var(--border-color);
+}
+
+.border-l {
+    border-left: 1px solid var(--border-color);
+}
+
+.border-r {
+    border-right: 1px solid var(--border-color);
+}

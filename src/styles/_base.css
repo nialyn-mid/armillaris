@@ -1,0 +1,131 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    overflow: hidden;
+}
+
+#root {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+}
+
+button {
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    background-color: var(--border-color);
+    border-color: var(--text-secondary);
+}
+
+button.primary {
+    background-color: var(--accent-color);
+    color: #0d1117;
+    border-color: var(--accent-color);
+}
+
+button.primary:hover {
+    background-color: var(--accent-hover);
+    border-color: var(--accent-hover);
+}
+
+input,
+textarea,
+select {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px;
+    border-radius: 4px;
+    font-family: inherit;
+}
+
+input:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+h1,
+h2,
+h3 {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* Scrollbars */
+.scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.unselectable {
+    user-select: none;
+}
+
+/* --- Driver.js Custom Styling --- */
+.driver-popover.driverjs-theme {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+    border-radius: 12px !important;
+    padding: 16px 24px !important;
+    font-family: var(--font-family) !important;
+    max-width: 360px !important;
+}
+
+.driver-popover.driverjs-theme .driver-popover-title {
+    color: var(--accent-color) !important;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+}
+
+.driver-popover.driverjs-theme .driver-popover-description {
+    color: var(--text-primary) !important;
+    font-size: 0.95rem !important;
+}
+
+.driver-popover.driverjs-theme .driver-popover-next-btn {
+    background-color: var(--accent-color) !important;
+    color: #ffffff !important;
+    border-color: var(--accent-color) !important;
+    padding: 8px 20px !important;
+    font-weight: 700 !important;
+}
+
+.driver-popover.driverjs-theme .driver-popover-next-btn:hover {
+    background-color: var(--accent-hover) !important;
+}
+
+.driver-popover-navigation-btns button {
+    text-shadow: none;
+}

@@ -233,6 +233,64 @@
     color: var(--accent-hover);
 }
 
+/* Graph Overlay UI */
+.graph-empty-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.graph-stats-panel {
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-align: right;
+    pointer-events: none;
+}
+
+.graph-meta-info {
+    opacity: 0.8;
+    margin-top: 4px;
+}
+
+.graph-production-warning {
+    color: var(--danger-color);
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+/* Execution Error Box */
+.execution-error-banner {
+    padding: 10px 12px;
+    background: rgba(248, 81, 105, 0.08);
+    color: var(--danger-color);
+    font-size: 0.75rem;
+    border-bottom: 1px solid rgba(248, 81, 105, 0.15);
+    white-space: pre-wrap;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.execution-error-status {
+    color: var(--danger-color);
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+/* Generic Splitter Styles */
+.panel-splitter-h {
+    position: relative;
+    height: 4px;
+    background: var(--border-color);
+    flex-shrink: 0;
+}
+
 /* Adjust clear button for date inputs to avoid overlap with native icon */
 .metadata-field input[type="datetime-local"]+.field-clear-btn {
     right: 30px;

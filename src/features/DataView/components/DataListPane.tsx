@@ -32,32 +32,21 @@ export function DataListPane({
     addEntry
 }: DataListPaneProps) {
     return (
-        <div style={{
-            width: '300px',
-            borderRight: '1px solid var(--border-color)',
-            display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: 'var(--bg-secondary)'
-        }}>
-            <div style={{ padding: '10px', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <button
-                    onClick={addEntry}
-                    style={{ width: '100%', padding: '8px', background: 'var(--accent-color)', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
-                >
-                    + New Entry
-                </button>
+        <div className="data-list-pane">
+            <div className="data-list-header">
+                <button onClick={addEntry} className="data-list-add-btn">+ New Entry</button>
                 <input
                     type="text"
                     placeholder="Search entries..."
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
-                    style={{ width: '100%', padding: '6px', boxSizing: 'border-box' }}
+                    className="form-control"
                 />
-                <div style={{ display: 'flex', gap: '5px' }}>
+                <div className="flex-row gap-xs">
                     <select
                         value={filterMeta}
                         onChange={(e) => setFilterMeta(e.target.value)}
-                        style={{ flex: 1, padding: '4px', fontSize: '0.8rem' }}
+                        className="form-control form-select flex-1"
                     >
                         <option value="all">All Meta</option>
                         {availableMetas.map(m => <option key={m} value={m}>{m}</option>)}
@@ -65,14 +54,16 @@ export function DataListPane({
                     <select
                         value={sortOrder}
                         onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                        style={{ width: '60px', padding: '4px', fontSize: '0.8rem' }}
+                        className="form-control form-select"
+                        style={{ width: '70px' }}
                     >
                         <option value="asc">A-Z</option>
                         <option value="desc">Z-A</option>
                     </select>
                 </div>
             </div>
-            <div style={{ flex: 1, overflowY: 'auto' }}>
+
+            <div className="data-list-content scrollbar-hidden">
                 {filteredEntries.length === 0 && (
                     <EmptyState
                         icon={<MdLibraryBooks />}
@@ -86,16 +77,9 @@ export function DataListPane({
                         <div
                             key={entry.id}
                             onClick={() => setSelectedId(entry.id)}
-                            style={{
-                                padding: '8px 12px',
-                                cursor: 'pointer',
-                                backgroundColor: selectedId === entry.id ? 'var(--bg-primary)' : 'transparent',
-                                borderLeft: selectedId === entry.id ? '3px solid var(--accent-color)' : '3px solid transparent',
-                                borderBottom: '1px solid var(--border-color)',
-                                color: selectedId === entry.id ? '#fff' : (isMetaDefined ? 'var(--text-primary)' : '#ff6b6b') // Red for invalid meta
-                            }}
+                            className={`data-list-item ${selectedId === entry.id ? 'selected' : ''} ${!isMetaDefined ? 'invalid' : ''}`}
                         >
-                            <div style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', justifyContent: 'space-between' }}>
+                            <div className="data-list-item-title">
                                 <span>{entry.label}</span>
                                 {!isMetaDefined && <span title="Undefined Meta Type">⚠️</span>}
                             </div>
@@ -103,7 +87,8 @@ export function DataListPane({
                     );
                 })}
             </div>
-            <div style={{ padding: '10px', fontSize: '0.8rem', color: 'var(--text-secondary)', textAlign: 'center', borderTop: '1px solid var(--border-color)' }}>
+
+            <div className="data-list-summary">
                 {filteredEntries.length} Entries
             </div>
         </div>

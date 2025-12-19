@@ -9,36 +9,11 @@ interface ToolbarProps {
 export default function Toolbar({ activePane, onTogglePane }: ToolbarProps) {
     const { startTutorial } = useData();
 
-    const btnStyle = (isActive: boolean) => ({
-        width: '50px',
-        height: '50px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: isActive ? 'var(--bg-secondary)' : 'transparent',
-        border: 'none',
-        borderLeft: isActive ? '3px solid var(--accent-color)' : '3px solid transparent',
-        color: isActive ? 'var(--accent-color)' : 'var(--text-secondary)',
-        cursor: 'pointer',
-        fontSize: '24px',
-        transition: 'all 0.2s ease',
-        outline: 'none'
-    });
-
     return (
-        <div style={{
-            width: '50px',
-            backgroundColor: 'var(--bg-primary)',
-            borderRight: '1px solid var(--border-color)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            paddingTop: '10px',
-            zIndex: 10
-        }}>
+        <div className="toolbar-container h-full">
             <button
                 id="toolbar-engine"
-                style={btnStyle(activePane === 'engine')}
+                className={`toolbar-btn ${activePane === 'engine' ? 'active' : ''}`}
                 onClick={() => onTogglePane('engine')}
                 title="Engine Configuration"
             >
@@ -46,16 +21,16 @@ export default function Toolbar({ activePane, onTogglePane }: ToolbarProps) {
             </button>
             <button
                 id="toolbar-import"
-                style={btnStyle(activePane === 'import')}
+                className={`toolbar-btn ${activePane === 'import' ? 'active' : ''}`}
                 onClick={() => onTogglePane('import')}
                 title="Import Settings"
             >
                 <MdDownload />
             </button>
-            <div style={{ width: '30px', height: '1px', background: '#333', margin: '5px 0' }}></div>
+            <div className="toolbar-divider"></div>
             <button
                 id="toolbar-export"
-                style={btnStyle(activePane === 'export')}
+                className={`toolbar-btn ${activePane === 'export' ? 'active' : ''}`}
                 onClick={() => onTogglePane('export')}
                 title="Export & Generate"
             >
@@ -63,10 +38,10 @@ export default function Toolbar({ activePane, onTogglePane }: ToolbarProps) {
             </button>
 
             {/* Bottom-aligned Info Button */}
-            <div style={{ marginTop: 'auto', marginBottom: '10px' }}>
+            <div className="mt-auto mb-10">
                 <button
                     id="toolbar-info"
-                    style={btnStyle(false)}
+                    className="toolbar-btn"
                     onClick={() => startTutorial('onboarding')}
                     title="Tutorial & Info"
                 >

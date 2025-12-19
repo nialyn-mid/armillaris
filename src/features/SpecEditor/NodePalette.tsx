@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import './NodePalette.css';
 import type { EngineSpec, EngineSpecNodeDef } from '../../lib/engine-spec-types';
 import { SYSTEM_NODES } from './nodes/SystemNodes';
 import { useCustomNodes } from './context/CustomNodesContext';
