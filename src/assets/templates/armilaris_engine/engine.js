@@ -46,7 +46,7 @@ function getProps(nodeIdx) {
     for (var i = 0; i < arr.length; i += 2) {
         var key = getBStr(arr[i]);
         var val = arr[i + 1];
-        if (typeof val === 'number' && val >= 0 && val < behaviorStrings.length && (key === "label" || key === "type" || key === "attribute")) {
+        if (typeof val === 'number' && val >= 0 && val < behaviorStrings.length && (key === "label" || key === "type" || key === "attribute" || key === "message_user_type")) {
             p[key] = getBStr(val);
         } else {
             p[key] = val;
@@ -90,7 +90,14 @@ function compareValues(a, b, op) {
 
 // 4. Graph Execution Engine
 var memo = {};
-var executed_nodes = []; // For internal tracing only
+var executed_nodes = [];
+var rawHighlights = {}; // msgIndex -> [ { color, ranges: [[s,e]...] } ]
+
+function addHighlight(msgIdx, color, start, end) {
+    if (!rawHighlights[msgIdx]) rawHighlights[msgIdx] = {};
+    if (!rawHighlights[msgIdx][color]) rawHighlights[msgIdx][color] = [];
+    rawHighlights[msgIdx][color].push([start, end]);
+}
 
 function getIncomingEdges(nodeIdx, targetPortIdx) {
     var edges = [];
@@ -127,11 +134,6 @@ function executeNode(nodeIdx, portIdx) {
     var props = getProps(nodeIdx);
     var label = (props.label || "").toLowerCase();
 
-    // Trace logic
-    if (type !== "InputSource" || portName === "entries") {
-        dlog("Exec Node: [" + nodeIdx + "] " + type + " (" + (props.label || 'No Label') + ") -> Port: " + portName);
-    }
-
     var result = null;
 
     switch (type) {
@@ -156,27 +158,106 @@ function executeNode(nodeIdx, portIdx) {
                 var sourceEntries = resolveInput(nodeIdx, "entries") || dataEntries || [];
                 var messages = resolveInput(nodeIdx, "messages") || (context.chat ? context.chat.last_messages : []) || [];
 
+                // Properties
+                var caseSensitive = props.case_sensitive || false;
+                var matchInsideWord = props.wordbreak_sensitive || false;
+                var matchLimit = Number(props.match_limit) || 0;
+                var senderType = props.message_user_type || "all";
+
+                var flags = "g" + (caseSensitive ? "" : "i");
                 var filtered = [];
+
                 for (var i = 0; i < sourceEntries.length; i++) {
                     var entry = sourceEntries[i];
                     var ep = getEntryProps(entry);
                     var kws = ep.Keywords || [];
                     if (!Array.isArray(kws)) kws = [kws];
 
-                    var match = false;
+                    var entryMatched = false;
                     for (var k = 0; k < kws.length; k++) {
                         var kw = kws[k];
                         if (!kw) continue;
-                        var pattern = "\\b" + String(kw).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "\\b";
-                        var re = new RegExp(pattern, "i");
+
+                        var escapedKw = String(kw).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        var pattern = matchInsideWord ? escapedKw : ("\\b" + escapedKw + "\\b");
+                        var re = new RegExp(pattern, flags);
+
                         for (var m = 0; m < messages.length; m++) {
-                            if (re.test(String(messages[m].message))) { match = true; break; }
+                            var msg = messages[m];
+
+                            // Sender Type Filter
+                            if (senderType === "user" && msg.is_bot) continue;
+                            if (senderType === "bot" && !msg.is_bot) continue;
+
+                            var msgStr = String(msg.message);
+                            var match;
+                            var matchesInThisMsg = 0;
+
+                            re.lastIndex = 0; // Reset for each message
+                            while ((match = re.exec(msgStr)) !== null) {
+                                entryMatched = true;
+                                matchesInThisMsg++;
+
+                                addHighlight(m, "#58a6ff", match.index, match.index + match[0].length);
+
+                                if (matchLimit > 0 && matchesInThisMsg >= matchLimit) break;
+                                if (re.lastIndex === match.index) re.lastIndex++;
+                            }
                         }
-                        if (match) break;
                     }
-                    if (match) filtered.push(entry);
+                    if (entryMatched) filtered.push(entry);
                 }
                 result = filtered;
+            } else if (label.indexOf("message filter") !== -1 || type === "MessageFilter") {
+                var messages = resolveInput(nodeIdx, "messages") || (context.chat ? context.chat.last_messages : []) || [];
+                var conditions = resolveInput(nodeIdx, "conditions") || [];
+
+                var isRegex = props.is_regex || false;
+                var caseSensitive = props.case_sensitive || false;
+                var matchInsideWord = props.wordbreak_sensitive || false;
+                var senderType = props.message_user_type || "all";
+
+                var flags = "g" + (caseSensitive ? "" : "i");
+                var matchedMsgs = [];
+
+                for (var m = 0; m < messages.length; m++) {
+                    var msg = messages[m];
+
+                    // Sender Type Filter
+                    if (senderType === "user" && msg.is_bot) continue;
+                    if (senderType === "bot" && !msg.is_bot) continue;
+
+                    var msgStr = String(msg.message);
+                    var msgMatch = false;
+
+                    for (var c = 0; c < conditions.length; c++) {
+                        var cond = String(conditions[c]);
+                        if (!cond) continue;
+
+                        var re;
+                        try {
+                            if (isRegex) {
+                                re = new RegExp(cond, flags);
+                            } else {
+                                var escapedCond = cond.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                var pattern = matchInsideWord ? escapedCond : ("\\b" + escapedCond + "\\b");
+                                re = new RegExp(pattern, flags);
+                            }
+                        } catch (e) { continue; }
+
+                        var match;
+                        re.lastIndex = 0;
+                        while ((match = re.exec(msgStr)) !== null) {
+                            msgMatch = true;
+                            addHighlight(m, "#d2a8ff", match.index, match.index + match[0].length);
+                            if (re.lastIndex === match.index) re.lastIndex++;
+                        }
+                    }
+                    if (msgMatch) matchedMsgs.push(msg);
+                }
+
+                if (portName === "matched_messages") result = matchedMsgs;
+                else result = matchedMsgs;
             } else if (label.indexOf("entry filter") !== -1 || type === "EntryFilter") {
                 var sourceEntries = resolveInput(nodeIdx, "entries") || dataEntries || [];
                 var attrFilter = props.attributes || "";
@@ -191,21 +272,15 @@ function executeNode(nodeIdx, portIdx) {
                 var sourceList = resolveInput(nodeIdx, "list_input") || [];
                 var trimStart = Number(props.trim_start) || 0;
                 var trimEnd = Number(props.trim_end) || 0;
-
                 var endIndex = sourceList.length;
-                if (trimEnd > 0) {
-                    endIndex = sourceList.length - trimEnd;
-                } else if (trimEnd < 0) {
-                    endIndex = trimStart + Math.abs(trimEnd);
-                }
-
+                if (trimEnd > 0) endIndex = sourceList.length - trimEnd;
+                else if (trimEnd < 0) endIndex = trimStart + Math.abs(trimEnd);
                 var list = sourceList.slice(trimStart, Math.max(trimStart, endIndex));
                 var freq = Number(props.frequency) || 1;
                 result = [];
                 for (var i = 0; i < list.length; i++) {
                     if (i % freq === 0) result.push(list[i]);
                 }
-                dlog(" |-> List Filter: Input=" + sourceList.length + ", Trimmed=" + list.length + ", Final=" + result.length + " (TrimEnd was " + trimEnd + ")");
             } else {
                 result = resolveInput(nodeIdx, "entries") || resolveInput(nodeIdx, "list_input") || null;
             }
@@ -255,23 +330,36 @@ if (rootIdx !== -1) {
     for (var i = 0; i < finalEntries.length; i++) {
         var entry = finalEntries[i];
         if (entry.id) activatedEntryIds.push(entry.id);
-
         var ep = getEntryProps(entry);
         if (ep.Description) descriptions.push(ep.Description);
     }
     context.character.personality = descriptions.join("\n\n");
-} else {
-    dlog("Error: Root node not found");
 }
 
-// 6. Highlighting Export (Entry IDs for Lore Graph)
+// 6. Highlight Formatting (Reverse order for ChatOverlay)
+var totalMsgs = (context.chat && context.chat.last_messages) ? context.chat.last_messages.length : 0;
+var formattedHighlights = [];
+
+for (var i = totalMsgs - 1; i >= 0; i--) {
+    var msgHighlights = [];
+    if (rawHighlights[i]) {
+        for (var color in rawHighlights[i]) {
+            msgHighlights.push({ color: color, ranges: rawHighlights[i][color] });
+        }
+    }
+    formattedHighlights.push(msgHighlights);
+}
+
+// 7. Highlighting Export
 dlog("Highlights Exported: " + activatedEntryIds.length + " entry(s)");
 
-// Always export highly visible properties for the host app
 activated_ids = activatedEntryIds;
 activatedIds = activatedEntryIds;
+chat_highlights = formattedHighlights;
+
 if (typeof context !== 'undefined') {
     context.activated_ids = activatedEntryIds;
     context.activatedIds = activatedEntryIds;
+    context.chat_highlights = formattedHighlights;
     if (context.character) context.character.scenario = "--- DEBUG TRACE ---\n" + dtrace.join("\n");
 }
