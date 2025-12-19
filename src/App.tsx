@@ -9,6 +9,7 @@ import GraphView from './features/GraphEditor/GraphView';
 import CodeView from './features/CodeView/CodeView';
 import TemplateView from './features/TemplateView/TemplateView';
 import DataView from './features/DataView/DataView';
+import ModuleView from './features/ModuleView/ModuleView';
 import NotificationBar from './shared/ui/NotificationBar';
 import RightActivityBar from './shared/ui/RightActivityBar';
 import ConfirmModal from './shared/ui/ConfirmModal';
@@ -16,7 +17,7 @@ import { type TemplateViewHandle } from './features/TemplateView/TemplateView';
 import { TutorialManager } from './features/Tutorial/TutorialManager';
 import { useData } from './context/DataContext';
 
-export type ViewMode = 'develop' | 'data' | 'graph' | 'output';
+export type ViewMode = 'develop' | 'data' | 'graph' | 'output' | 'modules';
 export type PaneMode = 'import' | 'export' | 'engine' | null;
 
 
@@ -106,7 +107,7 @@ function App() {
           <TabBar
             currentView={activeTab as ViewMode}
             onViewChange={(mode) => handleTabChange(mode)}
-            tabs={['data', 'graph', 'develop', 'output']}
+            tabs={['data', 'graph', 'modules', 'develop', 'output']}
           />
 
           <div style={{ flex: 1, overflow: 'hidden', position: 'relative', display: 'flex' }}>
@@ -122,6 +123,7 @@ function App() {
                 showSchema={activeTools.includes('schema')}
               />
             )}
+            {activeTab === 'modules' && <ModuleView />}
             {activeTab === 'develop' && (
               <TemplateView
                 ref={templateRef}

@@ -1,0 +1,466 @@
+.module-view-container {
+    display: flex;
+    flex: 1;
+    height: 100%;
+    background-color: var(--bg-secondary);
+    overflow: hidden;
+    color: var(--text-primary);
+}
+
+.module-interaction-area {
+    display: flex;
+    width: 200%;
+    /* Two panels wide at any time */
+    height: 100%;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Initially center is visible, maybe shifted left if description is open? 
+Actually let's use a 3-column system where we shift the container.
+*/
+
+.module-interaction-area {
+    display: flex;
+    width: 150%;
+    /* Center is 50%, side panels are 25% each? No, let's make them 50/50 or similar */
+    transform: translateX(0);
+}
+
+.module-interaction-area.description {
+    transform: translateX(0);
+    /* Left panel visible, center partially visible */
+}
+
+.module-interaction-area.config {
+    transform: translateX(-50%);
+    /* Center panel visible on left, right panel visible on right */
+}
+
+/* Let's try a simpler approach with flex and width */
+
+.module-view-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.module-interaction-area {
+    display: flex;
+    height: 100%;
+    width: 150%;
+}
+
+/* New Layout Logic:
+   The viewport shows 100% width.
+   We have 3 panels: Description (30%), Center (70%), Config (30%)? 
+   No, let's make it simpler:
+   Description: 400px
+   Center: 1fr
+   Config: 400px
+*/
+
+.module-view-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(circle at top right, #1a1a2e, #16213e);
+}
+
+.module-interaction-area {
+    display: flex;
+    height: 100%;
+    width: calc(200% - 700px);
+    /* Side (100% - 700px) + Center (700px) + Side (100% - 700px) */
+    transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.module-interaction-area.description {
+    transform: translateX(0);
+    /* Shows Description and Center */
+}
+
+.module-interaction-area.config {
+    transform: translateX(calc(700px - 100%));
+    /* Shifts by the exact width of the side panel */
+}
+
+/* Panels */
+.side-panel {
+    width: calc(100% - 700px);
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    background-color: var(--bg-primary);
+    border-right: 1px solid var(--border-color);
+    z-index: 10;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.center-panel {
+    width: 700px;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    background-color: var(--bg-secondary);
+    overflow-y: auto;
+}
+
+.right-panel {
+    border-right: none;
+    border-left: 1px solid var(--border-color);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.center-panel {
+    padding: 40px;
+}
+
+.panel-content {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
+}
+
+.panel-content.empty {
+    justify-content: center;
+    align-items: center;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.module-header-large h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--accent-color);
+    text-shadow: 0 0 10px var(--accent-faint);
+}
+
+.version-tag {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.author {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.author-name {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.description-text {
+    line-height: 1.7;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Center Panel Specific Padding */
+.center-panel {
+    padding: 40px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.module-lists {
+    display: flex;
+    gap: 40px;
+    height: 100%;
+    max-width: 1200px;
+}
+
+.list-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.list-section h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.list-section h3::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border-color), transparent);
+}
+
+.module-list {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    transition: border-color 0.3s ease;
+}
+
+.module-list:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Cards */
+.module-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+}
+
+.module-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+    border-color: var(--accent-color);
+    background: var(--bg-hover);
+}
+
+.module-card.active {
+    background: linear-gradient(135deg, var(--bg-primary), rgba(var(--accent-rgb), 0.1));
+    border-color: var(--accent-color);
+    box-shadow: inset 0 0 10px rgba(var(--accent-rgb), 0.2);
+}
+
+.module-card h4 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 500;
+}
+
+.module-card p {
+    margin: 6px 0 0 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.order-badge {
+    background-color: var(--accent-color);
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.installed-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.card-order {
+    width: 24px;
+    height: 24px;
+    background: var(--accent-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.card-info {
+    flex: 1;
+}
+
+.drag-handle {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: grab;
+}
+
+/* Engine Card Special Styling */
+.locked-engine-card {
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    box-shadow: 0 0 15px rgba(var(--bg-primary), 0.2);
+    height: 150px;
+}
+
+.locked-engine-card:hover {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 20px rgba(var(--bg-primary), 0.3);
+}
+
+.locked-engine-card .card-order {
+    background: var(--border-color);
+    /* Distinct color for locked order */
+}
+
+/* Config & Buttons */
+.config-subtitle {
+    font-size: 0.9rem;
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.no-config-text {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px dashed var(--border-color);
+}
+
+.dynamic-config-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.config-item.vertical {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.config-input,
+.config-select {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 14px;
+    color: white;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.config-input:focus,
+.config-select:focus {
+    border-color: var(--accent-color);
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+}
+
+.config-input.small {
+    width: 100px;
+}
+
+.config-item-wrapper {
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.config-item-wrapper:last-child {
+    border-bottom: none;
+}
+
+.toggle {
+    width: 40px;
+    height: 20px;
+    background: #333;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+}
+
+.toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #777;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.toggle.active {
+    background: var(--accent-color);
+}
+
+.toggle.active::after {
+    left: 22px;
+    background: white;
+}
+
+.primary-button {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.primary-button:hover {
+    filter: brightness(1.2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.4);
+}
+
+.danger-button {
+    background: transparent;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: auto;
+    transition: all 0.2s ease;
+}
+
+.danger-button:hover {
+    background: #dc3545;
+    color: white;
+}
+
+.empty-list-plug {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 20px;
+}

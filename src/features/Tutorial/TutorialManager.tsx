@@ -46,7 +46,7 @@ export const TutorialManager = () => {
                     {
                         element: '#toolbar-engine',
                         popover: {
-                            title: '1. Engine Configuration',
+                            title: 'Engine Configuration',
                             description: 'Click this icon in the left toolbar to open the engine selection and settings.',
                             side: "right",
                             align: 'start',
@@ -76,7 +76,7 @@ export const TutorialManager = () => {
                     {
                         element: '#tab-data',
                         popover: {
-                            title: '2. Data Entry',
+                            title: 'Data Entry',
                             description: 'The Data tab is where you write and edit your lorebook content.',
                             side: "bottom",
                             align: 'start'
@@ -118,7 +118,7 @@ export const TutorialManager = () => {
                     {
                         element: '#tab-graph',
                         popover: {
-                            title: '3. Simulation Graph',
+                            title: 'Simulation Graph',
                             description: 'This is where you can see how your lorebook reacts to user chats.',
                             side: "bottom",
                             align: 'start'
@@ -199,7 +199,7 @@ export const TutorialManager = () => {
                     {
                         element: '#toolbar-export',
                         popover: {
-                            title: '4. Exporting',
+                            title: 'Exporting',
                             description: 'That\'s all you need for a simple lorebook. Download it from this export panel.',
                             side: "right",
                             align: 'start',
@@ -207,6 +207,40 @@ export const TutorialManager = () => {
                                 setActivePane('export');
                                 setTimeout(() => driver.moveNext(), 400);
                             }
+                        }
+                    },
+                    {
+                        element: '#tab-modules',
+                        popover: {
+                            title: 'Module Management',
+                            description: 'If you\'re looking for more simple features, you can install script modules made by the community.',
+                            side: "bottom",
+                            align: 'start',
+                            onNextClick: (_el: any, _step: any, { driver }: any) => {
+                                setActiveTab('modules');
+                                setTimeout(() => driver.moveNext(), 400);
+                            }
+                        },
+                        onHighlightStarted: () => {
+                            resetPanels();
+                        }
+                    },
+                    {
+                        element: '#module-list-available',
+                        popover: {
+                            title: 'Available Modules',
+                            description: 'These are all the modules currently on your computer. Click one to view its details and installation instructions.',
+                            side: "right",
+                            align: 'start'
+                        }
+                    },
+                    {
+                        element: '#module-list-installed',
+                        popover: {
+                            title: 'Installed Chain',
+                            description: 'Drag modules from the available list to here to install them. The order of this list determines the order of execution in your final lorebook!',
+                            side: "left",
+                            align: 'start'
                         }
                     },
                     {
@@ -221,7 +255,7 @@ export const TutorialManager = () => {
                     {
                         element: '#tab-develop',
                         popover: {
-                            title: '5. Develop View',
+                            title: 'Develop View',
                             description: 'If you\'re building an engine, everything you need to support Armillaris is here.',
                             side: "bottom",
                             align: 'start'
@@ -234,7 +268,7 @@ export const TutorialManager = () => {
                     {
                         element: '#tab-output',
                         popover: {
-                            title: '6. Output View',
+                            title: 'Output View',
                             description: 'You can verify your script\'s filesize and final form here.',
                             side: "bottom",
                             align: 'start'

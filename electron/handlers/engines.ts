@@ -4,8 +4,12 @@ import fs from 'fs';
 import { app } from 'electron';
 import { minify } from 'terser';
 import * as vm from 'node:vm';
+import Store from 'electron-store';
+
+const store = new Store();
 
 const ENGINES_DIR = path.join(app.getPath('userData'), 'Engines');
+const MODULES_DIR = path.join(app.getPath('userData'), 'Modules');
 
 export function registerEngineHandlers() {
     ipcMain.handle('get-engines', async () => {
@@ -176,6 +180,38 @@ export function registerEngineHandlers() {
         compiled = replaceInject(compiled, '{{BEHAVIOR_INJECT}}', behaviorOutput);
         compiled = replaceInject(compiled, '{{DATA_INJECT}}', dataOutput);
         compiled = compiled.replace('"{{JSON_DATA}}"', behaviorOutput);
+
+        // 2.5 Module Integration
+        const moduleChain = store.get('module_chain', []) as any[];
+        const installedModules = moduleChain
+            .filter(m => m.isInstalled)
+            .sort((a, b) => a.order - b.order);
+
+        const engineModuleIdx = installedModules.findIndex(m => m.id === 'engine');
+        const beforeModules = engineModuleIdx !== -1 ? installedModules.slice(0, engineModuleIdx) : [];
+        const afterModules = engineModuleIdx !== -1 ? installedModules.slice(engineModuleIdx + 1) : installedModules;
+
+        const getModuleCode = (mod: any) => {
+            const modPath = path.join(MODULES_DIR, mod.id, 'index.js');
+            if (fs.existsSync(modPath)) {
+                try {
+                    let code = fs.readFileSync(modPath, 'utf-8');
+                    // In the future, we might handle {{MODULE_DATA}} injection here.
+                    return `\n// --- Module: ${mod.id} ---\n${code}\n`;
+                } catch (e) {
+                    console.error(`Failed to read module index.js for ${mod.id}:`, e);
+                }
+            }
+            return '';
+        };
+
+        let preCode = '// --- Modules (Before) ---\n';
+        for (const m of beforeModules) preCode += getModuleCode(m);
+
+        let postCode = '\n// --- Modules (After) ---\n';
+        for (const m of afterModules) postCode += getModuleCode(m);
+
+        compiled = preCode + '\n// --- Core Engine ---\n' + compiled + postCode;
 
         // 3. Syntax Validation (Pre-minification)
         try {

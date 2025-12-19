@@ -1,0 +1,41 @@
+{
+    "name": "Example Module",
+    "description": "This is an example module demonstrating dynamic configuration fields.",
+    "version": "0.1.0",
+    "author": "Nialyn",
+    "config": {
+        "enabled": true,
+        "mode": "strict",
+        "threshold": 5
+    },
+    "settingsSchema": [
+        {
+            "id": "enabled",
+            "label": "Enable Processing",
+            "type": "toggle",
+            "default": true
+        },
+        {
+            "id": "mode",
+            "label": "Processing Mode",
+            "type": "select",
+            "default": "strict",
+            "options": [
+                {
+                    "label": "Strict",
+                    "value": "strict"
+                },
+                {
+                    "label": "Lax",
+                    "value": "lax"
+                }
+            ]
+        },
+        {
+            "id": "threshold",
+            "label": "Effect Threshold",
+            "type": "number",
+            "default": 5
+        }
+    ]
+}
