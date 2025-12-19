@@ -81,29 +81,19 @@ function adapt(behaviorData) {
         // Compact Properties: [KeyIdx, Value, KeyIdx, Value...]
         var propsArray = [];
 
-        // We only serialize values that are explicitly set or have defaults in 'def' if needed.
-        // Usually the engine wants ONLY the 'values' object from the instance data.
-        // But we might want to iterate definition properties to ensure type safety?
-        // For this optimized format, we just dump what is in 'values'.
-        // NOTE: The engine might expect specific property names.
+        // ALWAYS include the label from the definition in properties for engine routing
+        propsArray.push(getStringIndex("label"));
+        propsArray.push(getStringIndex(def.label));
 
+        // We only serialize values that are explicitly set or have defaults in 'def' if needed.
         for (var key in values) {
             if (Object.prototype.hasOwnProperty.call(values, key)) {
                 var val = values[key];
 
-                // Handle complex values or primitives
-                // If val is string, we index it.
-                // If val is primitive/bool/number, we keep it.
-                // If val is object/array, we just keep it as is (JSON) but maybe compact keys if possible?
-                // For simplicity level 1: Index Strings, keep others.
-
                 var finalVal = val;
                 if (typeof val === 'string') {
-                    finalVal = getStringIndex(val); // Store index for string values
+                    finalVal = getStringIndex(val);
                 }
-                // Note: If we really want to optimize nested objects, we'd need recursion.
-                // For ES5/Simplicity, we'll keep objects as plain objects, but keys won't be indexed.
-                // Revisit if deep compression needed.
 
                 propsArray.push(getStringIndex(key));
                 propsArray.push(finalVal);
@@ -140,6 +130,7 @@ function adapt(behaviorData) {
     var ane = {
         v: "1.0",
         s: stringTable,
+        i: validNodes.map(function (n) { return n.id; }), // Node ID Table
         n: serializedNodes,
         e: serializedEdges
     };
@@ -218,10 +209,19 @@ function adaptData(entries) {
 
 /**
  * Adapts the activated IDs from the engine to the format expected by the editor.
- * @param {string[]} ids - The list of activated IDs from the engine.
- * @returns {string[]} The adapted list of activated IDs.
+ * @param {number[]} indices - The list of activated node indices from the engine.
+ * @param {Object} behaviorData - The original or adapted behavior data containing the ID table.
+ * @returns {string[]} The adapted list of activated UUIDs.
  */
-function adaptActivatedIds(ids) {
+function adaptActivatedIds(indices, behaviorData) {
+    if (!behaviorData || !behaviorData.i) return indices;
+    var ids = [];
+    for (var i = 0; i < indices.length; i++) {
+        var idx = indices[i];
+        if (behaviorData.i[idx]) {
+            ids.push(behaviorData.i[idx]);
+        }
+    }
     return ids;
 }
 

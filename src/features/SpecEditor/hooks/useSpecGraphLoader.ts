@@ -73,7 +73,7 @@ export const useSpecGraphLoader = ({
 
         setTargetSpecName(activeSpec);
 
-        console.log("[Loader] Loading Spec:", activeSpec, "with EngineSpec:", engineSpec ? "Present" : "Missing");
+        //console.log("[Loader] Loading Spec:", activeSpec, "with EngineSpec:", engineSpec ? "Present" : "Missing");
 
         ipc.invoke('read-spec', activeEngine, activeSpec).then((content: string) => {
             try {
@@ -109,7 +109,6 @@ export const useSpecGraphLoader = ({
 
                     // NOW set master graph with upgraded nodes
                     setMasterGraph(source);
-                    console.log("[Loader] Upgraded Source set to MasterGraph:", source);
 
                     // Also set Local Nodes (with handlers)
                     const restoredNodes = upgradedNodes.map((n: Node) => ({
