@@ -205,9 +205,9 @@
               "type": "Entry List"
             },
             {
-              "id": "attributes",
-              "label": "Attributes",
-              "type": "Attribute List"
+              "id": "attribute_name",
+              "label": "Attribute",
+              "type": "string"
             },
             {
               "id": "values",
@@ -240,9 +240,9 @@
               "default": "or"
             },
             {
-              "name": "attributes",
-              "label": "Attributes",
-              "type": "Attribute List",
+              "name": "attribute_name",
+              "label": "Attribute",
+              "type": "string",
               "default": ""
             },
             {
@@ -293,12 +293,12 @@
           ]
         },
         "values": {
-          "attributes": "Meta"
+          "attribute_name": "Meta"
         },
         "categoryColor": "#8e44ad"
       },
       "width": 220,
-      "height": 392,
+      "height": 376,
       "selected": false,
       "positionAbsolute": {
         "x": 1401.7540959003343,
@@ -1172,11 +1172,11 @@
               "dragging": false
             },
             {
-              "id": "eb5d4b84-631b-4ad6-a673-173b5d6a37f4",
+              "id": "691565aa-f1b4-4973-8e98-8adea399040e",
               "type": "custom",
               "position": {
-                "x": 81.43678018077338,
-                "y": 4.210317445816429
+                "x": 117.11951853717937,
+                "y": 8.474127518604632
               },
               "data": {
                 "label": "List Filter",
@@ -1251,10 +1251,10 @@
               },
               "width": 220,
               "height": 263,
-              "selected": false,
+              "selected": true,
               "positionAbsolute": {
-                "x": 81.43678018077338,
-                "y": 4.210317445816429
+                "x": 117.11951853717937,
+                "y": 8.474127518604632
               },
               "dragging": false
             }
@@ -1270,16 +1270,23 @@
             {
               "source": "25be099e-648f-4191-bce9-27c68fdd3861",
               "sourceHandle": "sorted_messages",
-              "target": "eb5d4b84-631b-4ad6-a673-173b5d6a37f4",
+              "target": "691565aa-f1b4-4973-8e98-8adea399040e",
               "targetHandle": "list_input",
-              "id": "reactflow__edge-25be099e-648f-4191-bce9-27c68fdd3861sorted_messages-eb5d4b84-631b-4ad6-a673-173b5d6a37f4list_input"
+              "id": "reactflow__edge-25be099e-648f-4191-bce9-27c68fdd3861sorted_messages-691565aa-f1b4-4973-8e98-8adea399040elist_input"
             },
             {
-              "source": "eb5d4b84-631b-4ad6-a673-173b5d6a37f4",
+              "source": "691565aa-f1b4-4973-8e98-8adea399040e",
+              "sourceHandle": "list_output",
+              "target": "end",
+              "targetHandle": "out_1766185622983",
+              "id": "reactflow__edge-691565aa-f1b4-4973-8e98-8adea399040elist_output-endout_1766185622983"
+            },
+            {
+              "source": "691565aa-f1b4-4973-8e98-8adea399040e",
               "sourceHandle": "list_output",
               "target": "end",
               "targetHandle": "out_1765967096328",
-              "id": "reactflow__edge-eb5d4b84-631b-4ad6-a673-173b5d6a37f4list_output-endout_1765967096328"
+              "id": "reactflow__edge-691565aa-f1b4-4973-8e98-8adea399040elist_output-endout_1765967096328"
             }
           ]
         },
@@ -1324,7 +1331,28 @@
               "type": "List"
             }
           ],
-          "properties": [],
+          "properties": [
+            {
+              "name": "deduplicate",
+              "label": "Deduplicate",
+              "type": "select",
+              "options": [
+                {
+                  "value": "off",
+                  "label": "Off"
+                },
+                {
+                  "value": "first",
+                  "label": "Keep first"
+                },
+                {
+                  "value": "last",
+                  "label": "Keep last"
+                }
+              ],
+              "default": "first"
+            }
+          ],
           "typeConstraints": [
             {
               "id": "list_type",
@@ -1371,7 +1399,7 @@
         ]
       },
       "width": 220,
-      "height": 187,
+      "height": 239,
       "selected": true,
       "positionAbsolute": {
         "x": 1651.6327880433616,

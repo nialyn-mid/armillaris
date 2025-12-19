@@ -1,9 +1,11 @@
 import { useCallback, useState } from 'react';
 import { useNodesState, useEdgesState } from 'reactflow';
+import { useData } from '../../../context/DataContext';
 
 export const useSpecGraphState = () => {
-    const [nodes, setNodes, onNodesChange] = useNodesState([]);
-    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    const { setIsSpecDirty } = useData();
+    const [nodes, setNodes, _onNodesChange] = useNodesState([]);
+    const [edges, setEdges, _onEdgesChange] = useEdgesState([]);
     const [masterGraph, setMasterGraph] = useState<any>(null);
 
     const [viewPath, setViewPath] = useState<{ id: string, label: string }[]>([]);
@@ -21,7 +23,34 @@ export const useSpecGraphState = () => {
     // And helper 'getCurrentGraph(spec, path)'
     // And helper 'updateGraphInSpec(spec, path, {nodes, edges})'
 
+    const onNodesChange = useCallback((changes: any) => {
+        _onNodesChange(changes);
+        // Only set dirty for structural or positional changes, ignoring selection and auto-dimensions
+        const isUserChange = changes.some((c: any) =>
+            c.type === 'position' ||
+            c.type === 'remove' ||
+            c.type === 'add' ||
+            c.type === 'reset'
+        );
+        if (isUserChange) {
+            setIsSpecDirty(true);
+        }
+    }, [_onNodesChange, setIsSpecDirty]);
+
+    const onEdgesChange = useCallback((changes: any) => {
+        _onEdgesChange(changes);
+        const isUserChange = changes.some((c: any) =>
+            c.type === 'remove' ||
+            c.type === 'add' ||
+            c.type === 'reset'
+        );
+        if (isUserChange) {
+            setIsSpecDirty(true);
+        }
+    }, [_onEdgesChange, setIsSpecDirty]);
+
     const handleNodeUpdate = useCallback((id: string, newValues: any) => {
+        setIsSpecDirty(true);
         setNodes((nds) => {
             return nds.map((node) => {
                 if (node.id === id) {
@@ -105,6 +134,7 @@ export const useSpecGraphState = () => {
     }, []);
 
     const handleDuplicateNode = useCallback((id: string) => {
+        setIsSpecDirty(true);
         setNodes((nds) => {
             const node = nds.find((n) => n.id === id);
             if (!node) return nds;
@@ -161,14 +191,16 @@ export const useSpecGraphState = () => {
                 };
             });
 
+            setIsSpecDirty(true);
             return [
                 ...nds.map(n => ({ ...n, selected: false })),
                 ...newNodes
             ];
         });
-    }, [setNodes, regenerateGraphIds]);
+    }, [setNodes, regenerateGraphIds, setIsSpecDirty]);
 
     const handleDeleteNode = useCallback((id: string) => {
+        setIsSpecDirty(true);
         setNodes((nds) => nds.filter((n) => n.id !== id));
         setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
     }, [setNodes, setEdges]);

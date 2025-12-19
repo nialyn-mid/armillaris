@@ -49,6 +49,10 @@ interface DataContextType {
   engineErrors: any[];
   setEngineErrors: (errors: any[]) => void;
   reloadEngine: () => Promise<void>;
+  debugNodes: string[];
+  setDebugNodes: (nodes: string[]) => void;
+  isSpecDirty: boolean;
+  setIsSpecDirty: (dirty: boolean) => void;
 
   // Sidebar Tools / Panels
   activeTools: string[];
@@ -74,6 +78,8 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export function DataProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [debugNodes, setDebugNodes] = useState<string[]>([]);
+  const [isSpecDirty, setIsSpecDirty] = useState(false);
 
   const showNotification = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
     setNotification({ message: msg, type });
@@ -108,7 +114,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       notification,
       showNotification,
       reloadEngine,
-      loadTutorialData
+      loadTutorialData,
+      debugNodes,
+      setDebugNodes,
+      isSpecDirty,
+      setIsSpecDirty
     }}>
       {children}
     </DataContext.Provider>

@@ -3,6 +3,8 @@
     "description": "Standard Keyword & Meta Activation Engine",
     "idlist-var": "activated_ids",
     "chathighlights-var": "chat_highlights",
+    "debugnodes-var": "debug_nodes",
+    "debugports-var": "debug_ports",
     "categories": {
         "Input": {
             "color": "#0078d4"
@@ -267,9 +269,9 @@
                     "type": "Entry List"
                 },
                 {
-                    "id": "attributes",
-                    "label": "Attributes",
-                    "type": "Attribute List"
+                    "id": "attribute_name",
+                    "label": "Attribute",
+                    "type": "string"
                 },
                 {
                     "id": "values",
@@ -302,9 +304,9 @@
                     "default": "or"
                 },
                 {
-                    "name": "attributes",
-                    "label": "Attributes",
-                    "type": "Attribute List",
+                    "name": "attribute_name",
+                    "label": "Attribute",
+                    "type": "string",
                     "default": ""
                 },
                 {
@@ -661,7 +663,7 @@
                             "label": "Keep last"
                         }
                     ],
-                    "default": "off"
+                    "default": "first"
                 }
             ],
             "typeConstraints": [

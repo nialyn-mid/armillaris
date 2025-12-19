@@ -14,6 +14,7 @@ import NotificationBar from './shared/ui/NotificationBar';
 import RightActivityBar from './shared/ui/RightActivityBar';
 import ConfirmModal from './shared/ui/ConfirmModal';
 import { type TemplateViewHandle } from './features/TemplateView/TemplateView';
+import { type SpecNodeEditorHandle } from './features/SpecEditor/SpecNodeEditor';
 import { TutorialManager } from './features/Tutorial/TutorialManager';
 import { useData } from './context/DataContext';
 
@@ -37,7 +38,8 @@ function App() {
     setActiveTab,
     activePane,
     setActivePane,
-    togglePane
+    togglePane,
+    isSpecDirty
   } = useData();
 
   const [showWelcomePrompt, setShowWelcomePrompt] = useState(false);
@@ -55,9 +57,14 @@ function App() {
   const [isTemplateDirty, setIsTemplateDirty] = useState(false);
   const [pendingTab, setPendingTab] = useState<string | null>(null);
   const templateRef = useRef<TemplateViewHandle>(null);
+  const specRef = useRef<SpecNodeEditorHandle>(null);
 
   const handleTabChange = (tab: string) => {
     if (activeTab === 'develop' && isTemplateDirty) {
+      setPendingTab(tab);
+      return;
+    }
+    if (activeTab === 'graph' && isSpecDirty) {
       setPendingTab(tab);
       return;
     }
@@ -72,15 +79,19 @@ function App() {
   };
 
   const handleSaveAndLeave = async () => {
-    if (templateRef.current) {
+    if (activeTab === 'develop' && templateRef.current) {
       await templateRef.current.handleSaveAll();
+    } else if (activeTab === 'graph' && specRef.current) {
+      await specRef.current.handleSave();
     }
     confirmNavigation();
   };
 
   const handleDiscardAndLeave = () => {
-    if (templateRef.current) {
+    if (activeTab === 'develop' && templateRef.current) {
       templateRef.current.handleDiscardAll();
+    } else if (activeTab === 'graph' && specRef.current) {
+      specRef.current.handleDiscard();
     }
     confirmNavigation();
   };
@@ -115,6 +126,7 @@ function App() {
                 showOutput={activeTools.includes('output')}
                 showSpecEditor={activeTools.includes('spec_editor')}
                 showInputPanel={activeTools.includes('engine_context')}
+                specRef={specRef}
               />
             )}
             {activeTab === 'data' && (
@@ -169,7 +181,7 @@ function App() {
       {pendingTab && (
         <ConfirmModal
           title="Unsaved Changes"
-          message={`You have unsaved changes in the Develop view.\nWould you like to save them before leaving?`}
+          message={`You have unsaved changes in the ${activeTab === 'graph' ? 'Behavior Graph' : 'Develop'} view.\nWould you like to save them before leaving?`}
           buttons={[
             {
               label: 'Save & Leave',

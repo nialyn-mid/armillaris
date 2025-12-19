@@ -46,7 +46,7 @@ function getProps(nodeIdx) {
     for (var i = 0; i < arr.length; i += 2) {
         var key = getBStr(arr[i]);
         var val = arr[i + 1];
-        if (typeof val === 'number' && val >= 0 && val < behaviorStrings.length && (key === "label" || key === "type" || key === "attribute" || key === "message_user_type" || key === "deduplicate")) {
+        if (typeof val === 'number' && val >= 0 && val < behaviorStrings.length && (key === "label" || key === "type" || key === "attribute" || key === "message_user_type" || key === "deduplicate" || key === "attribute_name")) {
             p[key] = getBStr(val);
         } else {
             p[key] = val;
@@ -260,13 +260,25 @@ function executeNode(nodeIdx, portIdx) {
                 else result = matchedMsgs;
             } else if (label.indexOf("entry filter") !== -1 || type === "EntryFilter") {
                 var sourceEntries = resolveInput(nodeIdx, "entries") || dataEntries || [];
-                var attrFilter = props.attributes || "";
+                var attrName = resolveInput(nodeIdx, "attribute_name") || props.attribute_name || "Meta";
                 var op = props.operator || "==";
-                var valFilter = props.values || "";
+                var valList = resolveInput(nodeIdx, "values") || props.values || [];
+                if (!Array.isArray(valList)) valList = [valList];
+
                 result = [];
                 for (var i = 0; i < sourceEntries.length; i++) {
-                    var ep = getEntryProps(sourceEntries[i]);
-                    if (compareValues(ep[attrFilter], valFilter, op)) result.push(sourceEntries[i]);
+                    var entry = sourceEntries[i];
+                    var ep = getEntryProps(entry);
+                    var entryVal = ep[attrName];
+
+                    var match = false;
+                    for (var v = 0; v < valList.length; v++) {
+                        if (compareValues(entryVal, valList[v], op)) {
+                            match = true;
+                            break;
+                        }
+                    }
+                    if (match) result.push(entry);
                 }
             } else if (label.indexOf("list filter") !== -1 || type === "ListFilter") {
                 var sourceList = resolveInput(nodeIdx, "list_input") || [];
@@ -378,16 +390,25 @@ for (var i = totalMsgs - 1; i >= 0; i--) {
     formattedHighlights.push(msgHighlights);
 }
 
+// 6. Export Results
+var executed_uuids = executed_nodes.map(function (idx) {
+    return behaviorIds[idx];
+});
+
 // 7. Highlighting Export
 dlog("Highlights Exported: " + activatedEntryIds.length + " entry(s)");
 
-activated_ids = activatedEntryIds;
-activatedIds = activatedEntryIds;
-chat_highlights = formattedHighlights;
-
 if (typeof context !== 'undefined') {
     context.activated_ids = activatedEntryIds;
-    context.activatedIds = activatedEntryIds;
     context.chat_highlights = formattedHighlights;
+    context.debug_nodes = executed_uuids;
     if (context.character) context.character.scenario = "--- DEBUG TRACE ---\n" + dtrace.join("\n");
 }
+if (typeof activated_ids !== 'undefined') activated_ids = activatedEntryIds;
+if (typeof chat_highlights !== 'undefined') chat_highlights = formattedHighlights;
+if (typeof debug_nodes !== 'undefined') debug_nodes = executed_uuids;
+
+// For Electron host extractor
+var _activated_ids = activatedEntryIds;
+var _chat_highlights = formattedHighlights;
+var _debug_nodes = executed_uuids;

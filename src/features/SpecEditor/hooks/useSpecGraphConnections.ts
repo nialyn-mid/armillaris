@@ -6,13 +6,14 @@ interface UseSpecGraphConnectionsProps {
     setEdges: (edges: Edge[] | ((eds: Edge[]) => Edge[])) => void;
     nodes: Node[];
     setNodes: (nodes: Node[] | ((nds: Node[]) => Node[])) => void;
+    setIsSpecDirty: (dirty: boolean) => void;
 }
 
 import { inferTypeFromNode, inferInputTypeFromNode } from '../utils/specTypeInference';
 import { checkConnectionCompatibility } from '../utils/specTypeCompatibility';
 import { requireConstraintPorts, resolveNodePorts, checkConstraintCompatibility } from '../utils/specConstraintUtils';
 
-export const useSpecGraphConnections = ({ setEdges, nodes, setNodes }: UseSpecGraphConnectionsProps) => {
+export const useSpecGraphConnections = ({ setEdges, nodes, setNodes, setIsSpecDirty }: UseSpecGraphConnectionsProps) => {
 
     // Type Inference Helpers (Now using Utils)
     const inferType = useCallback((nodeId: string, handleId: string | null): string => {
@@ -53,10 +54,12 @@ export const useSpecGraphConnections = ({ setEdges, nodes, setNodes }: UseSpecGr
 
     const onEdgeDoubleClick = useCallback((event: React.MouseEvent, edge: Edge) => {
         event.stopPropagation();
+        setIsSpecDirty(true);
         setEdges((eds) => eds.filter((e) => e.id !== edge.id));
-    }, [setEdges]);
+    }, [setEdges, setIsSpecDirty]);
 
     const onConnect = useCallback((params: Connection) => {
+        setIsSpecDirty(true);
         let { source, target, sourceHandle, targetHandle } = params;
         if (!source || !target) return; // Ensure valid connection
 

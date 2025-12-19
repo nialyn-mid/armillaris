@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { type NodeProps } from 'reactflow';
+import { useData } from '../../context/DataContext';
 import RecursiveProperties from './nodes/RecursiveProperties';
 import SpecNodeHeader from './nodes/SpecNodeHeader';
 import { SpecNodeInputPorts, SpecNodeOutputPorts } from './nodes/SpecNodePorts';
@@ -13,6 +14,7 @@ import './nodes/Nodes.css';
 
 const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
     const { def, values, categoryColor, onDuplicate, onDelete } = data;
+    const { debugNodes } = useData();
 
     if (!def) {
         return <div style={{ color: 'red', border: '1px solid red', padding: 5 }}>Error: Missing Node Definition</div>;
@@ -31,9 +33,11 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
         saveCustomNode(data, def.label);
     };
 
+    const isExecuting = debugNodes.includes(id);
+
     return (
         <div
-            className={`spec-node ${selected ? 'selected' : ''}`}
+            className={`spec-node ${selected ? 'selected' : ''} ${isExecuting ? 'executing-glow' : ''}`}
             style={{
                 '--node-accent-color': categoryColor || '#007fd4',
                 minWidth: isSideBySide ? '400px' : undefined

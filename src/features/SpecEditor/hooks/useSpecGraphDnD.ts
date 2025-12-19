@@ -10,6 +10,7 @@ interface UseSpecGraphDnDProps {
     handleDuplicateNode: (id: string) => void;
     handleDeleteNode: (id: string) => void;
     onEditGroup: (id: string, label: string) => void;
+    setIsSpecDirty: (dirty: boolean) => void;
 }
 
 export const useSpecGraphDnD = ({
@@ -18,7 +19,8 @@ export const useSpecGraphDnD = ({
     handleNodeUpdate,
     handleDuplicateNode,
     handleDeleteNode,
-    onEditGroup
+    onEditGroup,
+    setIsSpecDirty
 }: UseSpecGraphDnDProps) => {
 
     // We don't strictly need reactFlowInstance for positioning anymore with screenToFlowPosition, 
@@ -41,6 +43,8 @@ export const useSpecGraphDnD = ({
             event.preventDefault();
 
             if (!reactFlowWrapper.current || !reactFlowInstance) return;
+
+            setIsSpecDirty(true);
 
             // Use screenToFlowPosition for accurate drop location
             const position = screenToFlowPosition({

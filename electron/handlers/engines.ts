@@ -317,6 +317,14 @@ export function registerEngineHandlers() {
                 chatHighlights = sandbox.context[highlightsVarName];
             }
 
+            const debugNodesVarName = spec['debugnodes-var'] || 'debug_nodes';
+            let debugNodes: string[] = [];
+            if (sandbox[debugNodesVarName] && Array.isArray(sandbox[debugNodesVarName])) {
+                debugNodes = sandbox[debugNodesVarName];
+            } else if (sandbox.context?.[debugNodesVarName] && Array.isArray(sandbox.context[debugNodesVarName])) {
+                debugNodes = sandbox.context[debugNodesVarName];
+            }
+
             let activatedIds = rawIds;
             if (fs.existsSync(adapterPath)) {
                 const adapterScript = fs.readFileSync(adapterPath, 'utf-8');
@@ -330,7 +338,15 @@ export function registerEngineHandlers() {
                 }
             }
 
-            return { success: true, personality, scenario, example_dialogs, activatedIds, chatHighlights };
+            return {
+                success: true,
+                personality,
+                scenario,
+                example_dialogs,
+                activatedIds,
+                chatHighlights,
+                debugNodes
+            };
 
         } catch (e: any) {
             console.error('Engine Execution Failed:', e);

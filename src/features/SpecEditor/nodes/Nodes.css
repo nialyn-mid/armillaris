@@ -131,3 +131,9 @@
 .group-edit-button:hover {
     background: var(--bg-secondary);
 }
+
+.spec-node.executing-glow {
+    border-color: var(--node-accent-color);
+    box-shadow: 0 0 20px var(--node-accent-color);
+    z-index: 100;
+}

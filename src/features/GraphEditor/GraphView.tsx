@@ -10,7 +10,7 @@ import { useChatSession } from './hooks/useChatSession';
 import { ChatOverlay } from './components/ChatOverlay';
 import { useGraphData } from './hooks/useGraphData';
 import { LabeledEdge } from './graph/LabeledEdge';
-import SpecNodeEditor from '../SpecEditor/SpecNodeEditor';
+import SpecNodeEditor, { type SpecNodeEditorHandle } from '../SpecEditor/SpecNodeEditor';
 import { ResizeHandle } from '../../shared/ui/ResizeHandle';
 import { useData } from '../../context/DataContext';
 import './GraphEditor.css';
@@ -20,16 +20,17 @@ const edgeTypes = {
 };
 
 interface GraphViewProps {
-    showOutput: boolean;
-    showSpecEditor: boolean;
-    showInputPanel: boolean;
+    showOutput?: boolean;
+    showSpecEditor?: boolean;
+    showInputPanel?: boolean;
+    specRef?: React.RefObject<SpecNodeEditorHandle | null>;
 }
 
-export default function GraphView({ showOutput, showSpecEditor, showInputPanel }: GraphViewProps) {
+export default function GraphView({ showOutput, showSpecEditor, showInputPanel, specRef }: GraphViewProps) {
     const {
         activeEngine, activeSpec, entries,
         minifyEnabled, compressEnabled, mangleEnabled, includeComments,
-        simulateUsingDevEngine
+        simulateUsingDevEngine, setDebugNodes
     } = useData();
     const { nodes, edges, onNodesChange, onEdgesChange, updateHighlights } = useGraphData();
     const session = useChatSession();
@@ -180,6 +181,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
                 });
                 if (response.activatedIds) updateHighlights(response.activatedIds);
                 setChatHighlights(response.chatHighlights);
+                setDebugNodes(response.debugNodes || []);
                 setExecutionError(null);
             } else {
                 setExecutionError(response.error);
@@ -290,7 +292,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel }
                                 setBottomPanelHeight(Math.max(300, Math.min(1200, startStateRef.current.bottom - delta)));
                             }}
                         />
-                        <SpecNodeEditor />
+                        <SpecNodeEditor ref={specRef} />
                     </div>
                 )}
             </div>

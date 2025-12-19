@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, forwardRef, useImperativeHandle } from 'react';
 import ReactFlow, {
     Background,
     Controls,
@@ -29,7 +29,12 @@ const edgeTypes: EdgeTypes = {
     labeled: LabeledEdge,
 };
 
-export function SpecNodeEditor() {
+export interface SpecNodeEditorHandle {
+    handleSave: () => void;
+    handleDiscard: () => void;
+}
+
+const SpecNodeEditor = forwardRef<SpecNodeEditorHandle>((_, ref) => {
     const { availableSpecs, activeSpec, setActiveSpec } = useData();
 
     // Use Custom Hook for Graph Logic
@@ -57,6 +62,7 @@ export function SpecNodeEditor() {
         masterGraph,
         duplicateSelectedNodes,
         handleCreateNew,
+        handleDiscard,
         deleteSpec
     } = useSpecGraph();
 
@@ -66,6 +72,24 @@ export function SpecNodeEditor() {
         const saved = parseInt(localStorage.getItem('spec_node_editor_palette_width') || '300', 10);
         return isNaN(saved) ? 300 : saved;
     });
+
+    useImperativeHandle(ref, () => ({
+        handleSave,
+        handleDiscard
+    }));
+
+    // Shortcut listener
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSave();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown, true);
+        return () => window.removeEventListener('keydown', handleKeyDown, true);
+    }, [handleSave]);
 
     const nodeTypes = useMemo<NodeTypes>(() => ({
         custom: SpecNode,
@@ -178,15 +202,16 @@ export function SpecNodeEditor() {
             <SpecHotkeys onDuplicate={duplicateSelectedNodes} />
         </div>
     );
+});
 
-}
-
-export default function SpecNodeEditorWithProvider() {
+const SpecNodeEditorWithProvider = forwardRef<SpecNodeEditorHandle>((_, ref) => {
     return (
         <ReactFlowProvider>
             <CustomNodesProvider>
-                <SpecNodeEditor />
+                <SpecNodeEditor ref={ref} />
             </CustomNodesProvider>
         </ReactFlowProvider>
     );
-}
+});
+
+export default SpecNodeEditorWithProvider;

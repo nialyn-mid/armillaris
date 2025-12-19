@@ -36,9 +36,10 @@ export const useSpecGraphLoader = ({
     setMasterGraph,
     onEditGroup
 }: UseSpecGraphLoaderProps) => {
-    const { activeEngine, activeSpec, setActiveSpec, refreshSpecList, deleteSpec, showNotification } = useData();
+    const { activeEngine, activeSpec, setActiveSpec, refreshSpecList, deleteSpec, showNotification, setIsSpecDirty, reloadEngine } = useData();
     const [engineSpec, setEngineSpec] = useState<EngineSpec | null>(null);
     const [targetSpecName, setTargetSpecName] = useState('');
+    const [reloadVersion, setReloadVersion] = useState(0);
     const ipc = (window as any).ipcRenderer;
 
     // Load Engine Spec
@@ -126,16 +127,18 @@ export const useSpecGraphLoader = ({
 
                     setNodes(restoredNodes);
                     setEdges(source.edges || []);
+                    setIsSpecDirty(false);
                 } else {
                     setNodes([]);
                     setEdges([]);
                     setMasterGraph({ nodes: [], edges: [] });
+                    setIsSpecDirty(false);
                 }
             } catch (e) {
                 console.error("Failed to parse user spec", e);
             }
         });
-    }, [activeEngine, activeSpec, handleNodeUpdate, handleDuplicateNode, handleDeleteNode, engineSpec, ipc, setNodes, setEdges, onEditGroup]);
+    }, [activeEngine, activeSpec, handleNodeUpdate, handleDuplicateNode, handleDeleteNode, engineSpec, ipc, setNodes, setEdges, onEditGroup, reloadVersion]);
 
     const handleCreateNew = () => {
         setNodes([]);
@@ -143,6 +146,12 @@ export const useSpecGraphLoader = ({
         setMasterGraph({ nodes: [], edges: [] });
         setTargetSpecName('new_behavior');
         setActiveSpec(''); // Deselect current
+        setIsSpecDirty(false);
+    };
+
+    const handleDiscard = () => {
+        setReloadVersion(v => v + 1);
+        setIsSpecDirty(false);
     };
 
     const saveSpec = async (overrideGraph?: any) => {
@@ -169,6 +178,8 @@ export const useSpecGraphLoader = ({
             showNotification(`Saved ${baseName}`, 'success');
             refreshSpecList();
             setActiveSpec(`${baseName}.behavior`);
+            setIsSpecDirty(false);
+            reloadEngine();
         } catch (e: any) {
             showNotification(`Failed to save behavior: ${e.message}`, 'error');
         }
@@ -181,6 +192,7 @@ export const useSpecGraphLoader = ({
         setTargetSpecName,
         saveSpec,
         handleCreateNew,
+        handleDiscard,
         deleteSpec
     };
 };

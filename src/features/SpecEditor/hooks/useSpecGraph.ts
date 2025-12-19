@@ -11,6 +11,7 @@ import { GroupMoveService } from '../services/GroupMoveService';
 import { getGraphAt, updateSpecAt } from '../utils/specTraversals';
 import { useValidation } from '../../../context/ValidationContext';
 import { validateBehaviorSpec } from '../utils/specValidation';
+import { useData } from '../../../context/DataContext';
 
 export const useSpecGraph = () => {
     // 1. State Management (Includes ViewPath)
@@ -26,6 +27,7 @@ export const useSpecGraph = () => {
     } = useSpecGraphState();
 
     const { reportIssues } = useValidation();
+    const { setIsSpecDirty } = useData();
 
     // 2. Navigation Logic (Needs State first)
     // 2. Navigation Logic (Needs Stable Functions to prevent Loader re-triggering)
@@ -69,6 +71,7 @@ export const useSpecGraph = () => {
         setTargetSpecName,
         saveSpec,
         handleCreateNew,
+        handleDiscard,
         deleteSpec
     } = useSpecGraphLoader({
         setNodes,
@@ -124,7 +127,8 @@ export const useSpecGraph = () => {
         edges,
         setEdges,
         nodes,
-        setNodes
+        setNodes,
+        setIsSpecDirty
     });
 
     // 4. Drag & Drop
@@ -140,7 +144,8 @@ export const useSpecGraph = () => {
         handleNodeUpdate,
         handleDuplicateNode,
         handleDeleteNode,
-        onEditGroup
+        onEditGroup,
+        setIsSpecDirty
     });
 
     // 5. Move Nodes Logic (Move Into Group & Move Up)
@@ -234,6 +239,7 @@ export const useSpecGraph = () => {
         masterGraph, // Expose for Breadcrumbs
         duplicateSelectedNodes,
         handleCreateNew,
+        handleDiscard,
         deleteSpec
     };
 };
