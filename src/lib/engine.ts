@@ -176,21 +176,33 @@ export class Engine {
         };
     }
 
-    generateOutput(activatedIds: string[]): { personality: string, scenario: string } {
+    generateOutput(activatedIds: string[]): { personality: string, scenario: string, example_dialogs: string } {
         let personality = "";
-        const scenario = "";
+        let scenario = "";
+        let example_dialogs = "";
         const delimiter = "\n\n";
 
         for (const id of activatedIds) {
             const node = this.graph.nodes.find(n => n.id === id);
             if (node && node.data) {
-                const desc = (node.data.Description || node.data.description || "") as string;
-                if (desc) {
+                const p = (node.data.Personality || "") as string;
+                const s = (node.data.Scenario || "") as string;
+                const ed = (node.data['Example Dialogs'] || "") as string;
+
+                if (p) {
                     if (personality.length > 0) personality += delimiter;
-                    personality += desc;
+                    personality += p;
+                }
+                if (s) {
+                    if (scenario.length > 0) scenario += delimiter;
+                    scenario += s;
+                }
+                if (ed) {
+                    if (example_dialogs.length > 0) example_dialogs += delimiter;
+                    example_dialogs += ed;
                 }
             }
         }
-        return { personality, scenario };
+        return { personality, scenario, example_dialogs };
     }
 }

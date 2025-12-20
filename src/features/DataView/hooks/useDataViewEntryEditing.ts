@@ -26,7 +26,9 @@ export function useDataViewEntryEditing({
         const entry = entries.find(e => e.id === selectedId);
         if (entry) {
             const props = { ...entry.properties };
-            if (props.Description === undefined) props.Description = '';
+            if (props.Personality === undefined) props.Personality = '';
+            if (props.Scenario === undefined) props.Scenario = '';
+            if (props['Example Dialogs'] === undefined) props['Example Dialogs'] = '';
             if (props.Keywords === undefined) props.Keywords = [];
             if (props.Meta === undefined) props.Meta = '';
 
@@ -70,7 +72,9 @@ export function useDataViewEntryEditing({
         const original = originalEntries.find(e => e.id === selectedId);
         if (original) {
             const props = { ...original.properties };
-            if (props.Description === undefined) props.Description = '';
+            if (props.Personality === undefined) props.Personality = '';
+            if (props.Scenario === undefined) props.Scenario = '';
+            if (props['Example Dialogs'] === undefined) props['Example Dialogs'] = '';
             if (props.Keywords === undefined) props.Keywords = [];
             if (props.Meta === undefined) props.Meta = '';
 

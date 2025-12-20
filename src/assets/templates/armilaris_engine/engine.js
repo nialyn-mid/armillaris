@@ -50,10 +50,26 @@ function getProps(nodeIdx) {
             key === "label" || key === "type" || key === "attribute" ||
             key === "message_user_type" || key === "deduplicate" ||
             key === "attribute_name" || key.indexOf("value_") === 0 ||
-            key.indexOf("attribute_") === 0
+            key.indexOf("attribute_") === 0 ||
+            key.indexOf("mapping_") === 0 ||
+            key.indexOf("input_") === 0 ||
+            key.indexOf("output_") === 0
         );
         if (typeof val === 'number' && val >= 0 && val < behaviorStrings.length && isStringKey) {
             p[key] = getBStr(val);
+        } else if (val !== null && typeof val === 'object' && !Array.isArray(val)) {
+            // Recursively resolve object properties
+            var sub = {};
+            for (var sk in val) {
+                var sval = val[sk];
+                var isSubStringKey = (sk.indexOf("input_") === 0 || sk.indexOf("output_") === 0 || sk.indexOf("value_") === 0);
+                if (typeof sval === 'number' && sval >= 0 && sval < behaviorStrings.length && isSubStringKey) {
+                    sub[sk] = getBStr(sval);
+                } else {
+                    sub[sk] = sval;
+                }
+            }
+            p[key] = sub;
         } else {
             p[key] = val;
         }
@@ -548,20 +564,47 @@ function executeNode(nodeIdx, portIdx) {
                 result = [];
                 for (var i = 0; i < values.length; i++) {
                     var v = values[i];
-                    var mapped = null;
-                    // Check each mapping block
-                    for (var m = 0; m < maps.length; m++) {
-                        var mapObj = maps[m];
-                        // In each block, check input_1/output_1, input_2/output_2...
-                        for (var k = 1; k <= 20; k++) { // Rough limit for expandable
-                            if (mapObj["input_" + k] == v) {
-                                mapped = mapObj["output_" + k];
-                                break;
+                    var vStr = String(v);
+
+                    for (var key in props) {
+                        if (key.indexOf("mapping_") === 0) {
+                            var mapObj = props[key];
+                            var m = key.substring(8); // mapping index
+
+                            var isMatch = false;
+
+                            // 1. Check dynamic input port
+                            var dynamicKeys = resolveInput(nodeIdx, key);
+                            if (dynamicKeys && dynamicKeys !== mapObj) { // Ensure it's not returning the property block itself
+                                if (Array.isArray(dynamicKeys)) {
+                                    for (var dk = 0; dk < dynamicKeys.length; dk++) {
+                                        if (String(dynamicKeys[dk]) === vStr) {
+                                            isMatch = true;
+                                            break;
+                                        }
+                                    }
+                                } else if (String(dynamicKeys) === vStr) {
+                                    isMatch = true;
+                                }
+                            }
+
+                            // 2. Check static keys from properties
+                            if (!isMatch) {
+                                for (var k = 0; k <= 100; k++) {
+                                    if (mapObj.hasOwnProperty("input_" + k) && String(mapObj["input_" + k]) === vStr) {
+                                        isMatch = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (isMatch) {
+                                if (mapObj.hasOwnProperty("output_" + m)) {
+                                    result.push(mapObj["output_" + m]);
+                                }
                             }
                         }
-                        if (mapped !== null) break;
                     }
-                    result.push(mapped !== null ? mapped : v);
                 }
                 if (!portName) portName = "outputs";
             } else if (label.indexOf("sort messages") !== -1 || type === "SortMessages") {
@@ -649,14 +692,23 @@ var activatedEntryIds = [];
 if (rootIdx !== -1) {
     var finalEntries = executeNode(rootIdx, behaviorStrings.indexOf("entries")) || [];
     dlog("Final Activated Entries: " + finalEntries.length);
-    var descriptions = [];
+
+    var personalities = [];
+    var scenarios = [];
+    var exampleDialogsArr = [];
+
     for (var i = 0; i < finalEntries.length; i++) {
         var entry = finalEntries[i];
         if (entry.id) activatedEntryIds.push(entry.id);
         var ep = getEntryProps(entry);
-        if (ep.Description) descriptions.push(ep.Description);
+        if (ep.Personality) personalities.push(ep.Personality);
+        if (ep.Scenario) scenarios.push(ep.Scenario);
+        if (ep['Example Dialogs']) exampleDialogsArr.push(ep['Example Dialogs']);
     }
-    context.character.personality = descriptions.join("\n\n");
+
+    context.character.personality = personalities.join("\n\n");
+    context.character.scenario = scenarios.join("\n\n");
+    context.character.example_dialogs = exampleDialogsArr.join("\n\n");
 }
 
 // 6. Highlight Formatting (Reverse order for ChatOverlay)
@@ -685,7 +737,9 @@ if (typeof context !== 'undefined') {
     context.activated_ids = activatedEntryIds;
     context.chat_highlights = formattedHighlights;
     context.debug_nodes = executed_uuids;
-    if (context.character) context.character.scenario = "--- DEBUG TRACE ---\n" + dtrace.join("\n");
+    if (context.character) {
+        // Trace logic removed as requested by user to keep actual scenario data
+    }
 }
 if (typeof activated_ids !== 'undefined') activated_ids = activatedEntryIds;
 if (typeof chat_highlights !== 'undefined') chat_highlights = formattedHighlights;

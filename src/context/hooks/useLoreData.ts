@@ -19,7 +19,7 @@ export const useLoreData = (showNotification: (msg: string, type?: 'success' | '
             const props = map.get(meta)!;
 
             Object.entries(entry.properties).forEach(([key, value]) => {
-                if (['Meta', 'Description', 'Keywords'].includes(key)) return;
+                if (['Meta', 'Personality', 'Scenario', 'Example Dialogs', 'Keywords'].includes(key)) return;
 
                 const currentType = props.get(key);
 
@@ -75,7 +75,9 @@ export const useLoreData = (showNotification: (msg: string, type?: 'success' | '
             label: 'New Entry',
             sourceType: 'manual',
             properties: {
-                Description: '',
+                Personality: '',
+                Scenario: '',
+                'Example Dialogs': '',
                 Keywords: [],
                 Meta: ''
             }

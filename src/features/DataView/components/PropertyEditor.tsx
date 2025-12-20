@@ -83,7 +83,9 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
 
     let fieldsToRender: { key: string, type?: MetaPropertyType | '', forced?: boolean }[] = [];
     fieldsToRender.push({ key: 'Meta', type: 'string', forced: true });
-    fieldsToRender.push({ key: 'Description', type: 'string', forced: true });
+    fieldsToRender.push({ key: 'Personality', type: 'string', forced: true });
+    fieldsToRender.push({ key: 'Scenario', type: 'string', forced: true });
+    fieldsToRender.push({ key: 'Example Dialogs', type: 'string', forced: true });
     fieldsToRender.push({ key: 'Keywords', type: 'list', forced: true });
 
     if (definition) {
@@ -92,7 +94,7 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
         });
     } else {
         Object.entries(properties).forEach(([key, val]) => {
-            if (['Meta', 'Description', 'Keywords'].includes(key)) return;
+            if (['Meta', 'Personality', 'Scenario', 'Example Dialogs', 'Keywords'].includes(key)) return;
             fieldsToRender.push({ key, type: Array.isArray(val) ? 'list' : 'string', forced: false });
         });
         fieldsToRender.sort((a, b) => {
@@ -105,8 +107,10 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
     fieldsToRender.sort((a, b) => {
         const getWeight = (k: string, t?: string) => {
             if (k === 'Meta') return 0;
-            if (k === 'Description') return 1;
-            if (k === 'Keywords') return 2;
+            if (k === 'Personality') return 1;
+            if (k === 'Scenario') return 2;
+            if (k === 'Example Dialogs') return 3;
+            if (k === 'Keywords') return 4;
             if (t === 'relation') return 100;
             return 50;
         };
@@ -169,7 +173,7 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
             );
         }
 
-        const isDescription = key === 'Description';
+        const isMultiline = ['Personality', 'Scenario', 'Example Dialogs'].includes(key);
         let isRelation = forcedType === 'relation';
         let isArray = forcedType === 'list';
         let isString = forcedType === 'string';
@@ -183,7 +187,7 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
             <div key={key} className="property-field">
                 <label className="property-field-label">{key}</label>
 
-                {isDescription ? (
+                {isMultiline ? (
                     <div className="description-editor-wrapper">
                         <HighlightedTextarea
                             value={(value || '').replace(/\\n/g, '\n')}

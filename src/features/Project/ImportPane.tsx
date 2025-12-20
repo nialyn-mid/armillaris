@@ -285,7 +285,9 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
                                     <div><strong>Name</strong> (Title): Display name for the entry.</div>
                                     <div><strong>Meta</strong> (Select): Category for the graph. Every DB should have the same Meta value for every entry.</div>
                                     <div><strong>Keywords</strong> (Text): Comma-separated search terms.</div>
-                                    <div><strong>Description</strong> (Text): Personality text.</div>
+                                    <div><strong>Personality</strong> (Text): Character personality traits.</div>
+                                    <div><strong>Scenario</strong> (Text): Current situation context.</div>
+                                    <div><strong>Example Dialogs</strong> (Text): Sample conversation snippets.</div>
                                     <div>(Optional) <i>Relation properties:</i> Two-way relations between databases, preferrably each column is named the same as the database it is related to (e.g. column named "location" in "object" database)</div>
                                     <div>(Optional) <i>Custom properties:</i> Any other columns requested by your engine.</div>
                                 </div>

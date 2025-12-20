@@ -6,7 +6,9 @@ export const tutorialEntries: LoreEntry[] = [
         label: 'Aria of the Frost',
         sourceType: 'manual',
         properties: {
-            Description: 'A mythical sword forged from eternal ice. It glows blue when danger is near.',
+            Personality: '',
+            Scenario: 'A mythical sword forged from eternal ice. It glows blue when danger is near.',
+            'Example Dialogs': '',
             Keywords: ['Aria', 'Aria of the Frost', 'The Frost-Sword', 'Aria blade'],
             Meta: 'object',
             location: 'tut-2', // Glacial Peak
@@ -18,7 +20,9 @@ export const tutorialEntries: LoreEntry[] = [
         label: 'Glacial Peak',
         sourceType: 'manual',
         properties: {
-            Description: 'The highest mountain in the northern wastes, home to ancient ice giants and hidden forges.',
+            Personality: '',
+            Scenario: 'The highest mountain in the northern wastes, home to ancient ice giants and hidden forges.',
+            'Example Dialogs': '',
             Keywords: ['Glacial Peak', 'Cloud-Piercer Summit', 'Great Frost Mountain'],
             Meta: 'location',
             location: ['tut-4'] // Frostfire Caverns
@@ -29,7 +33,9 @@ export const tutorialEntries: LoreEntry[] = [
         label: 'Fria the Cold',
         sourceType: 'manual',
         properties: {
-            Description: 'A renowed warrior-mage who mastered the art of cryomancy.',
+            Personality: 'A renowed warrior-mage who mastered the art of cryomancy.',
+            Scenario: '',
+            'Example Dialogs': '',
             Keywords: ['Fria', 'Fria the Cold', 'Mistress of Rime', 'Fria the Cryomancer'],
             Meta: 'character',
             location: 'tut-5', // Winterhaven
@@ -41,7 +47,9 @@ export const tutorialEntries: LoreEntry[] = [
         label: 'Frostfire Caverns',
         sourceType: 'manual',
         properties: {
-            Description: 'A rare geological wonder where subterranean lava meets ice-covered walls.',
+            Personality: '',
+            Scenario: 'A rare geological wonder where subterranean lava meets ice-covered walls.',
+            'Example Dialogs': '',
             Keywords: ['Frostfire Caverns', 'The Steam-Ice Caves', 'Hell-Freeze hollow'],
             Meta: 'location',
             location: 'tut-2' // Glacial Peak
@@ -52,7 +60,9 @@ export const tutorialEntries: LoreEntry[] = [
         label: 'Winterhaven',
         sourceType: 'manual',
         properties: {
-            Description: 'A bustling trade city built at the base of the northern mountains.',
+            Personality: '',
+            Scenario: 'A bustling trade city built at the base of the northern mountains.',
+            'Example Dialogs': '',
             Keywords: ['Winterhaven', 'The Northern Port', 'City of the Snow'],
             Meta: 'location',
             character: 'tut-3' // Elara the Cold (as a protector)
@@ -63,7 +73,9 @@ export const tutorialEntries: LoreEntry[] = [
         label: 'Circle of Frost',
         sourceType: 'manual',
         properties: {
-            Description: 'A secret society of mages dedicated to preserving the balance of ice magic.',
+            Personality: 'A secret society of mages dedicated to preserving the balance of ice magic.',
+            Scenario: '',
+            'Example Dialogs': '',
             Keywords: ['Circle of Frost', 'The Frozen Magi', 'Order of the Eternal Rime'],
             Meta: 'group',
             location: 'tut-5' // Winterhaven

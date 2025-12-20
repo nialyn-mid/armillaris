@@ -129,3 +129,7 @@ h3 {
 .driver-popover-navigation-btns button {
     text-shadow: none;
 }
+
+.driver-popover-footer button {
+    text-shadow: none !important;
+}

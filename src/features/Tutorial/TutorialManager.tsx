@@ -191,7 +191,7 @@ export const TutorialManager = () => {
                         element: '#graph-chat-input',
                         popover: {
                             title: 'Chat Sandbox',
-                            description: 'Try typing "The Frost" or "Hello" to see activation in action.',
+                            description: 'Try typing "Fria\'s location" to see activation in real time.',
                             side: "top",
                             align: 'start'
                         }

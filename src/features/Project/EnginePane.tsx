@@ -73,7 +73,7 @@ export default function EnginePane({ onClose }: EnginePaneProps) {
                     </div>
                 )}
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
-                    When enabled, dev_engine.js will be used for local testing and simulation instead of engine.js.
+                    Enables the provided dev_engine.js to provide supported Armillaris editor features.
                 </div>
             </div>
 
