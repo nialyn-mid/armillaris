@@ -20,24 +20,14 @@ try {
 var behaviorStrings = BEHAVIOR_DATA.s || [];
 var behaviorNodes = BEHAVIOR_DATA.n || [];
 var behaviorEdges = BEHAVIOR_DATA.e || [];
-var behaviorIds = BEHAVIOR_DATA.i || [];
 
 var dataStrings = ENTRY_DATA.s || [];
 var dataEntries = ENTRY_DATA.d || [];
 
-// Debug Instrumentation
-var dtrace = [];
-function dlog(msg) { dtrace.push(msg); }
-
-dlog("--- Engine Start ---");
-dlog("Behavior: Nodes=" + behaviorNodes.length + ", Edges=" + behaviorEdges.length);
-dlog("Data: Entries=" + dataEntries.length);
-
-// Helper: Safe string resolution
+// 3. Property Utilities
 function getBStr(idx) { return idx === -1 ? null : behaviorStrings[idx]; }
 function getDStr(idx) { return idx === -1 ? null : dataStrings[idx]; }
 
-// 3. Property Utilities
 function getProps(nodeIdx) {
     var node = behaviorNodes[nodeIdx];
     if (!node || !node[1]) return {};
@@ -96,27 +86,6 @@ function getEntryProps(entry) {
     return p;
 }
 
-function decompressJSON(val) {
-    if (val === null || typeof val !== 'object') return val;
-    if (Array.isArray(val)) {
-        return val.map(decompressJSON);
-    }
-    // Check if it looks like an entry { id, p, ... }
-    if (val.hasOwnProperty('id') && val.hasOwnProperty('p') && Array.isArray(val.p)) {
-        var props = getEntryProps(val);
-        var res = { id: val.id };
-        for (var key in props) res[key] = decompressJSON(props[key]);
-        return res;
-    }
-    // Generic object
-    var res = {};
-    for (var key in val) {
-        if (val.hasOwnProperty(key)) {
-            res[key] = decompressJSON(val[key]);
-        }
-    }
-    return res;
-}
 
 function compareValues(a, b, op) {
     switch (op) {
@@ -134,17 +103,7 @@ function compareValues(a, b, op) {
 
 // 4. Graph Execution Engine
 var memo = {};
-var executed_nodes = [];
-var rawHighlights = {}; // msgIndex -> [ { color, ranges: [[s,e]...] } ]
-var debug_ports = {}; // { nodeUUID: { portID: value } }
 var recursionStack = {};
-
-// Tag messages with original index for stable highlighting
-if (typeof context !== 'undefined' && context.chat && context.chat.last_messages) {
-    for (var i = 0; i < context.chat.last_messages.length; i++) {
-        context.chat.last_messages[i].__idx = i;
-    }
-}
 
 // Graph Adjacency Helpers
 var _entryGraph = null;
@@ -189,11 +148,6 @@ function buildEntryGraph() {
     return _entryGraph;
 }
 
-function addHighlight(msgIdx, color, start, end) {
-    if (!rawHighlights[msgIdx]) rawHighlights[msgIdx] = {};
-    if (!rawHighlights[msgIdx][color]) rawHighlights[msgIdx][color] = [];
-    rawHighlights[msgIdx][color].push([start, end]);
-}
 
 function getIncomingEdges(nodeIdx, targetPortIdx) {
     var edges = [];
@@ -229,7 +183,7 @@ function executeNode(nodeIdx, portIdx) {
     if (recursionStack[nodeIdx]) {
         if (typeof context !== 'undefined') {
             if (!context.warnings) context.warnings = [];
-            var msg = "Cycle detected at node " + behaviorIds[nodeIdx];
+            var msg = "Cycle detected at node " + nodeIdx;
             if (context.warnings.indexOf(msg) === -1) context.warnings.push(msg);
         }
         return null;
@@ -248,7 +202,6 @@ function executeNode(nodeIdx, portIdx) {
         return null;
     }
 
-    var nodeUuid = behaviorIds[nodeIdx];
     var portName = (portIdx === -1) ? null : getBStr(portIdx);
 
     // Fallback for root execution or null ports
@@ -347,8 +300,6 @@ function executeNode(nodeIdx, portIdx) {
                                 entryMatched = true;
                                 matchesInThisMsg++;
 
-                                addHighlight(msg.__idx !== undefined ? msg.__idx : m, "#58a6ff", match.index, match.index + match[0].length);
-
                                 if (matchLimit > 0 && matchesInThisMsg >= matchLimit) break;
                                 if (re.lastIndex === match.index) re.lastIndex++;
                             }
@@ -405,7 +356,6 @@ function executeNode(nodeIdx, portIdx) {
                         while ((match = re.exec(msgStr)) !== null) {
                             msgMatch = true;
                             globalMatchedConds[cond] = true;
-                            addHighlight(msg.__idx !== undefined ? msg.__idx : m, "#d2a8ff", match.index, match.index + match[0].length);
                             if (re.lastIndex === match.index) re.lastIndex++;
                         }
                     }
@@ -664,17 +614,6 @@ function executeNode(nodeIdx, portIdx) {
 
     memo[cacheKey] = result;
 
-    if (nodeUuid) {
-        if (!debug_ports[nodeUuid]) debug_ports[nodeUuid] = {};
-        debug_ports[nodeUuid][portName] = decompressJSON(result);
-    }
-
-    // Only glow if the node produced something useful (non-falsy, non-empty list)
-    var isUseful = result && (!Array.isArray(result) || result.length > 0);
-    if (isUseful && nodeIdx !== -1 && executed_nodes.indexOf(nodeIdx) === -1) {
-        executed_nodes.push(nodeIdx);
-    }
-
     recursionStack[nodeIdx] = false;
     return result;
 }
@@ -687,11 +626,9 @@ for (var i = 0; i < behaviorNodes.length; i++) {
 }
 
 
-var activatedEntryIds = [];
 
 if (rootIdx !== -1) {
     var finalEntries = executeNode(rootIdx, behaviorStrings.indexOf("entries")) || [];
-    dlog("Final Activated Entries: " + finalEntries.length);
 
     var personalities = [];
     var scenarios = [];
@@ -699,7 +636,6 @@ if (rootIdx !== -1) {
 
     for (var i = 0; i < finalEntries.length; i++) {
         var entry = finalEntries[i];
-        if (entry.id) activatedEntryIds.push(entry.id);
         var ep = getEntryProps(entry);
         if (ep.Personality) personalities.push(ep.Personality);
         if (ep.Scenario) scenarios.push(ep.Scenario);
@@ -710,42 +646,3 @@ if (rootIdx !== -1) {
     context.character.scenario = scenarios.join("\n\n");
     context.character.example_dialogs = exampleDialogsArr.join("\n\n");
 }
-
-// 6. Highlight Formatting (Reverse order for ChatOverlay)
-var totalMsgs = (context.chat && context.chat.last_messages) ? context.chat.last_messages.length : 0;
-var formattedHighlights = [];
-
-for (var i = totalMsgs - 1; i >= 0; i--) {
-    var msgHighlights = [];
-    if (rawHighlights[i]) {
-        for (var color in rawHighlights[i]) {
-            msgHighlights.push({ color: color, ranges: rawHighlights[i][color] });
-        }
-    }
-    formattedHighlights.push(msgHighlights);
-}
-
-// 6. Export Results
-var executed_uuids = executed_nodes.map(function (idx) {
-    return behaviorIds[idx];
-});
-
-// 7. Highlighting Export
-dlog("Highlights Exported: " + activatedEntryIds.length + " entry(s)");
-
-if (typeof context !== 'undefined') {
-    context.activated_ids = activatedEntryIds;
-    context.chat_highlights = formattedHighlights;
-    context.debug_nodes = executed_uuids;
-    if (context.character) {
-        // Trace logic removed as requested by user to keep actual scenario data
-    }
-}
-if (typeof activated_ids !== 'undefined') activated_ids = activatedEntryIds;
-if (typeof chat_highlights !== 'undefined') chat_highlights = formattedHighlights;
-if (typeof debug_nodes !== 'undefined') debug_nodes = executed_uuids;
-
-// For Electron host extractor
-var _activated_ids = activatedEntryIds;
-var _chat_highlights = formattedHighlights;
-var _debug_nodes = executed_uuids;
