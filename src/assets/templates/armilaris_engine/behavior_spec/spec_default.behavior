@@ -25,7 +25,8 @@
           "properties": []
         },
         "values": {},
-        "categoryColor": "#0078d4"
+        "categoryColor": "#0078d4",
+        "pathPrefix": ""
       },
       "width": 220,
       "height": 84,
@@ -41,7 +42,7 @@
       "type": "custom",
       "position": {
         "x": 567.4340439911886,
-        "y": -206.78396888696227
+        "y": -205.2682523204519
       },
       "data": {
         "label": "Keyword Filter",
@@ -136,16 +137,18 @@
           ]
         },
         "values": {
-          "case_sensitive": false
+          "case_sensitive": false,
+          "match_limit": "1"
         },
-        "categoryColor": "#8e44ad"
+        "categoryColor": "#8e44ad",
+        "pathPrefix": ""
       },
       "width": 220,
       "height": 466,
       "selected": false,
       "positionAbsolute": {
         "x": 567.4340439911886,
-        "y": -206.78396888696227
+        "y": -205.2682523204519
       },
       "dragging": false
     },
@@ -173,7 +176,8 @@
           "properties": []
         },
         "values": {},
-        "categoryColor": "#d83b01"
+        "categoryColor": "#d83b01",
+        "pathPrefix": ""
       },
       "width": 220,
       "height": 84,
@@ -189,7 +193,7 @@
       "type": "custom",
       "position": {
         "x": 1401.7540959003343,
-        "y": -554.4721558619814
+        "y": -552.4721558619815
       },
       "data": {
         "label": "Entry Filter",
@@ -295,14 +299,15 @@
         "values": {
           "attribute_name": "Meta"
         },
-        "categoryColor": "#8e44ad"
+        "categoryColor": "#8e44ad",
+        "pathPrefix": ""
       },
       "width": 220,
       "height": 376,
       "selected": false,
       "positionAbsolute": {
         "x": 1401.7540959003343,
-        "y": -554.4721558619814
+        "y": -552.4721558619815
       },
       "dragging": false
     },
@@ -311,7 +316,7 @@
       "type": "custom",
       "position": {
         "x": 564.1184494309852,
-        "y": -623.8281042829951
+        "y": -635.175872315642
       },
       "data": {
         "label": "Message Filter",
@@ -396,93 +401,17 @@
           ]
         },
         "values": {
-          "wordbreak_sensitive": false
+          "wordbreak_sensitive": true
         },
-        "categoryColor": "#8e44ad"
+        "categoryColor": "#8e44ad",
+        "pathPrefix": ""
       },
       "width": 220,
       "height": 384,
       "selected": false,
       "positionAbsolute": {
         "x": 564.1184494309852,
-        "y": -623.8281042829951
-      },
-      "dragging": false
-    },
-    {
-      "id": "c2c7397d-a036-408b-874a-0f824961a554",
-      "type": "custom",
-      "position": {
-        "x": 829.9277781823112,
-        "y": -759.6379107922421
-      },
-      "data": {
-        "label": "Value Map",
-        "def": {
-          "type": "DataUtility",
-          "label": "Value Map",
-          "category": "Utility",
-          "description": "Map values from one list to another.",
-          "inputs": {
-            "values": {
-              "label": "Values",
-              "type": "Value List"
-            },
-            "$for": "node.mappings",
-            "$item": {
-              "id": "mapping_{{_value}}",
-              "label": "Mapping {{_value}}",
-              "type": "Value List"
-            }
-          },
-          "outputs": [
-            {
-              "id": "outputs",
-              "label": "Outputs",
-              "type": "Value List"
-            }
-          ],
-          "properties": {
-            "$for": "node.mappings",
-            "$item": {
-              "name": "mapping_{{_value}}",
-              "label": "Mapping {{_value}}",
-              "type": "Property Block",
-              "content": {
-                "$for": "inputs",
-                "$item": {
-                  "name": "input_{{_value}}",
-                  "label": "Input {{_value}}",
-                  "type": "Value"
-                },
-                "output_{{_value}}": {
-                  "label": "Output {{_value}}",
-                  "type": "Value"
-                }
-              }
-            }
-          }
-        },
-        "values": {
-          "_mappings": [
-            0,
-            1
-          ],
-          "mapping_0": {
-            "output_0": "history"
-          },
-          "mapping_1": {
-            "output_1": "object"
-          }
-        },
-        "categoryColor": "#607d8b"
-      },
-      "width": 529,
-      "height": 241,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 829.9277781823112,
-        "y": -759.6379107922421
+        "y": -635.175872315642
       },
       "dragging": false
     },
@@ -528,8 +457,11 @@
             }
           ]
         },
-        "values": {},
-        "categoryColor": "#16a085"
+        "values": {
+          "distance": "1"
+        },
+        "categoryColor": "#16a085",
+        "pathPrefix": ""
       },
       "width": 220,
       "height": 205,
@@ -544,8 +476,8 @@
       "id": "2092b993-df98-42df-9d6c-a4f92d33c3e3",
       "type": "Group",
       "position": {
-        "x": 246.6426048475014,
-        "y": -812.3022424985329
+        "x": 264.83120364562615,
+        "y": -913.8552524547295
       },
       "style": {
         "width": 220,
@@ -565,18 +497,28 @@
         "inputs": [],
         "outputs": [
           {
-            "id": "28ff91c4-acfa-4e30-98fa-4f7553dc30d3",
-            "label": "history keywords",
+            "id": "907eef74-db38-4275-8b0f-b1e6fd19d0fa",
+            "label": "all meta keywords",
             "type": "Value List"
           },
           {
-            "id": "12b3e1cb-3055-4244-83d6-c63145537832",
+            "id": "out_1766209632816",
             "label": "object keywords",
             "type": "Value List"
           },
           {
-            "id": "907eef74-db38-4275-8b0f-b1e6fd19d0fa",
-            "label": "all meta keywords",
+            "id": "out_1766209636356",
+            "label": "history keywords",
+            "type": "Value List"
+          },
+          {
+            "id": "out_1766209638914",
+            "label": "group keywords",
+            "type": "Value List"
+          },
+          {
+            "id": "out_1766209641332",
+            "label": "location keywords",
             "type": "Value List"
           }
         ],
@@ -586,19 +528,20 @@
               "id": "33ea81a6-1d93-4b33-901b-5b23381d71f6",
               "type": "GroupInput",
               "position": {
-                "x": -847.6124431911193,
-                "y": 423.37637194148124
+                "x": -1046.2459001833536,
+                "y": -47.84365998966405
               },
               "data": {
                 "label": "Input",
-                "ports": []
+                "ports": [],
+                "pathPrefix": "2092b993-df98-42df-9d6c-a4f92d33c3e3"
               },
               "selected": false,
               "width": 150,
               "height": 79,
               "positionAbsolute": {
-                "x": -847.6124431911193,
-                "y": 423.37637194148124
+                "x": -1046.2459001833536,
+                "y": -47.84365998966405
               },
               "dragging": false
             },
@@ -613,26 +556,37 @@
                 "label": "Output",
                 "ports": [
                   {
-                    "id": "28ff91c4-acfa-4e30-98fa-4f7553dc30d3",
-                    "label": "history keywords",
+                    "id": "907eef74-db38-4275-8b0f-b1e6fd19d0fa",
+                    "label": "all meta keywords",
                     "type": "Value List"
                   },
                   {
-                    "id": "12b3e1cb-3055-4244-83d6-c63145537832",
+                    "id": "out_1766209632816",
                     "label": "object keywords",
                     "type": "Value List"
                   },
                   {
-                    "id": "907eef74-db38-4275-8b0f-b1e6fd19d0fa",
-                    "label": "all meta keywords",
+                    "id": "out_1766209636356",
+                    "label": "history keywords",
+                    "type": "Value List"
+                  },
+                  {
+                    "id": "out_1766209638914",
+                    "label": "group keywords",
+                    "type": "Value List"
+                  },
+                  {
+                    "id": "out_1766209641332",
+                    "label": "location keywords",
                     "type": "Value List"
                   }
                 ],
-                "values": {}
+                "values": {},
+                "pathPrefix": "2092b993-df98-42df-9d6c-a4f92d33c3e3"
               },
               "selected": false,
               "width": 199,
-              "height": 169,
+              "height": 229,
               "positionAbsolute": {
                 "x": 389.5052568893467,
                 "y": 429.01657026546195
@@ -643,8 +597,8 @@
               "id": "4abbaa52-2927-4ef1-ba37-5e4600bbe525",
               "type": "custom",
               "position": {
-                "x": -401.21009566221375,
-                "y": 199.1282825226051
+                "x": -799.8435526544482,
+                "y": 177.9082505914596
               },
               "data": {
                 "label": "Custom Value List Input",
@@ -707,19 +661,22 @@
                   "value_0": "history",
                   "_expandable_properties": [
                     0,
-                    1
+                    1,
+                    2
                   ],
-                  "value_1": "past"
+                  "value_1": "past",
+                  "value_2": "era"
                 },
                 "categoryColor": "#0078d4",
-                "isDragTarget": false
+                "isDragTarget": false,
+                "pathPrefix": "2092b993-df98-42df-9d6c-a4f92d33c3e3"
               },
               "width": 220,
-              "height": 298,
+              "height": 376,
               "selected": false,
               "positionAbsolute": {
-                "x": -401.21009566221375,
-                "y": 199.1282825226051
+                "x": -799.8435526544482,
+                "y": 177.9082505914596
               },
               "dragging": false
             },
@@ -727,8 +684,8 @@
               "id": "3af43049-092d-4b4c-9967-ed96db9dd7dc",
               "type": "custom",
               "position": {
-                "x": -647.4588838164165,
-                "y": 238.40748231015993
+                "x": -1046.092340808651,
+                "y": 217.18745037901442
               },
               "data": {
                 "label": "Custom Value List Input",
@@ -791,19 +748,22 @@
                   "value_0": "object",
                   "_expandable_properties": [
                     0,
-                    1
+                    1,
+                    2
                   ],
-                  "value_1": "item"
+                  "value_1": "item",
+                  "value_2": "thing"
                 },
                 "categoryColor": "#0078d4",
-                "isDragTarget": false
+                "isDragTarget": false,
+                "pathPrefix": "2092b993-df98-42df-9d6c-a4f92d33c3e3"
               },
               "width": 220,
-              "height": 298,
+              "height": 376,
               "selected": false,
               "positionAbsolute": {
-                "x": -647.4588838164165,
-                "y": 238.40748231015993
+                "x": -1046.092340808651,
+                "y": 217.18745037901442
               },
               "dragging": false
             },
@@ -880,7 +840,9 @@
                   "_expandable_inputs": [
                     0,
                     1,
-                    2
+                    2,
+                    3,
+                    4
                   ]
                 },
                 "inputs": [
@@ -893,6 +855,16 @@
                     "id": "list_1",
                     "label": "List {{_value}}",
                     "type": "Value List"
+                  },
+                  {
+                    "id": "list_2",
+                    "label": "List {{_value}}",
+                    "type": "Value List"
+                  },
+                  {
+                    "id": "list_3",
+                    "label": "List {{_value}}",
+                    "type": "Value List"
                   }
                 ],
                 "outputs": [
@@ -901,14 +873,187 @@
                     "label": "Joined List",
                     "type": "Value List"
                   }
-                ]
+                ],
+                "pathPrefix": "2092b993-df98-42df-9d6c-a4f92d33c3e3"
               },
               "width": 220,
-              "height": 187,
-              "selected": true,
+              "height": 303,
+              "selected": false,
               "positionAbsolute": {
                 "x": 26.032502375855188,
                 "y": 543.8045176154224
+              },
+              "dragging": false
+            },
+            {
+              "id": "26b41e4b-ca63-4c5b-9983-d97d89afc388",
+              "type": "custom",
+              "position": {
+                "x": -552.4628041673351,
+                "y": 120.59811838354221
+              },
+              "data": {
+                "label": "Custom Value List Input",
+                "def": {
+                  "type": "InputSource",
+                  "label": "Custom Value List Input",
+                  "category": "Input",
+                  "description": "Create a custom value list by defining the type and values.",
+                  "inputs": [
+                    {
+                      "id": "type",
+                      "label": "Type",
+                      "type": "String"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "values",
+                      "label": "Values",
+                      "type": "Value List"
+                    }
+                  ],
+                  "properties": {
+                    "value_type": {
+                      "label": "Value Type",
+                      "type": "select",
+                      "options": [
+                        {
+                          "value": "String",
+                          "label": "String"
+                        },
+                        {
+                          "value": "Number",
+                          "label": "Number"
+                        },
+                        {
+                          "value": "Boolean",
+                          "label": "Boolean"
+                        },
+                        {
+                          "value": "Date",
+                          "label": "Date"
+                        },
+                        {
+                          "value": "String List",
+                          "label": "String List"
+                        }
+                      ],
+                      "default": "String"
+                    },
+                    "$for": "node.expandable_properties",
+                    "$item": {
+                      "name": "value_{{_value}}",
+                      "label": "Value {{_value}}",
+                      "type": "Value"
+                    }
+                  }
+                },
+                "categoryColor": "#0078d4",
+                "values": {
+                  "value_0": "group",
+                  "_expandable_properties": [
+                    0,
+                    1,
+                    2
+                  ],
+                  "value_1": "faction",
+                  "value_2": "society"
+                },
+                "pathPrefix": "2092b993-df98-42df-9d6c-a4f92d33c3e3"
+              },
+              "width": 220,
+              "height": 376,
+              "selected": false,
+              "positionAbsolute": {
+                "x": -552.4628041673351,
+                "y": 120.59811838354221
+              },
+              "dragging": false
+            },
+            {
+              "id": "3c0f6b7a-b547-4e27-b07e-77978a4c26f4",
+              "type": "custom",
+              "position": {
+                "x": -305.4249701450823,
+                "y": 83.83865987797867
+              },
+              "data": {
+                "label": "Custom Value List Input",
+                "def": {
+                  "type": "InputSource",
+                  "label": "Custom Value List Input",
+                  "category": "Input",
+                  "description": "Create a custom value list by defining the type and values.",
+                  "inputs": [
+                    {
+                      "id": "type",
+                      "label": "Type",
+                      "type": "String"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "values",
+                      "label": "Values",
+                      "type": "Value List"
+                    }
+                  ],
+                  "properties": {
+                    "value_type": {
+                      "label": "Value Type",
+                      "type": "select",
+                      "options": [
+                        {
+                          "value": "String",
+                          "label": "String"
+                        },
+                        {
+                          "value": "Number",
+                          "label": "Number"
+                        },
+                        {
+                          "value": "Boolean",
+                          "label": "Boolean"
+                        },
+                        {
+                          "value": "Date",
+                          "label": "Date"
+                        },
+                        {
+                          "value": "String List",
+                          "label": "String List"
+                        }
+                      ],
+                      "default": "String"
+                    },
+                    "$for": "node.expandable_properties",
+                    "$item": {
+                      "name": "value_{{_value}}",
+                      "label": "Value {{_value}}",
+                      "type": "Value"
+                    }
+                  }
+                },
+                "categoryColor": "#0078d4",
+                "values": {
+                  "value_0": "location",
+                  "_expandable_properties": [
+                    0,
+                    1,
+                    2
+                  ],
+                  "value_1": "where",
+                  "value_2": "place"
+                },
+                "pathPrefix": "2092b993-df98-42df-9d6c-a4f92d33c3e3"
+              },
+              "width": 220,
+              "height": 376,
+              "selected": false,
+              "positionAbsolute": {
+                "x": -305.4249701450823,
+                "y": 83.83865987797867
               },
               "dragging": false
             }
@@ -919,28 +1064,32 @@
               "source": "4abbaa52-2927-4ef1-ba37-5e4600bbe525",
               "sourceHandle": "values",
               "target": "194ebfa6-e778-47ea-9f5a-bf442e57a0f3",
-              "targetHandle": "28ff91c4-acfa-4e30-98fa-4f7553dc30d3"
+              "targetHandle": "28ff91c4-acfa-4e30-98fa-4f7553dc30d3",
+              "selected": false
             },
             {
               "id": "428e9ce9-f10d-4953-bf47-cfdcd3ad5d97",
               "source": "3af43049-092d-4b4c-9967-ed96db9dd7dc",
               "sourceHandle": "values",
               "target": "194ebfa6-e778-47ea-9f5a-bf442e57a0f3",
-              "targetHandle": "12b3e1cb-3055-4244-83d6-c63145537832"
+              "targetHandle": "12b3e1cb-3055-4244-83d6-c63145537832",
+              "selected": false
             },
             {
               "source": "4abbaa52-2927-4ef1-ba37-5e4600bbe525",
               "sourceHandle": "values",
               "target": "83ee2ba3-d13f-41ab-a5b6-0453e42a7da3",
               "targetHandle": "list_0",
-              "id": "reactflow__edge-4abbaa52-2927-4ef1-ba37-5e4600bbe525values-83ee2ba3-d13f-41ab-a5b6-0453e42a7da3list_0"
+              "id": "reactflow__edge-4abbaa52-2927-4ef1-ba37-5e4600bbe525values-83ee2ba3-d13f-41ab-a5b6-0453e42a7da3list_0",
+              "selected": false
             },
             {
               "source": "3af43049-092d-4b4c-9967-ed96db9dd7dc",
               "sourceHandle": "values",
               "target": "83ee2ba3-d13f-41ab-a5b6-0453e42a7da3",
               "targetHandle": "list_1",
-              "id": "reactflow__edge-3af43049-092d-4b4c-9967-ed96db9dd7dcvalues-83ee2ba3-d13f-41ab-a5b6-0453e42a7da3list_1"
+              "id": "reactflow__edge-3af43049-092d-4b4c-9967-ed96db9dd7dcvalues-83ee2ba3-d13f-41ab-a5b6-0453e42a7da3list_1",
+              "selected": false
             },
             {
               "source": "83ee2ba3-d13f-41ab-a5b6-0453e42a7da3",
@@ -948,18 +1097,75 @@
               "target": "194ebfa6-e778-47ea-9f5a-bf442e57a0f3",
               "targetHandle": "907eef74-db38-4275-8b0f-b1e6fd19d0fa",
               "id": "reactflow__edge-83ee2ba3-d13f-41ab-a5b6-0453e42a7da3joined_list-194ebfa6-e778-47ea-9f5a-bf442e57a0f3907eef74-db38-4275-8b0f-b1e6fd19d0fa"
+            },
+            {
+              "source": "26b41e4b-ca63-4c5b-9983-d97d89afc388",
+              "sourceHandle": "values",
+              "target": "83ee2ba3-d13f-41ab-a5b6-0453e42a7da3",
+              "targetHandle": "list_2",
+              "id": "reactflow__edge-26b41e4b-ca63-4c5b-9983-d97d89afc388values-83ee2ba3-d13f-41ab-a5b6-0453e42a7da3list_2"
+            },
+            {
+              "source": "3c0f6b7a-b547-4e27-b07e-77978a4c26f4",
+              "sourceHandle": "values",
+              "target": "83ee2ba3-d13f-41ab-a5b6-0453e42a7da3",
+              "targetHandle": "list_3",
+              "id": "reactflow__edge-3c0f6b7a-b547-4e27-b07e-77978a4c26f4values-83ee2ba3-d13f-41ab-a5b6-0453e42a7da3list_3"
+            },
+            {
+              "source": "3c0f6b7a-b547-4e27-b07e-77978a4c26f4",
+              "sourceHandle": "values",
+              "target": "194ebfa6-e778-47ea-9f5a-bf442e57a0f3",
+              "targetHandle": "out_1766209617938",
+              "id": "reactflow__edge-3c0f6b7a-b547-4e27-b07e-77978a4c26f4values-194ebfa6-e778-47ea-9f5a-bf442e57a0f3out_1766209617938"
+            },
+            {
+              "source": "26b41e4b-ca63-4c5b-9983-d97d89afc388",
+              "sourceHandle": "values",
+              "target": "194ebfa6-e778-47ea-9f5a-bf442e57a0f3",
+              "targetHandle": "out_1766209624544",
+              "id": "reactflow__edge-26b41e4b-ca63-4c5b-9983-d97d89afc388values-194ebfa6-e778-47ea-9f5a-bf442e57a0f3out_1766209624544"
+            },
+            {
+              "source": "3af43049-092d-4b4c-9967-ed96db9dd7dc",
+              "sourceHandle": "values",
+              "target": "194ebfa6-e778-47ea-9f5a-bf442e57a0f3",
+              "targetHandle": "out_1766209632816",
+              "id": "reactflow__edge-3af43049-092d-4b4c-9967-ed96db9dd7dcvalues-194ebfa6-e778-47ea-9f5a-bf442e57a0f3out_1766209632816"
+            },
+            {
+              "source": "4abbaa52-2927-4ef1-ba37-5e4600bbe525",
+              "sourceHandle": "values",
+              "target": "194ebfa6-e778-47ea-9f5a-bf442e57a0f3",
+              "targetHandle": "out_1766209636356",
+              "id": "reactflow__edge-4abbaa52-2927-4ef1-ba37-5e4600bbe525values-194ebfa6-e778-47ea-9f5a-bf442e57a0f3out_1766209636356"
+            },
+            {
+              "source": "26b41e4b-ca63-4c5b-9983-d97d89afc388",
+              "sourceHandle": "values",
+              "target": "194ebfa6-e778-47ea-9f5a-bf442e57a0f3",
+              "targetHandle": "out_1766209638914",
+              "id": "reactflow__edge-26b41e4b-ca63-4c5b-9983-d97d89afc388values-194ebfa6-e778-47ea-9f5a-bf442e57a0f3out_1766209638914"
+            },
+            {
+              "source": "3c0f6b7a-b547-4e27-b07e-77978a4c26f4",
+              "sourceHandle": "values",
+              "target": "194ebfa6-e778-47ea-9f5a-bf442e57a0f3",
+              "targetHandle": "out_1766209641332",
+              "id": "reactflow__edge-3c0f6b7a-b547-4e27-b07e-77978a4c26f4values-194ebfa6-e778-47ea-9f5a-bf442e57a0f3out_1766209641332"
             }
           ]
         },
         "color": "#b366ff",
-        "isDragTarget": false
+        "isDragTarget": false,
+        "pathPrefix": ""
       },
       "width": 220,
       "height": 100,
       "selected": false,
       "positionAbsolute": {
-        "x": 246.6426048475014,
-        "y": -812.3022424985329
+        "x": 264.83120364562615,
+        "y": -913.8552524547295
       },
       "dragging": false
     },
@@ -967,8 +1173,8 @@
       "id": "d8250b8a-f2f7-4417-8a4a-8b97e274c81d",
       "type": "Group",
       "position": {
-        "x": 250.5840539896887,
-        "y": -499.8374208983091
+        "x": 243.98651443582423,
+        "y": -495.87889716599045
       },
       "style": {
         "width": 220,
@@ -1004,7 +1210,8 @@
               },
               "data": {
                 "label": "Input",
-                "ports": []
+                "ports": [],
+                "pathPrefix": "d8250b8a-f2f7-4417-8a4a-8b97e274c81d"
               },
               "width": 150,
               "height": 79,
@@ -1031,152 +1238,18 @@
                     "type": "Message List"
                   }
                 ],
-                "values": {}
+                "values": {},
+                "pathPrefix": "d8250b8a-f2f7-4417-8a4a-8b97e274c81d"
               },
               "width": 199,
               "height": 109
             },
             {
-              "id": "553e7cfd-5544-4c89-9bb2-f448888e02f9",
-              "type": "custom",
-              "position": {
-                "x": -473.7830963263951,
-                "y": -13.302885615091213
-              },
-              "data": {
-                "label": "Input Chat",
-                "def": {
-                  "type": "InputSource",
-                  "label": "Input Chat",
-                  "category": "Input",
-                  "description": "All chat fields provided by the system.",
-                  "inputs": [],
-                  "outputs": [
-                    {
-                      "id": "last_message",
-                      "label": "Last Message",
-                      "type": "String"
-                    },
-                    {
-                      "id": "last_messages",
-                      "label": "Message History",
-                      "type": "Message List"
-                    },
-                    {
-                      "id": "first_message_date",
-                      "label": "First Message Date",
-                      "type": "Date"
-                    },
-                    {
-                      "id": "last_bot_message_date",
-                      "label": "Last Bot Message Date",
-                      "type": "Date"
-                    },
-                    {
-                      "id": "message_count",
-                      "label": "Message Count",
-                      "type": "Number"
-                    },
-                    {
-                      "id": "contextLength",
-                      "label": "Context Length",
-                      "type": "Number"
-                    },
-                    {
-                      "id": "user_name",
-                      "label": "User Name",
-                      "type": "String"
-                    },
-                    {
-                      "id": "persona_name",
-                      "label": "Persona Name",
-                      "type": "String"
-                    }
-                  ],
-                  "properties": []
-                },
-                "values": {},
-                "categoryColor": "#0078d4",
-                "isDragTarget": false
-              },
-              "width": 220,
-              "height": 308,
-              "selected": false,
-              "positionAbsolute": {
-                "x": -614.9051813906949,
-                "y": -556.7908440032876
-              },
-              "dragging": false
-            },
-            {
-              "id": "25be099e-648f-4191-bce9-27c68fdd3861",
-              "type": "custom",
-              "position": {
-                "x": -216.94258841624585,
-                "y": 1.6856706021060859
-              },
-              "data": {
-                "label": "Sort Messages",
-                "def": {
-                  "type": "DataUtility",
-                  "label": "Sort Messages",
-                  "category": "Utility",
-                  "description": "Sort messages based on a chosen method.",
-                  "inputs": [
-                    {
-                      "id": "messages",
-                      "label": "Messages",
-                      "type": "Message List"
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "id": "sorted_messages",
-                      "label": "Sorted Messages",
-                      "type": "Message List"
-                    },
-                    {
-                      "id": "inverse_sorted_messages",
-                      "label": "Inverse Sorted Messages",
-                      "type": "Message List"
-                    }
-                  ],
-                  "properties": [
-                    {
-                      "name": "sort_by",
-                      "label": "Sort By",
-                      "type": "select",
-                      "options": [
-                        {
-                          "value": "date",
-                          "label": "Date"
-                        },
-                        {
-                          "value": "random",
-                          "label": "Random"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "categoryColor": "#607d8b",
-                "values": {}
-              },
-              "width": 220,
-              "height": 207,
-              "selected": false,
-              "positionAbsolute": {
-                "x": -216.94258841624585,
-                "y": 1.6856706021060859
-              },
-              "dragging": false
-            },
-            {
               "id": "691565aa-f1b4-4973-8e98-8adea399040e",
               "type": "custom",
               "position": {
-                "x": 117.11951853717937,
-                "y": 8.474127518604632
+                "x": 116.98043351143241,
+                "y": 2.027516581308646
               },
               "data": {
                 "label": "List Filter",
@@ -1247,33 +1320,156 @@
                     "label": "Output List",
                     "type": "Message List"
                   }
-                ]
+                ],
+                "pathPrefix": "d8250b8a-f2f7-4417-8a4a-8b97e274c81d"
               },
               "width": 220,
               "height": 263,
-              "selected": true,
+              "selected": false,
               "positionAbsolute": {
-                "x": 117.11951853717937,
-                "y": 8.474127518604632
+                "x": 116.98043351143241,
+                "y": 2.027516581308646
+              },
+              "dragging": false
+            },
+            {
+              "id": "8ea61fa1-da69-4458-bdce-ae80af217e89",
+              "type": "custom",
+              "position": {
+                "x": -495.362977633052,
+                "y": -49.079775712961236
+              },
+              "data": {
+                "label": "Input Chat",
+                "def": {
+                  "type": "InputSource",
+                  "label": "Input Chat",
+                  "category": "Input",
+                  "description": "All chat fields provided by the system.",
+                  "inputs": [],
+                  "outputs": [
+                    {
+                      "id": "last_message",
+                      "label": "Last Message",
+                      "type": "String"
+                    },
+                    {
+                      "id": "last_messages",
+                      "label": "Message History",
+                      "type": "Message List"
+                    },
+                    {
+                      "id": "first_message_date",
+                      "label": "First Message Date",
+                      "type": "Date"
+                    },
+                    {
+                      "id": "last_bot_message_date",
+                      "label": "Last Bot Message Date",
+                      "type": "Date"
+                    },
+                    {
+                      "id": "message_count",
+                      "label": "Message Count",
+                      "type": "Number"
+                    },
+                    {
+                      "id": "contextLength",
+                      "label": "Context Length",
+                      "type": "Number"
+                    },
+                    {
+                      "id": "user_name",
+                      "label": "User Name",
+                      "type": "String"
+                    },
+                    {
+                      "id": "persona_name",
+                      "label": "Persona Name",
+                      "type": "String"
+                    }
+                  ],
+                  "properties": []
+                },
+                "categoryColor": "#0078d4",
+                "values": {},
+                "pathPrefix": "d8250b8a-f2f7-4417-8a4a-8b97e274c81d"
+              },
+              "width": 220,
+              "height": 308,
+              "selected": false,
+              "positionAbsolute": {
+                "x": -495.362977633052,
+                "y": -49.079775712961236
+              },
+              "dragging": false
+            },
+            {
+              "id": "6b323107-436f-40ed-b968-d935ae683784",
+              "type": "custom",
+              "position": {
+                "x": -232.1263643601334,
+                "y": 22.556275515002085
+              },
+              "data": {
+                "label": "Sort Messages",
+                "def": {
+                  "type": "DataUtility",
+                  "label": "Sort Messages",
+                  "category": "Utility",
+                  "description": "Sort messages based on a chosen method.",
+                  "inputs": [
+                    {
+                      "id": "messages",
+                      "label": "Messages",
+                      "type": "Message List"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "sorted_messages",
+                      "label": "Sorted Messages",
+                      "type": "Message List"
+                    },
+                    {
+                      "id": "inverse_sorted_messages",
+                      "label": "Inverse Sorted Messages",
+                      "type": "Message List"
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "sort_by",
+                      "label": "Sort By",
+                      "type": "select",
+                      "options": [
+                        {
+                          "value": "date",
+                          "label": "Date (Recent First)"
+                        },
+                        {
+                          "value": "random",
+                          "label": "Random"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "categoryColor": "#607d8b",
+                "values": {},
+                "pathPrefix": "d8250b8a-f2f7-4417-8a4a-8b97e274c81d"
+              },
+              "width": 220,
+              "height": 207,
+              "selected": false,
+              "positionAbsolute": {
+                "x": -232.1263643601334,
+                "y": 22.556275515002085
               },
               "dragging": false
             }
           ],
           "edges": [
-            {
-              "source": "553e7cfd-5544-4c89-9bb2-f448888e02f9",
-              "sourceHandle": "last_messages",
-              "target": "25be099e-648f-4191-bce9-27c68fdd3861",
-              "targetHandle": "messages",
-              "id": "reactflow__edge-553e7cfd-5544-4c89-9bb2-f448888e02f9last_messages-25be099e-648f-4191-bce9-27c68fdd3861messages"
-            },
-            {
-              "source": "25be099e-648f-4191-bce9-27c68fdd3861",
-              "sourceHandle": "sorted_messages",
-              "target": "691565aa-f1b4-4973-8e98-8adea399040e",
-              "targetHandle": "list_input",
-              "id": "reactflow__edge-25be099e-648f-4191-bce9-27c68fdd3861sorted_messages-691565aa-f1b4-4973-8e98-8adea399040elist_input"
-            },
             {
               "source": "691565aa-f1b4-4973-8e98-8adea399040e",
               "sourceHandle": "list_output",
@@ -1287,18 +1483,33 @@
               "target": "end",
               "targetHandle": "out_1765967096328",
               "id": "reactflow__edge-691565aa-f1b4-4973-8e98-8adea399040elist_output-endout_1765967096328"
+            },
+            {
+              "source": "8ea61fa1-da69-4458-bdce-ae80af217e89",
+              "sourceHandle": "last_messages",
+              "target": "6b323107-436f-40ed-b968-d935ae683784",
+              "targetHandle": "messages",
+              "id": "reactflow__edge-8ea61fa1-da69-4458-bdce-ae80af217e89last_messages-6b323107-436f-40ed-b968-d935ae683784messages"
+            },
+            {
+              "source": "6b323107-436f-40ed-b968-d935ae683784",
+              "sourceHandle": "sorted_messages",
+              "target": "691565aa-f1b4-4973-8e98-8adea399040e",
+              "targetHandle": "list_input",
+              "id": "reactflow__edge-6b323107-436f-40ed-b968-d935ae683784sorted_messages-691565aa-f1b4-4973-8e98-8adea399040elist_input"
             }
           ]
         },
         "color": "#0773bb",
-        "isDragTarget": false
+        "isDragTarget": false,
+        "pathPrefix": ""
       },
       "width": 220,
       "height": 100,
       "selected": false,
       "positionAbsolute": {
-        "x": 250.5840539896887,
-        "y": -499.8374208983091
+        "x": 243.98651443582423,
+        "y": -495.87889716599045
       },
       "dragging": false
     },
@@ -1306,8 +1517,8 @@
       "id": "f16f32ae-7eb3-439c-94b1-c530d54bae2a",
       "type": "custom",
       "position": {
-        "x": 1651.6327880433616,
-        "y": -229.67180178262402
+        "x": 1655.078883108353,
+        "y": -200.95434290769822
       },
       "data": {
         "label": "Join List",
@@ -1376,7 +1587,8 @@
             0,
             1,
             2
-          ]
+          ],
+          "deduplicate": "first"
         },
         "inputs": [
           {
@@ -1388,6 +1600,11 @@
             "id": "list_1",
             "label": "List {{_value}}",
             "type": "Entry List"
+          },
+          {
+            "id": "list_2",
+            "label": "List {{_value}}",
+            "type": "Entry List"
           }
         ],
         "outputs": [
@@ -1396,67 +1613,112 @@
             "label": "Joined List",
             "type": "Entry List"
           }
-        ]
+        ],
+        "pathPrefix": ""
       },
       "width": 220,
       "height": 239,
-      "selected": true,
+      "selected": false,
       "positionAbsolute": {
-        "x": 1651.6327880433616,
-        "y": -229.67180178262402
+        "x": 1655.078883108353,
+        "y": -200.95434290769822
+      },
+      "dragging": false
+    },
+    {
+      "id": "4b5003bd-ec39-4072-b44d-c1d4c3aa01bb",
+      "type": "custom",
+      "position": {
+        "x": 828.8971791047326,
+        "y": -829.4678247605225
+      },
+      "data": {
+        "label": "Value Map",
+        "def": {
+          "type": "DataUtility",
+          "label": "Value Map",
+          "category": "Utility",
+          "description": "Map values from one list to another.",
+          "inputs": {
+            "values": {
+              "label": "Values",
+              "type": "Value List"
+            },
+            "$for": "node.mappings",
+            "$item": {
+              "id": "mapping_{{_value}}",
+              "label": "Mapping {{_value}}",
+              "type": "Value List"
+            }
+          },
+          "outputs": [
+            {
+              "id": "outputs",
+              "label": "Outputs",
+              "type": "Value List"
+            }
+          ],
+          "properties": {
+            "$for": "node.mappings",
+            "$item": {
+              "name": "mapping_{{_value}}",
+              "label": "Mapping {{_value}}",
+              "type": "Property Block",
+              "content": {
+                "$for": "inputs",
+                "$item": {
+                  "name": "input_{{_value}}",
+                  "label": "Input {{_value}}",
+                  "type": "Value"
+                },
+                "output_{{_value}}": {
+                  "label": "Output {{_value}}",
+                  "type": "Value"
+                }
+              }
+            }
+          }
+        },
+        "categoryColor": "#607d8b",
+        "values": {
+          "mapping_0": {
+            "output_0": "object"
+          },
+          "_mappings": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "mapping_1": {
+            "output_1": "history"
+          },
+          "mapping_2": {
+            "output_2": "group"
+          },
+          "mapping_3": {
+            "output_3": "location"
+          }
+        },
+        "pathPrefix": ""
+      },
+      "width": 529,
+      "height": 415,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 828.8971791047326,
+        "y": -829.4678247605225
       },
       "dragging": false
     }
   ],
   "edges": [
     {
-      "source": "e8d3f1b1-be44-4632-b705-d08607391b6b",
-      "sourceHandle": "entries",
-      "target": "8a196f55-edac-40b7-b4ee-1342c442ab96",
-      "targetHandle": "entries",
-      "id": "reactflow__edge-e8d3f1b1-be44-4632-b705-d08607391b6bentries-8a196f55-edac-40b7-b4ee-1342c442ab96entries"
-    },
-    {
-      "source": "fdcdd17b-d372-46d2-b45f-3825f8d13696",
-      "sourceHandle": "matched_conditions",
-      "target": "c2c7397d-a036-408b-874a-0f824961a554",
-      "targetHandle": "values",
-      "id": "reactflow__edge-fdcdd17b-d372-46d2-b45f-3825f8d13696matched_conditions-c2c7397d-a036-408b-874a-0f824961a554values"
-    },
-    {
-      "source": "c2c7397d-a036-408b-874a-0f824961a554",
-      "sourceHandle": "outputs",
-      "target": "c1071842-fe02-401c-903b-68fba5731f8b",
-      "targetHandle": "values",
-      "id": "reactflow__edge-c2c7397d-a036-408b-874a-0f824961a554outputs-c1071842-fe02-401c-903b-68fba5731f8bvalues"
-    },
-    {
       "source": "8a196f55-edac-40b7-b4ee-1342c442ab96",
       "sourceHandle": "entries",
       "target": "2fb83def-51a7-4149-8ba4-90fe509bb752",
       "targetHandle": "entries",
       "id": "reactflow__edge-8a196f55-edac-40b7-b4ee-1342c442ab96entries-2fb83def-51a7-4149-8ba4-90fe509bb752entries"
-    },
-    {
-      "source": "2fb83def-51a7-4149-8ba4-90fe509bb752",
-      "sourceHandle": "adjacency",
-      "target": "c1071842-fe02-401c-903b-68fba5731f8b",
-      "targetHandle": "entries",
-      "id": "reactflow__edge-2fb83def-51a7-4149-8ba4-90fe509bb752adjacency-c1071842-fe02-401c-903b-68fba5731f8bentries"
-    },
-    {
-      "id": "25a45ba9-f976-4722-806a-822db7231540",
-      "source": "2092b993-df98-42df-9d6c-a4f92d33c3e3",
-      "sourceHandle": "28ff91c4-acfa-4e30-98fa-4f7553dc30d3",
-      "target": "c2c7397d-a036-408b-874a-0f824961a554",
-      "targetHandle": "mapping_0"
-    },
-    {
-      "id": "957280ed-5fe7-4fe1-87f1-d1526d60e565",
-      "source": "2092b993-df98-42df-9d6c-a4f92d33c3e3",
-      "sourceHandle": "12b3e1cb-3055-4244-83d6-c63145537832",
-      "target": "c2c7397d-a036-408b-874a-0f824961a554",
-      "targetHandle": "mapping_1"
     },
     {
       "id": "f37ad098-2c32-4901-b4ab-16642afcd566",
@@ -1466,18 +1728,26 @@
       "targetHandle": "conditions"
     },
     {
-      "id": "40572269-f334-4114-a357-7c6c207ea3d9",
-      "source": "d8250b8a-f2f7-4417-8a4a-8b97e274c81d",
-      "sourceHandle": "4dc13191-2da3-4560-a3fa-880efe051c2e",
-      "target": "fdcdd17b-d372-46d2-b45f-3825f8d13696",
-      "targetHandle": "messages"
+      "source": "8a196f55-edac-40b7-b4ee-1342c442ab96",
+      "sourceHandle": "entries",
+      "target": "f16f32ae-7eb3-439c-94b1-c530d54bae2a",
+      "targetHandle": "list_1",
+      "id": "reactflow__edge-8a196f55-edac-40b7-b4ee-1342c442ab96entries-f16f32ae-7eb3-439c-94b1-c530d54bae2alist_1",
+      "selected": false
     },
     {
-      "id": "519f8a62-3243-4b44-a000-1e6280848a43",
+      "source": "f16f32ae-7eb3-439c-94b1-c530d54bae2a",
+      "sourceHandle": "joined_list",
+      "target": "a6362734-2edc-4796-bf57-65f449765f5c",
+      "targetHandle": "entries",
+      "id": "reactflow__edge-f16f32ae-7eb3-439c-94b1-c530d54bae2ajoined_list-a6362734-2edc-4796-bf57-65f449765f5centries"
+    },
+    {
       "source": "d8250b8a-f2f7-4417-8a4a-8b97e274c81d",
-      "sourceHandle": "4dc13191-2da3-4560-a3fa-880efe051c2e",
+      "sourceHandle": "out_1765967096328",
       "target": "8a196f55-edac-40b7-b4ee-1342c442ab96",
-      "targetHandle": "messages"
+      "targetHandle": "messages",
+      "id": "reactflow__edge-d8250b8a-f2f7-4417-8a4a-8b97e274c81dout_1765967096328-8a196f55-edac-40b7-b4ee-1342c442ab96messages"
     },
     {
       "source": "c1071842-fe02-401c-903b-68fba5731f8b",
@@ -1487,18 +1757,67 @@
       "id": "reactflow__edge-c1071842-fe02-401c-903b-68fba5731f8bentries-f16f32ae-7eb3-439c-94b1-c530d54bae2alist_0"
     },
     {
-      "source": "8a196f55-edac-40b7-b4ee-1342c442ab96",
+      "source": "e8d3f1b1-be44-4632-b705-d08607391b6b",
       "sourceHandle": "entries",
-      "target": "f16f32ae-7eb3-439c-94b1-c530d54bae2a",
-      "targetHandle": "list_1",
-      "id": "reactflow__edge-8a196f55-edac-40b7-b4ee-1342c442ab96entries-f16f32ae-7eb3-439c-94b1-c530d54bae2alist_1"
+      "target": "8a196f55-edac-40b7-b4ee-1342c442ab96",
+      "targetHandle": "entries",
+      "id": "reactflow__edge-e8d3f1b1-be44-4632-b705-d08607391b6bentries-8a196f55-edac-40b7-b4ee-1342c442ab96entries"
     },
     {
-      "source": "f16f32ae-7eb3-439c-94b1-c530d54bae2a",
-      "sourceHandle": "joined_list",
-      "target": "a6362734-2edc-4796-bf57-65f449765f5c",
+      "source": "d8250b8a-f2f7-4417-8a4a-8b97e274c81d",
+      "sourceHandle": "out_1765967096328",
+      "target": "fdcdd17b-d372-46d2-b45f-3825f8d13696",
+      "targetHandle": "messages",
+      "id": "reactflow__edge-d8250b8a-f2f7-4417-8a4a-8b97e274c81dout_1765967096328-fdcdd17b-d372-46d2-b45f-3825f8d13696messages"
+    },
+    {
+      "source": "2fb83def-51a7-4149-8ba4-90fe509bb752",
+      "sourceHandle": "adjacency",
+      "target": "c1071842-fe02-401c-903b-68fba5731f8b",
       "targetHandle": "entries",
-      "id": "reactflow__edge-f16f32ae-7eb3-439c-94b1-c530d54bae2ajoined_list-a6362734-2edc-4796-bf57-65f449765f5centries"
+      "id": "reactflow__edge-2fb83def-51a7-4149-8ba4-90fe509bb752adjacency-c1071842-fe02-401c-903b-68fba5731f8bentries"
+    },
+    {
+      "source": "fdcdd17b-d372-46d2-b45f-3825f8d13696",
+      "sourceHandle": "matched_conditions",
+      "target": "4b5003bd-ec39-4072-b44d-c1d4c3aa01bb",
+      "targetHandle": "values",
+      "id": "reactflow__edge-fdcdd17b-d372-46d2-b45f-3825f8d13696matched_conditions-4b5003bd-ec39-4072-b44d-c1d4c3aa01bbvalues"
+    },
+    {
+      "source": "2092b993-df98-42df-9d6c-a4f92d33c3e3",
+      "sourceHandle": "out_1766209632816",
+      "target": "4b5003bd-ec39-4072-b44d-c1d4c3aa01bb",
+      "targetHandle": "mapping_0",
+      "id": "reactflow__edge-2092b993-df98-42df-9d6c-a4f92d33c3e3out_1766209632816-4b5003bd-ec39-4072-b44d-c1d4c3aa01bbmapping_0"
+    },
+    {
+      "source": "2092b993-df98-42df-9d6c-a4f92d33c3e3",
+      "sourceHandle": "out_1766209636356",
+      "target": "4b5003bd-ec39-4072-b44d-c1d4c3aa01bb",
+      "targetHandle": "mapping_1",
+      "id": "reactflow__edge-2092b993-df98-42df-9d6c-a4f92d33c3e3out_1766209636356-4b5003bd-ec39-4072-b44d-c1d4c3aa01bbmapping_1"
+    },
+    {
+      "source": "2092b993-df98-42df-9d6c-a4f92d33c3e3",
+      "sourceHandle": "out_1766209638914",
+      "target": "4b5003bd-ec39-4072-b44d-c1d4c3aa01bb",
+      "targetHandle": "mapping_2",
+      "id": "reactflow__edge-2092b993-df98-42df-9d6c-a4f92d33c3e3out_1766209638914-4b5003bd-ec39-4072-b44d-c1d4c3aa01bbmapping_2"
+    },
+    {
+      "source": "2092b993-df98-42df-9d6c-a4f92d33c3e3",
+      "sourceHandle": "out_1766209641332",
+      "target": "4b5003bd-ec39-4072-b44d-c1d4c3aa01bb",
+      "targetHandle": "mapping_3",
+      "id": "reactflow__edge-2092b993-df98-42df-9d6c-a4f92d33c3e3out_1766209641332-4b5003bd-ec39-4072-b44d-c1d4c3aa01bbmapping_3"
+    },
+    {
+      "source": "4b5003bd-ec39-4072-b44d-c1d4c3aa01bb",
+      "sourceHandle": "outputs",
+      "target": "c1071842-fe02-401c-903b-68fba5731f8b",
+      "targetHandle": "values",
+      "id": "reactflow__edge-4b5003bd-ec39-4072-b44d-c1d4c3aa01bboutputs-c1071842-fe02-401c-903b-68fba5731f8bvalues"
     }
   ],
   "ver": 1,

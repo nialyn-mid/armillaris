@@ -1,7 +1,7 @@
 {
   "name": "armillaris",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "preview": "vite preview"
   },
   "build": {
-    "appId": "com.armillaris.app",
+    "appId": "com.nialyn.armillaris",
     "productName": "Armillaris",
     "directories": {
       "output": "release"
@@ -25,8 +25,39 @@
       "dist-electron/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "src/assets/templates",
+        "to": "Engines",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "src/assets/modules",
+        "to": "Modules",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "src/assets/icon.ico",
+        "to": "icon.ico"
+      }
+    ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "src/assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Armillaris",
+      "installerIcon": "src/assets/icon.ico",
+      "uninstallerIcon": "src/assets/icon.ico",
+      "uninstallDisplayName": "Armillaris"
     },
     "mac": {
       "target": "dmg"

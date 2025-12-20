@@ -27,12 +27,17 @@ function createWindow() {
         height: bounds.height,
         x: bounds.x,
         y: bounds.y,
+        icon: app.isPackaged
+            ? path.join(process.resourcesPath, 'icon.ico')
+            : path.join(__dirname, '../src/assets/icon.ico'),
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             sandbox: false,
             contextIsolation: true,
         },
     });
+
+    win.setMenu(null);
 
     win.webContents.on('did-finish-load', () => {
         win?.webContents.send('main-process-message', (new Date).toLocaleString());
@@ -97,4 +102,37 @@ app.whenReady().then(() => {
         await shell.openExternal(url);
         return true;
     });
+
+    // Asset distribution logic
+    const setupAssets = async () => {
+        const userDataPath = app.getPath('userData');
+        const enginesDest = path.join(userDataPath, 'Engines');
+        const modulesDest = path.join(userDataPath, 'Modules');
+
+        const enginesSrc = app.isPackaged
+            ? path.join(process.resourcesPath, 'Engines')
+            : path.join(__dirname, '../src/assets/templates');
+
+        const modulesSrc = app.isPackaged
+            ? path.join(process.resourcesPath, 'Modules')
+            : path.join(__dirname, '../src/assets/modules');
+
+        const copyDir = async (src: string, dest: string) => {
+            try {
+                await fs.access(dest);
+            } catch {
+                // Directory doesn't exist, create and copy
+                await fs.mkdir(dest, { recursive: true });
+                if (await fs.stat(src).then(s => s.isDirectory()).catch(() => false)) {
+                    await fs.cp(src, dest, { recursive: true });
+                    console.log(`Copied assets from ${src} to ${dest}`);
+                }
+            }
+        };
+
+        await copyDir(enginesSrc, enginesDest);
+        await copyDir(modulesSrc, modulesDest);
+    };
+
+    setupAssets();
 });
