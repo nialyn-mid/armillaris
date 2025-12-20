@@ -3,10 +3,15 @@ import { useNodesState, useEdgesState } from 'reactflow';
 import { useData } from '../../../context/DataContext';
 
 export const useSpecGraphState = () => {
-    const { setIsSpecDirty } = useData();
+    const { setIsSpecDirty, setBehaviorGraph } = useData();
     const [nodes, setNodes, _onNodesChange] = useNodesState([]);
     const [edges, setEdges, _onEdgesChange] = useEdgesState([]);
-    const [masterGraph, setMasterGraph] = useState<any>(null);
+    const [masterGraph, _setMasterGraph] = useState<any>(null);
+
+    const setMasterGraph = useCallback((graph: any) => {
+        _setMasterGraph(graph);
+        setBehaviorGraph(graph);
+    }, [setBehaviorGraph]);
 
     const [viewPath, setViewPath] = useState<{ id: string, label: string }[]>([]);
 
@@ -25,12 +30,11 @@ export const useSpecGraphState = () => {
 
     const onNodesChange = useCallback((changes: any) => {
         _onNodesChange(changes);
-        // Only set dirty for structural or positional changes, ignoring selection and auto-dimensions
+        // Only set dirty for structural changes, ignoring selection, auto-dimensions, and resets (navigation)
+        // Position is handled by onNodeDragStop to avoid jumping to dirty state on pure clicks
         const isUserChange = changes.some((c: any) =>
-            c.type === 'position' ||
             c.type === 'remove' ||
-            c.type === 'add' ||
-            c.type === 'reset'
+            c.type === 'add'
         );
         if (isUserChange) {
             setIsSpecDirty(true);
@@ -41,8 +45,7 @@ export const useSpecGraphState = () => {
         _onEdgesChange(changes);
         const isUserChange = changes.some((c: any) =>
             c.type === 'remove' ||
-            c.type === 'add' ||
-            c.type === 'reset'
+            c.type === 'add'
         );
         if (isUserChange) {
             setIsSpecDirty(true);

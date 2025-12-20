@@ -46,7 +46,13 @@ function getProps(nodeIdx) {
     for (var i = 0; i < arr.length; i += 2) {
         var key = getBStr(arr[i]);
         var val = arr[i + 1];
-        if (typeof val === 'number' && val >= 0 && val < behaviorStrings.length && (key === "label" || key === "type" || key === "attribute" || key === "message_user_type" || key === "deduplicate" || key === "attribute_name")) {
+        var isStringKey = (
+            key === "label" || key === "type" || key === "attribute" ||
+            key === "message_user_type" || key === "deduplicate" ||
+            key === "attribute_name" || key.indexOf("value_") === 0 ||
+            key.indexOf("attribute_") === 0
+        );
+        if (typeof val === 'number' && val >= 0 && val < behaviorStrings.length && isStringKey) {
             p[key] = getBStr(val);
         } else {
             p[key] = val;
@@ -115,6 +121,57 @@ var memo = {};
 var executed_nodes = [];
 var rawHighlights = {}; // msgIndex -> [ { color, ranges: [[s,e]...] } ]
 var debug_ports = {}; // { nodeUUID: { portID: value } }
+var recursionStack = {};
+
+// Tag messages with original index for stable highlighting
+if (typeof context !== 'undefined' && context.chat && context.chat.last_messages) {
+    for (var i = 0; i < context.chat.last_messages.length; i++) {
+        context.chat.last_messages[i].__idx = i;
+    }
+}
+
+// Graph Adjacency Helpers
+var _entryGraph = null;
+var _entryMap = null;
+
+function getEntryById(id) {
+    if (!_entryMap) {
+        _entryMap = {};
+        for (var i = 0; i < dataEntries.length; i++) {
+            _entryMap[dataEntries[i].id] = dataEntries[i];
+        }
+    }
+    return _entryMap[id];
+}
+
+function buildEntryGraph() {
+    if (_entryGraph) return _entryGraph;
+    _entryGraph = {};
+    var allIds = {};
+    for (var i = 0; i < dataEntries.length; i++) allIds[dataEntries[i].id] = true;
+
+    for (var i = 0; i < dataEntries.length; i++) {
+        var entry = dataEntries[i];
+        var id = entry.id;
+        if (!id) continue;
+
+        var neighbors = [];
+        var props = getEntryProps(entry);
+
+        for (var key in props) {
+            var val = props[key];
+            if (Array.isArray(val)) {
+                for (var k = 0; k < val.length; k++) {
+                    if (allIds[val[k]] && val[k] !== id) neighbors.push(val[k]);
+                }
+            } else if (allIds[val] && val !== id) {
+                neighbors.push(val);
+            }
+        }
+        _entryGraph[id] = neighbors;
+    }
+    return _entryGraph;
+}
 
 function addHighlight(msgIdx, color, start, end) {
     if (!rawHighlights[msgIdx]) rawHighlights[msgIdx] = {};
@@ -135,23 +192,51 @@ function getIncomingEdges(nodeIdx, targetPortIdx) {
 
 function resolveInput(nodeIdx, portName) {
     var portIdx = behaviorStrings.indexOf(portName);
-    if (portIdx === -1) return null;
+    if (portIdx === -1) {
+        var props = getProps(nodeIdx);
+        return props.hasOwnProperty(portName) ? props[portName] : null;
+    }
 
     var edges = getIncomingEdges(nodeIdx, portIdx);
-    if (edges.length === 0) return null;
+    if (edges.length === 0) {
+        var props = getProps(nodeIdx);
+        return props.hasOwnProperty(portName) ? props[portName] : null;
+    }
 
     return executeNode(edges[0][0], edges[0][1]);
 }
 
 function executeNode(nodeIdx, portIdx) {
+    if (nodeIdx === -1) return null;
+
+    // Cycle Detection
+    if (recursionStack[nodeIdx]) {
+        if (typeof context !== 'undefined') {
+            if (!context.warnings) context.warnings = [];
+            var msg = "Cycle detected at node " + behaviorIds[nodeIdx];
+            if (context.warnings.indexOf(msg) === -1) context.warnings.push(msg);
+        }
+        return null;
+    }
+    recursionStack[nodeIdx] = true;
+
     var cacheKey = nodeIdx + ":" + portIdx;
-    if (memo.hasOwnProperty(cacheKey)) return memo[cacheKey];
+    if (memo.hasOwnProperty(cacheKey)) {
+        recursionStack[nodeIdx] = false;
+        return memo[cacheKey];
+    }
 
     var node = behaviorNodes[nodeIdx];
-    if (!node) return null;
+    if (!node) {
+        recursionStack[nodeIdx] = false;
+        return null;
+    }
 
     var nodeUuid = behaviorIds[nodeIdx];
-    var portName = getBStr(portIdx);
+    var portName = (portIdx === -1) ? null : getBStr(portIdx);
+
+    // Fallback for root execution or null ports
+    if (!portName && (portIdx === behaviorStrings.indexOf("entries") || portIdx === -1)) portName = "entries";
 
     var type = getBStr(node[0]);
     var props = getProps(nodeIdx);
@@ -163,12 +248,37 @@ function executeNode(nodeIdx, portIdx) {
         case "InputSource":
             if (portName === "entries" || label.indexOf("entry list") !== -1) {
                 result = dataEntries;
+                if (!portName) portName = "entries";
+            } else if (portName === "values" || label.indexOf("custom value list") !== -1) {
+                // Aggregate value_1, value_2, etc.
+                result = [];
+                for (var key in props) {
+                    if (key.indexOf("value_") === 0) {
+                        result.push(props[key]);
+                    }
+                }
+                if (!portName) portName = "values";
+            } else if (portName === "attributes" || label.indexOf("custom attributes") !== -1) {
+                // Aggregate attribute_1, attribute_2, etc.
+                result = [];
+                for (var key in props) {
+                    if (key.indexOf("attribute_") === 0 && typeof props[key] === 'object') {
+                        var attr = props[key];
+                        result.push({
+                            name: attr.attribute_name,
+                            type: attr.attribute_type,
+                            value: attr.attribute_value
+                        });
+                    }
+                }
+                if (!portName) portName = "attributes";
             } else if (context.chat && context.chat.hasOwnProperty(portName)) {
                 result = context.chat[portName];
             } else if (context.character && context.character.hasOwnProperty(portName)) {
                 result = context.character[portName];
             } else if (portName === "last_messages" || portName === "messages") {
                 result = (context.chat && context.chat.last_messages) ? context.chat.last_messages : [];
+                if (!portName) portName = "messages";
             }
             break;
 
@@ -179,7 +289,7 @@ function executeNode(nodeIdx, portIdx) {
         case "ListFilter":
             if (label.indexOf("keyword") !== -1 || type === "KeywordFilter") {
                 var sourceEntries = resolveInput(nodeIdx, "entries") || dataEntries || [];
-                var messages = resolveInput(nodeIdx, "messages") || (context.chat ? context.chat.last_messages : []) || [];
+                var messages = resolveInput(nodeIdx, "messages") || [];
 
                 // Properties
                 var caseSensitive = props.case_sensitive || false;
@@ -221,7 +331,7 @@ function executeNode(nodeIdx, portIdx) {
                                 entryMatched = true;
                                 matchesInThisMsg++;
 
-                                addHighlight(m, "#58a6ff", match.index, match.index + match[0].length);
+                                addHighlight(msg.__idx !== undefined ? msg.__idx : m, "#58a6ff", match.index, match.index + match[0].length);
 
                                 if (matchLimit > 0 && matchesInThisMsg >= matchLimit) break;
                                 if (re.lastIndex === match.index) re.lastIndex++;
@@ -231,8 +341,9 @@ function executeNode(nodeIdx, portIdx) {
                     if (entryMatched) filtered.push(entry);
                 }
                 result = filtered;
+                if (!portName) portName = "entries";
             } else if (label.indexOf("message filter") !== -1 || type === "MessageFilter") {
-                var messages = resolveInput(nodeIdx, "messages") || (context.chat ? context.chat.last_messages : []) || [];
+                var messages = resolveInput(nodeIdx, "messages") || [];
                 var conditions = resolveInput(nodeIdx, "conditions") || [];
 
                 var isRegex = props.is_regex || false;
@@ -242,6 +353,11 @@ function executeNode(nodeIdx, portIdx) {
 
                 var flags = "g" + (caseSensitive ? "" : "i");
                 var matchedMsgs = [];
+                var unmatchedMsgs = [];
+                var matchedConds = [];
+                var unmatchedConds = [];
+
+                var globalMatchedConds = {};
 
                 for (var m = 0; m < messages.length; m++) {
                     var msg = messages[m];
@@ -272,14 +388,24 @@ function executeNode(nodeIdx, portIdx) {
                         re.lastIndex = 0;
                         while ((match = re.exec(msgStr)) !== null) {
                             msgMatch = true;
-                            addHighlight(m, "#d2a8ff", match.index, match.index + match[0].length);
+                            globalMatchedConds[cond] = true;
+                            addHighlight(msg.__idx !== undefined ? msg.__idx : m, "#d2a8ff", match.index, match.index + match[0].length);
                             if (re.lastIndex === match.index) re.lastIndex++;
                         }
                     }
                     if (msgMatch) matchedMsgs.push(msg);
+                    else unmatchedMsgs.push(msg);
+                }
+
+                for (var c = 0; c < conditions.length; c++) {
+                    if (globalMatchedConds[conditions[c]]) matchedConds.push(conditions[c]);
+                    else unmatchedConds.push(conditions[c]);
                 }
 
                 if (portName === "matched_messages") result = matchedMsgs;
+                else if (portName === "unmatched_messages") result = unmatchedMsgs;
+                else if (portName === "matched_conditions") result = matchedConds;
+                else if (portName === "unmatched_conditions") result = unmatchedConds;
                 else result = matchedMsgs;
             } else if (label.indexOf("entry filter") !== -1 || type === "EntryFilter") {
                 var sourceEntries = resolveInput(nodeIdx, "entries") || dataEntries || [];
@@ -321,6 +447,54 @@ function executeNode(nodeIdx, portIdx) {
             }
             break;
 
+        case "Adjacency":
+        case "GraphAdjacency":
+            var sourceEntries = resolveInput(nodeIdx, "entries") || [];
+            var dist = Number(resolveInput(nodeIdx, "distance")) || Number(props.distance) || 1;
+
+            if (sourceEntries.length === 0) {
+                result = [];
+            } else {
+                var graph = buildEntryGraph();
+                var visited = {};
+                var queue = [];
+
+                for (var i = 0; i < sourceEntries.length; i++) {
+                    var id = sourceEntries[i].id;
+                    if (id) {
+                        visited[id] = 0;
+                        queue.push({ id: id, d: 0 });
+                    }
+                }
+
+                var found = {};
+                var qIdx = 0;
+                while (qIdx < queue.length) {
+                    var curr = queue[qIdx++];
+                    if (curr.d >= dist) continue;
+
+                    var neighbors = graph[curr.id] || [];
+                    for (var i = 0; i < neighbors.length; i++) {
+                        var nid = neighbors[i];
+                        if (visited[nid] === undefined) {
+                            visited[nid] = curr.d + 1;
+                            if (visited[nid] === dist) {
+                                found[nid] = true;
+                            }
+                            queue.push({ id: nid, d: curr.d + 1 });
+                        }
+                    }
+                }
+
+                result = [];
+                for (var id in found) {
+                    var entry = getEntryById(id);
+                    if (entry) result.push(entry);
+                }
+            }
+            if (!portName) portName = "adjacency";
+            break;
+
         case "DataUtility":
         case "JoinList":
         case "ValueMap":
@@ -359,18 +533,90 @@ function executeNode(nodeIdx, portIdx) {
                     }
                     result = finalResult;
                 }
+            } else if (label.indexOf("value map") !== -1 || type === "ValueMap" || portName === "outputs") {
+                var values = resolveInput(nodeIdx, "values") || [];
+                if (!Array.isArray(values)) values = [values];
+
+                // Collect mappings
+                var maps = [];
+                for (var key in props) {
+                    if (key.indexOf("mapping_") === 0) {
+                        maps.push(props[key]);
+                    }
+                }
+
+                result = [];
+                for (var i = 0; i < values.length; i++) {
+                    var v = values[i];
+                    var mapped = null;
+                    // Check each mapping block
+                    for (var m = 0; m < maps.length; m++) {
+                        var mapObj = maps[m];
+                        // In each block, check input_1/output_1, input_2/output_2...
+                        for (var k = 1; k <= 20; k++) { // Rough limit for expandable
+                            if (mapObj["input_" + k] == v) {
+                                mapped = mapObj["output_" + k];
+                                break;
+                            }
+                        }
+                        if (mapped !== null) break;
+                    }
+                    result.push(mapped !== null ? mapped : v);
+                }
+                if (!portName) portName = "outputs";
+            } else if (label.indexOf("sort messages") !== -1 || type === "SortMessages") {
+                var msgs = resolveInput(nodeIdx, "messages") || [];
+                var sortBy = props.sort_by || "date";
+                var sorted = msgs.slice();
+                if (sortBy === "date") {
+                    sorted.sort(function (a, b) {
+                        var da = a.date ? new Date(a.date).getTime() : 0;
+                        var db = b.date ? new Date(b.date).getTime() : 0;
+                        return db - da; // Recent first
+                    });
+                } else if (sortBy === "random") {
+                    for (var i = sorted.length - 1; i > 0; i--) {
+                        var j = Math.floor(Math.random() * (i + 1));
+                        var temp = sorted[i];
+                        sorted[i] = sorted[j];
+                        sorted[j] = temp;
+                    }
+                }
+                if (portName === "inverse_sorted_messages") result = sorted.slice().reverse();
+                else result = sorted;
+                if (!portName) portName = "sorted_messages";
+            } else if (label.indexOf("sort entries") !== -1 || type === "SortEntriesByAttribute") {
+                var entriesToSort = resolveInput(nodeIdx, "entries") || [];
+                var attr = resolveInput(nodeIdx, "attribute") || props.attribute;
+                var sortedEntries = entriesToSort.slice();
+                if (attr) {
+                    sortedEntries.sort(function (a, b) {
+                        var ap = getEntryProps(a);
+                        var bp = getEntryProps(b);
+                        var valA = ap[attr];
+                        var valB = bp[attr];
+                        if (valA < valB) return -1;
+                        if (valA > valB) return 1;
+                        return 0;
+                    });
+                }
+                if (portName === "inverse_sorted_entries") result = sortedEntries.slice().reverse();
+                else result = sortedEntries;
+                if (!portName) portName = "sorted_entries";
             } else {
-                result = resolveInput(nodeIdx, "entries") || resolveInput(nodeIdx, "values") || null;
+                result = resolveInput(nodeIdx, "entries") || resolveInput(nodeIdx, "values") || resolveInput(nodeIdx, "list_input") || resolveInput(nodeIdx, "messages") || resolveInput(nodeIdx, "last_messages") || null;
             }
             break;
 
         case "OutputRoot":
         case "ActivationOutput":
             result = resolveInput(nodeIdx, "entries") || [];
+            if (!portName) portName = "entries";
             break;
 
         default:
             result = resolveInput(nodeIdx, "entries") || null;
+            if (!portName) portName = "entries";
     }
 
     memo[cacheKey] = result;
@@ -386,6 +632,7 @@ function executeNode(nodeIdx, portIdx) {
         executed_nodes.push(nodeIdx);
     }
 
+    recursionStack[nodeIdx] = false;
     return result;
 }
 
@@ -396,10 +643,11 @@ for (var i = 0; i < behaviorNodes.length; i++) {
     if (t === "OutputRoot" || t === "ActivationOutput") { rootIdx = i; break; }
 }
 
+
 var activatedEntryIds = [];
 
 if (rootIdx !== -1) {
-    var finalEntries = executeNode(rootIdx, -1) || [];
+    var finalEntries = executeNode(rootIdx, behaviorStrings.indexOf("entries")) || [];
     dlog("Final Activated Entries: " + finalEntries.length);
     var descriptions = [];
     for (var i = 0; i < finalEntries.length; i++) {

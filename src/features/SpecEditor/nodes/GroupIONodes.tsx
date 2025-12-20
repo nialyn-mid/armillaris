@@ -1,6 +1,7 @@
 import { memo, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Handle, Position } from 'reactflow';
+import { useData } from '../../../context/DataContext';
 
 // Styles
 const nodeStyle = {
@@ -112,6 +113,7 @@ const NodeContextMenu = ({ x, y, onClose, onDuplicate, onDelete }: any) => {
 export const GroupInputNode = memo(({ data, id }: any) => {
     const ports = data.ports || [];
     const { onDuplicate, onDelete, onUpdate } = data;
+    const { debugNodes } = useData();
 
     const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
 
@@ -133,8 +135,11 @@ export const GroupInputNode = memo(({ data, id }: any) => {
         if (onUpdate) onUpdate(id, { ports: newPorts });
     };
 
+    const fullId = data.pathPrefix ? `${data.pathPrefix}.${id}` : id;
+    const isExecuting = debugNodes.includes(fullId);
+
     return (
-        <div className={`spec-node group-io-node ${data.isDragTarget ? 'drop-target' : ''}`} style={{ ...nodeStyle, background: undefined, border: undefined }} onContextMenu={onContextMenu}>
+        <div className={`spec-node group-io-node ${data.isDragTarget ? 'drop-target' : ''} ${isExecuting ? 'executing-glow' : ''}`} style={{ ...nodeStyle, background: undefined, border: undefined }} onContextMenu={onContextMenu}>
             {contextMenu && (
                 <NodeContextMenu
                     x={contextMenu.x}
@@ -174,6 +179,7 @@ export const GroupInputNode = memo(({ data, id }: any) => {
 export const GroupOutputNode = memo(({ data, id }: any) => {
     const ports = data.ports || [];
     const { onDuplicate, onDelete, onUpdate } = data;
+    const { debugNodes } = useData();
 
     const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
 
@@ -195,8 +201,11 @@ export const GroupOutputNode = memo(({ data, id }: any) => {
         if (onUpdate) onUpdate(id, { ports: newPorts });
     };
 
+    const fullId = data.pathPrefix ? `${data.pathPrefix}.${id}` : id;
+    const isExecuting = debugNodes.includes(fullId);
+
     return (
-        <div className={`spec-node group-io-node ${data.isDragTarget ? 'drop-target' : ''}`} style={{ ...nodeStyle, background: undefined, border: undefined }} onContextMenu={onContextMenu}>
+        <div className={`spec-node group-io-node ${data.isDragTarget ? 'drop-target' : ''} ${isExecuting ? 'executing-glow' : ''}`} style={{ ...nodeStyle, background: undefined, border: undefined }} onContextMenu={onContextMenu}>
             {contextMenu && (
                 <NodeContextMenu
                     x={contextMenu.x}

@@ -3,6 +3,7 @@ import { MdQuestionAnswer, MdUnfoldLess, MdUnfoldMore, MdAdd, MdLastPage, MdChev
 import { GoDotFill } from 'react-icons/go';
 import { HighlightedTextarea } from '../../../shared/ui/HighlightedTextarea';
 import { useChatSession } from '../hooks/useChatSession';
+import { Toggle } from '../../../shared/ui/Toggle';
 
 interface ChatOverlayProps {
     session: ReturnType<typeof useChatSession>;
@@ -111,10 +112,13 @@ export function ChatOverlay({ session, matches, onInputChange, highlights, id }:
         isChatCollapsed, setIsChatCollapsed,
         editingMsgId,
         editContent, setEditContent,
+        useCurrentTime, setUseCurrentTime,
+        customTime, setCustomTime,
         submitUserMessage,
         startEditing,
         saveEdit,
         deleteMessage,
+        setMessageDate,
         insertBotMessage
     } = session;
 
@@ -127,6 +131,20 @@ export function ChatOverlay({ session, matches, onInputChange, highlights, id }:
     useEffect(() => {
         localStorage.setItem('chat_sandbox_aligned_right', String(isRightAligned));
     }, [isRightAligned]);
+
+    // Helper for input type=datetime-local
+    const formatDateForInput = (d: Date | string) => {
+        const date = new Date(d);
+        if (isNaN(date.getTime())) return '';
+        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+        return date.toISOString().slice(0, 16);
+    };
+
+    const formatDateForDisplay = (d: Date | string) => {
+        const date = new Date(d);
+        if (isNaN(date.getTime())) return 'Invalid Date';
+        return date.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    };
 
     // Auto-scroll to bottom of history
     useEffect(() => {
@@ -161,6 +179,8 @@ export function ChatOverlay({ session, matches, onInputChange, highlights, id }:
         });
         return [...matches, ...hMatches];
     }, [matches, inputHighlights]);
+
+    const [editingDateId, setEditingDateId] = useState<string | null>(null);
 
     return (
         <div id={id} className="floating-island" style={{
@@ -258,9 +278,39 @@ export function ChatOverlay({ session, matches, onInputChange, highlights, id }:
                                         onClick={(e) => { e.stopPropagation(); deleteMessage(msg.id); }}
                                         title="Delete Message"
                                     >&times;</button>
-                                    <span style={{ fontWeight: 600, color: msg.role === 'user' ? '#58a6ff' : '#7ee787' }}>
-                                        {msg.role === 'user' ? 'YOU' : 'BOT'}:
-                                    </span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                                        <span style={{ fontSize: '0.7rem', fontWeight: 600, color: msg.role === 'user' ? '#58a6ff' : '#7ee787' }}>
+                                            {msg.role === 'user' ? 'YOU' : 'BOT'}
+                                        </span>
+                                        {editingDateId === msg.id ? (
+                                            <input
+                                                type="datetime-local"
+                                                autoFocus
+                                                value={formatDateForInput(msg.date)}
+                                                onBlur={() => setEditingDateId(null)}
+                                                onChange={(e) => setMessageDate(msg.id, e.target.value)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                style={{
+                                                    fontSize: '0.65rem',
+                                                    background: 'var(--bg-primary)',
+                                                    border: '1px solid var(--border-color)',
+                                                    color: 'var(--text-primary)',
+                                                    padding: '0 4px',
+                                                    borderRadius: '2px',
+                                                    colorScheme: 'dark',
+                                                    outline: 'none'
+                                                }}
+                                            />
+                                        ) : (
+                                            <span
+                                                onClick={(e) => { e.stopPropagation(); setEditingDateId(msg.id); }}
+                                                style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', cursor: 'pointer', opacity: 0.8 }}
+                                                title="Click to edit time"
+                                            >
+                                                [{formatDateForDisplay(msg.date)}]
+                                            </span>
+                                        )}
+                                    </div>
                                     {editingMsgId === msg.id ? (
                                         <input
                                             autoFocus
@@ -269,12 +319,12 @@ export function ChatOverlay({ session, matches, onInputChange, highlights, id }:
                                             onBlur={() => saveEdit(msg.id)}
                                             onKeyDown={(e) => e.key === 'Enter' && saveEdit(msg.id)}
                                             placeholder="Type bot message..."
-                                            style={{ background: 'var(--bg-primary)', border: '1px solid var(--accent-color)', color: 'var(--text-primary)', marginLeft: '5px', width: '95%' }}
+                                            style={{ background: 'var(--bg-primary)', border: '1px solid var(--accent-color)', color: 'var(--text-primary)', width: '95%' }}
                                         />
                                     ) : (
-                                        <span style={{ marginLeft: '5px' }}>
+                                        <div style={{ wordBreak: 'break-word' }}>
                                             <RenderHighlightedText text={msg.content} highlights={msgHighlights} />
-                                        </span>
+                                        </div>
                                     )}
                                 </div>
 
@@ -291,42 +341,101 @@ export function ChatOverlay({ session, matches, onInputChange, highlights, id }:
 
             {/* Input Area */}
             {!isChatCollapsed && (
-                <div style={{ minHeight: '120px', position: 'relative', display: 'flex', padding: '0', flexShrink: 0 }}>
-                    <div style={{ flex: 1, position: 'relative', borderBottomLeftRadius: '7px', borderBottomRightRadius: '7px' }}>
-                        <HighlightedTextarea
-                            value={chatInput}
-                            onChange={handleChange}
-                            onKeyDown={handleKeyDown}
-                            matches={transformedInputMatches}
-                        />
-                        {chatInput && (
-                            <button
-                                className="chat-input-clear-btn unselectable"
-                                onClick={() => { setChatInput(""); onInputChange(""); }}
-                                title="Clear Input"
-                            >&times;</button>
-                        )}
-                        <button
-                            onClick={() => {
-                                submitUserMessage();
-                                onInputChange("");
-                            }}
-                            className="btn-primary"
-                            style={{
+                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', background: 'rgba(37, 37, 38, 0.4)', borderBottomLeftRadius: '7px', borderBottomRightRadius: '7px' }}>
+                    <div style={{ minHeight: '80px', position: 'relative', display: 'flex', padding: '0' }}>
+                        <div style={{ flex: 1, position: 'relative' }}>
+                            <HighlightedTextarea
+                                value={chatInput}
+                                onChange={handleChange}
+                                onKeyDown={handleKeyDown}
+                                matches={transformedInputMatches}
+                            />
+
+                            {chatInput && (
+                                <button
+                                    className="chat-input-clear-btn unselectable"
+                                    onClick={() => { setChatInput(""); onInputChange(""); }}
+                                    title="Clear Input"
+                                    style={{
+                                        position: 'absolute',
+                                        top: '8px',
+                                        right: '8px',
+                                        height: '24px',
+                                        width: '24px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        zIndex: 11,
+                                        fontSize: '18px',
+                                        background: 'rgba(255,255,255,0.05)',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        color: '#aaa',
+                                        cursor: 'pointer'
+                                    }}
+                                >&times;</button>
+                            )}
+
+                            <div style={{
                                 position: 'absolute',
                                 right: '10px',
                                 bottom: '10px',
-                                width: 'auto',
-                                height: '28px',
-                                padding: '0 12px',
-                                fontSize: '0.8rem',
-                                zIndex: 10,
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                            }}
-                            title="Send (Enter)"
-                        >
-                            Send
-                        </button>
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                zIndex: 10
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', scale: '0.85', transformOrigin: 'right' }}>
+                                    <Toggle
+                                        label="Now"
+                                        checked={useCurrentTime}
+                                        onChange={setUseCurrentTime}
+                                    />
+                                </div>
+
+                                {!useCurrentTime && (
+                                    <input
+                                        type="datetime-local"
+                                        value={customTime}
+                                        onChange={(e) => setCustomTime(e.target.value)}
+                                        style={{
+                                            fontSize: '0.7rem',
+                                            background: 'var(--bg-primary)',
+                                            border: '1px solid var(--border-color)',
+                                            color: 'var(--text-primary)',
+                                            padding: '2px 6px',
+                                            borderRadius: '4px',
+                                            height: '28px',
+                                            colorScheme: 'dark',
+                                            outline: 'none'
+                                        }}
+                                    />
+                                )}
+
+                                <button
+                                    onClick={() => {
+                                        submitUserMessage();
+                                        onInputChange("");
+                                    }}
+                                    className="btn-primary"
+                                    style={{
+                                        width: 'auto',
+                                        height: '28px',
+                                        padding: '0 12px',
+                                        fontSize: '0.8rem',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                                        background: 'var(--accent-color)',
+                                        borderColor: 'var(--accent-color)',
+                                        color: '#0d1117',
+                                        fontWeight: 600
+                                    }}
+                                    title="Send (Enter)"
+                                >
+                                    Send
+                                </button>
+
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

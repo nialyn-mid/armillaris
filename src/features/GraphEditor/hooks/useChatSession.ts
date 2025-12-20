@@ -4,6 +4,7 @@ export interface ChatMessage {
     id: string;
     role: 'user' | 'system';
     content: string;
+    date: Date | string;
 }
 
 export function useChatSession() {
@@ -15,11 +16,24 @@ export function useChatSession() {
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>(() => {
         try {
             const saved = localStorage.getItem('graphview_chat_history');
-            return saved ? JSON.parse(saved) : [];
+            const parsed = saved ? JSON.parse(saved) : [];
+            // Ensure every message has a date
+            return parsed.map((m: any) => ({
+                ...m,
+                date: m.date || new Date()
+            }));
         } catch { return []; }
     });
     const [isChatHistoryOpen, setIsChatHistoryOpen] = useState(true);
     const [isChatCollapsed, setIsChatCollapsed] = useState(false);
+
+    // Custom Timing State
+    const [useCurrentTime, setUseCurrentTime] = useState(true);
+    const [customTime, setCustomTime] = useState<string>(() => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        return now.toISOString().slice(0, 16);
+    });
 
     // Editing State
     const [editingMsgId, setEditingMsgId] = useState<string | null>(null);
@@ -35,16 +49,18 @@ export function useChatSession() {
     }, [chatHistory]);
 
     // Actions
-    const addMessage = useCallback((role: 'user' | 'system', content: string) => {
-        setChatHistory(prev => [...prev, { id: crypto.randomUUID(), role, content }]);
+    const addMessage = useCallback((role: 'user' | 'system', content: string, date?: Date | string) => {
+        setChatHistory(prev => [...prev, { id: crypto.randomUUID(), role, content, date: date || new Date() }]);
     }, []);
 
     const submitUserMessage = useCallback(() => {
         const val = chatInput.trim();
         if (val.length === 0) return;
-        addMessage('user', val);
+
+        const timestamp = useCurrentTime ? new Date() : new Date(customTime);
+        addMessage('user', val, timestamp);
         setChatInput('');
-    }, [chatInput, addMessage]);
+    }, [chatInput, addMessage, useCurrentTime, customTime]);
 
     const startEditing = useCallback((msg: ChatMessage) => {
         setEditingMsgId(msg.id);
@@ -56,6 +72,10 @@ export function useChatSession() {
         setEditingMsgId(null);
     }, [editContent]);
 
+    const setMessageDate = useCallback((id: string, date: Date | string) => {
+        setChatHistory(prev => prev.map(m => m.id === id ? { ...m, date } : m));
+    }, []);
+
     const cancelEdit = useCallback(() => {
         setEditingMsgId(null);
         setEditContent('');
@@ -66,7 +86,7 @@ export function useChatSession() {
     }, []);
 
     const insertBotMessage = useCallback((index: number) => {
-        const newMsg: ChatMessage = { id: crypto.randomUUID(), role: 'system', content: '' };
+        const newMsg: ChatMessage = { id: crypto.randomUUID(), role: 'system', content: '', date: new Date() };
         setChatHistory(prev => {
             const next = [...prev];
             next.splice(index + 1, 0, newMsg);
@@ -88,11 +108,17 @@ export function useChatSession() {
         editContent,
         setEditContent,
 
+        useCurrentTime,
+        setUseCurrentTime,
+        customTime,
+        setCustomTime,
+
         submitUserMessage,
         startEditing,
         saveEdit,
         cancelEdit,
         deleteMessage,
+        setMessageDate,
         insertBotMessage
     };
 }

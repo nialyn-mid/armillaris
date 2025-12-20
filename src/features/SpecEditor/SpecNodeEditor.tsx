@@ -35,7 +35,7 @@ export interface SpecNodeEditorHandle {
 }
 
 const SpecNodeEditor = forwardRef<SpecNodeEditorHandle>((_, ref) => {
-    const { availableSpecs, activeSpec, setActiveSpec } = useData();
+    const { availableSpecs, activeSpec, setActiveSpec, isSpecDirty, setIsSpecDirty } = useData();
 
     // Use Custom Hook for Graph Logic
     const {
@@ -149,10 +149,10 @@ const SpecNodeEditor = forwardRef<SpecNodeEditorHandle>((_, ref) => {
                         multiSelectionKeyCode={['Control', 'Shift']}
                         selectionOnDrag={true}
                         panOnDrag={[1, 2]}
-                        onNodeDragStop={onNodeDragStop as any}
+                        onNodeDragStop={(e, n, an) => { onNodeDragStop(e, n, an); setIsSpecDirty(true); }}
                         onNodeDrag={onNodeDrag as any}
                         onSelectionDrag={onSelectionDrag as any}
-                        onSelectionDragStop={onSelectionDragStop as any}
+                        onSelectionDragStop={(e, an) => { onSelectionDragStop(e, an); setIsSpecDirty(true); }}
                         isValidConnection={isValidConnection}
                         onEdgeDoubleClick={onEdgeDoubleClick}
                     >
@@ -197,6 +197,8 @@ const SpecNodeEditor = forwardRef<SpecNodeEditorHandle>((_, ref) => {
                 setActiveSpec={setActiveSpec}
                 nodeCount={nodes.length}
                 edgeCount={edges.length}
+                isSpecDirty={isSpecDirty}
+                navigateTo={navigateTo}
             />
 
             <SpecHotkeys onDuplicate={duplicateSelectedNodes} />

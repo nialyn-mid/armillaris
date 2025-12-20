@@ -30,7 +30,9 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
     const {
         activeEngine, activeSpec, entries,
         minifyEnabled, compressEnabled, mangleEnabled, includeComments,
-        simulateUsingDevEngine, setDebugNodes, setDebugPorts
+        simulateUsingDevEngine, setDebugNodes, setDebugPorts,
+        setSelectedEntryId, setActiveTab,
+        isSpecDirty, setPendingTab, setPendingEntryId
     } = useData();
     const { nodes, edges, onNodesChange, onEdgesChange, updateHighlights } = useGraphData();
     const session = useChatSession();
@@ -96,6 +98,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
         localStorage.setItem('graphview_viewport', JSON.stringify(viewport));
     }, []);
 
+    const [isCompiling, setIsCompiling] = useState(false);
     const [engineMeta, setEngineMeta] = useState<{ lastCompiled: string, specName: string } | null>(null);
     const [chatHighlights, setChatHighlights] = useState<any>(null);
     const [executionError, setExecutionError] = useState<string | null>(null);
@@ -109,37 +112,60 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
 
     useEffect(() => { refreshMeta(); }, [refreshMeta]);
 
-    useEffect(() => {
+    const triggerCompile = useCallback(async () => {
         const ipc = (window as any).ipcRenderer;
-        if (ipc && activeEngine && activeSpec) {
-            ipc.invoke('compile-engine', activeEngine, activeSpec, entries, {
+        if (!ipc || !activeEngine || !activeSpec) return;
+
+        setIsCompiling(true);
+        const specContent = await ipc.invoke('read-spec', activeEngine, activeSpec);
+        if (!specContent) {
+            setIsCompiling(false);
+            return;
+        }
+
+        try {
+            const rawSpec = JSON.parse(specContent);
+            const { decomposeBehavior } = await import('../SpecEditor/utils/specTraversals');
+            const decomposed = decomposeBehavior(rawSpec);
+
+            await ipc.invoke('compile-engine', activeEngine, activeSpec, entries, {
                 minify: minifyEnabled,
                 compress: compressEnabled,
                 mangle: mangleEnabled,
                 comments: includeComments,
-                useDevEngine: simulateUsingDevEngine
-            }).then(() => {
-                refreshMeta();
+                useDevEngine: simulateUsingDevEngine,
+                graphData: decomposed
             });
+            await refreshMeta();
+        } catch (e) {
+            console.error("Failed to decompose or compile behavior", e);
+        } finally {
+            setIsCompiling(false);
         }
-    }, [activeSpec, activeEngine, entries, refreshMeta, minifyEnabled, compressEnabled, mangleEnabled, includeComments, simulateUsingDevEngine]);
+    }, [activeEngine, activeSpec, entries, refreshMeta, minifyEnabled, compressEnabled, mangleEnabled, includeComments, simulateUsingDevEngine]);
 
+    useEffect(() => {
+        triggerCompile();
+    }, [triggerCompile]);
 
     const runEngine = useCallback(async (currentInput: string) => {
+        if (isCompiling) return;
         const ipc = (window as any).ipcRenderer;
         if (!ipc || !activeEngine) return;
 
         const historyWindow = session.chatHistory.slice(-9).map(m => ({
             is_bot: m.role === 'system',
-            date: undefined,
+            date: m.date,
             message: m.content,
         }));
+
+        const currentTimestamp = session.useCurrentTime ? new Date() : new Date(session.customTime);
 
         const chat = {
             last_message: currentInput,
             last_messages: [
                 ...historyWindow,
-                { is_bot: false, date: new Date(), message: currentInput }
+                { is_bot: false, date: currentTimestamp, message: currentInput }
             ],
             first_message_date: chatMeta.first_message_date,
             last_bot_message_date: chatMeta.last_bot_message_date,
@@ -158,14 +184,13 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
             });
 
             if (!response.success && response.error?.includes('not found')) {
-                await ipc.invoke('compile-engine', activeEngine, activeSpec, entries, {
-                    minify: minifyEnabled,
-                    compress: compressEnabled,
-                    mangle: mangleEnabled,
-                    comments: includeComments,
-                    useDevEngine: simulateUsingDevEngine
-                });
-                await refreshMeta();
+                await triggerCompile();
+                // Recursion here might be blocked by isCompiling check if we are not careful
+                // But triggerCompile inside will await. RunEngine is async.
+                // However, triggerCompile sets isCompiling=true.
+                // IF we await it, isCompiling becomes false at end.
+                // We shouldn't recurse runEngine here if we have dependencies.
+                // Instead, just invoke invoke execute again.
                 response = await ipc.invoke('engine:execute', {
                     engineName: activeEngine,
                     context,
@@ -191,11 +216,18 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
         } catch (e) {
             console.error("Failed to execute engine sandbox", e);
         }
-    }, [activeEngine, activeSpec, entries, session.chatHistory, character, chatMeta, updateHighlights, refreshMeta, simulateUsingDevEngine, minifyEnabled, compressEnabled, mangleEnabled, includeComments]);
+    }, [activeEngine, activeSpec, entries, session.chatHistory, character, chatMeta, updateHighlights, refreshMeta, simulateUsingDevEngine, minifyEnabled, compressEnabled, mangleEnabled, includeComments, isCompiling]);
 
     const onChatInputChange = (val: string) => {
         runEngine(val);
     };
+
+    // Re-run engine when compilation finishes
+    useEffect(() => {
+        if (!isCompiling && activeEngine) {
+            runEngine(session.chatInput);
+        }
+    }, [isCompiling, activeEngine, runEngine, session.chatInput]);
 
     useEffect(() => {
         runEngine(session.chatInput);
@@ -245,6 +277,17 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
                             onEdgesChange={onEdgesChange}
                             defaultViewport={defaultViewport}
                             onMoveEnd={onMoveEnd}
+                            onNodeDoubleClick={(_, node) => {
+                                if (entries.some(e => e.id === node.id)) {
+                                    if (isSpecDirty) {
+                                        setPendingTab('data');
+                                        setPendingEntryId(node.id);
+                                    } else {
+                                        setSelectedEntryId(node.id);
+                                        setActiveTab('data');
+                                    }
+                                }
+                            }}
                             className="dark-theme"
                         >
                             <Background color="#30363d" gap={16} />

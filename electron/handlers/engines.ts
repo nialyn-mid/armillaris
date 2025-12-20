@@ -109,7 +109,8 @@ export function registerEngineHandlers() {
             compress = true,
             mangle = true,
             comments = false,
-            useDevEngine = false
+            useDevEngine = false,
+            graphData: graphOverride = null
         } = options;
 
         const enginePath = path.join(ENGINES_DIR, engineName);
@@ -132,7 +133,7 @@ export function registerEngineHandlers() {
         const specPath = path.join(enginePath, 'behavior_spec', specFilename);
 
         if (!fs.existsSync(adapterPath)) throw new Error('Adapter not found');
-        if (!fs.existsSync(specPath)) throw new Error(`Spec file '${specFilename}' not found`);
+        if (!graphOverride && !fs.existsSync(specPath)) throw new Error(`Spec file '${specFilename}' not found`);
         if (!fs.existsSync(engineJsPath)) throw new Error(`Engine file '${engineJsName}' not found`);
 
         let behaviorOutput = '{}';
@@ -142,7 +143,7 @@ export function registerEngineHandlers() {
         // 1. Run Adapter (Behavior & Data)
         try {
             const adapterCode = fs.readFileSync(adapterPath, 'utf-8');
-            const graphData = JSON.parse(fs.readFileSync(specPath, 'utf-8'));
+            const graphData = graphOverride || JSON.parse(fs.readFileSync(specPath, 'utf-8'));
 
             const sandbox = {
                 module: { exports: {} },

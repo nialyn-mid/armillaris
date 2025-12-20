@@ -1,5 +1,4 @@
 import { useData } from '../../context/DataContext';
-import { useDataViewSelection } from './hooks/useDataViewSelection';
 import { useDataViewFiltering } from './hooks/useDataViewFiltering';
 import { useDataViewEntryEditing } from './hooks/useDataViewEntryEditing';
 import { DataListPane } from './components/DataListPane';
@@ -20,11 +19,14 @@ export default function DataView({ showSchema }: DataViewProps) {
         addEntry,
         deleteEntry,
         originalEntries,
-        metaDefinitions
+        metaDefinitions,
+        selectedEntryId,
+        setSelectedEntryId
     } = useData();
 
     // Hooks
-    const { selectedId, setSelectedId } = useDataViewSelection();
+    const selectedId = selectedEntryId;
+    const setSelectedId = setSelectedEntryId;
 
     const {
         searchTerm, setSearchTerm,

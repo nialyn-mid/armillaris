@@ -97,10 +97,12 @@ export const useSpecGraph = () => {
         const subGraph = getGraphAt(masterGraph, viewPath);
 
         // Re-attach handlers to nodes coming from MasterGraph storage
+        const currentPathPrefix = viewPath.map(v => v.id).join('.');
         const loadedNodes = (subGraph.nodes || []).map((n: Node) => ({
             ...n,
             data: {
                 ...n.data,
+                pathPrefix: currentPathPrefix,
                 onUpdate: handleNodeUpdate,
                 onDuplicate: handleDuplicateNode,
                 onDelete: handleDeleteNode,

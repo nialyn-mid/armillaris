@@ -39,7 +39,12 @@ function App() {
     activePane,
     setActivePane,
     togglePane,
-    isSpecDirty
+    isSpecDirty,
+    pendingTab,
+    setPendingTab,
+    pendingEntryId,
+    setPendingEntryId,
+    setSelectedEntryId
   } = useData();
 
   const [showWelcomePrompt, setShowWelcomePrompt] = useState(false);
@@ -55,7 +60,6 @@ function App() {
   }, []);
 
   const [isTemplateDirty, setIsTemplateDirty] = useState(false);
-  const [pendingTab, setPendingTab] = useState<string | null>(null);
   const templateRef = useRef<TemplateViewHandle>(null);
   const specRef = useRef<SpecNodeEditorHandle>(null);
 
@@ -73,6 +77,10 @@ function App() {
 
   const confirmNavigation = () => {
     if (pendingTab) {
+      if (pendingEntryId) {
+        setSelectedEntryId(pendingEntryId);
+        setPendingEntryId(null);
+      }
       setActiveTab(pendingTab);
       setPendingTab(null);
     }
@@ -181,7 +189,7 @@ function App() {
       {pendingTab && (
         <ConfirmModal
           title="Unsaved Changes"
-          message={`You have unsaved changes in the ${activeTab === 'graph' ? 'Behavior Graph' : 'Develop'} view.\nWould you like to save them before leaving?`}
+          message={`You have unsaved changes in the ${activeTab === 'graph' ? 'Behavior' : 'Template'} editor.\nWould you like to save them before leaving?`}
           buttons={[
             {
               label: 'Save & Leave',
@@ -196,10 +204,16 @@ function App() {
             {
               label: 'Stay',
               variant: 'secondary',
-              onClick: () => setPendingTab(null)
+              onClick: () => {
+                setPendingTab(null);
+                setPendingEntryId(null);
+              }
             }
           ]}
-          onClose={() => setPendingTab(null)}
+          onClose={() => {
+            setPendingTab(null);
+            setPendingEntryId(null);
+          }}
         />
       )}
     </div>

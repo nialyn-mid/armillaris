@@ -22,125 +22,79 @@
  * @returns {string} - The valid JSON string of the .ane format
  */
 function adapt(behaviorData) {
-    // 1. Flatten Nodes (Handle groups if present, though engine usually receives flattened)
-    // The editor usually exports 'nodes' as a flat list, but just in case we filter.
-    // We also valid nodes only (ignore pure UI nodes if any, though usually all are functional).
-    var rawNodes = behaviorData.nodes || [];
-    var rawEdges = behaviorData.edges || [];
+    var allNodes = behaviorData.nodes || [];
+    var allEdges = behaviorData.edges || [];
 
-    // 2. Build String Table
-    // We need to collect ALL unique strings: Node Types, Property keys, String Values, Port Names.
-    var stringMap = {}; // String -> Index
+    // 1. Serialize String Table
+    var stringMap = {};
     var stringTable = [];
-
     function getStringIndex(str) {
         if (str === null || str === undefined) return -1;
         var s = String(str);
-        if (Object.prototype.hasOwnProperty.call(stringMap, s)) {
-            return stringMap[s];
-        }
+        if (Object.prototype.hasOwnProperty.call(stringMap, s)) return stringMap[s];
         var idx = stringTable.length;
         stringTable.push(s);
         stringMap[s] = idx;
         return idx;
     }
 
-    // 3. Map UUIDs to Sequential Indices
+    // 2. Map functional nodes
     var uuidToIndex = {};
-    var validNodes = [];
+    var engineNodes = [];
+    var engineIds = [];
 
-    // Pass 1: Collect Nodes and build UUID map
-    for (var i = 0; i < rawNodes.length; i++) {
-        var node = rawNodes[i];
-        if (!node.data || !node.data.def) continue; // Skip malformed nodes
+    for (var i = 0; i < allNodes.length; i++) {
+        var node = allNodes[i];
+        uuidToIndex[node.id] = i;
+        engineIds.push(node.id);
 
-        // Skip Group containers themselves (the children are what matters ?)
-        // Actually, in this system, if flattening is required, it should be done here.
-        // For now assuming standard flat export or that logic is handled by editor.
-        // We just process what is given.
+        var type = node.data.def ? node.data.def.type : "default";
+        var typeIdx = getStringIndex(type);
 
-        // Exclude specific UI-only nodes if known, e.g., "NoteNode" or "LabelNode"
-        // For now, if it has 'def' (definition), it's an engine node.
-
-        var runtimeIndex = validNodes.length;
-        uuidToIndex[node.id] = runtimeIndex;
-        validNodes.push(node);
-    }
-
-    // 4. Serialize Nodes
-    var serializedNodes = [];
-
-    for (var i = 0; i < validNodes.length; i++) {
-        var node = validNodes[i];
-        var def = node.data.def;
-        var values = node.data.values || {};
-
-        // Type Index
-        var typeIdx = getStringIndex(def.type);
-
-        // Compact Properties: [KeyIdx, Value, KeyIdx, Value...]
         var propsArray = [];
+        var label = node.data.label || (node.data.def ? node.data.def.label : "");
+        propsArray.push(getStringIndex("label"), getStringIndex(label));
 
-        // ALWAYS include the label from the definition in properties for engine routing
-        propsArray.push(getStringIndex("label"));
-        propsArray.push(getStringIndex(def.label));
-
-        // We only serialize values that are explicitly set or have defaults in 'def' if needed.
+        var values = node.data.values || {};
         for (var key in values) {
             if (Object.prototype.hasOwnProperty.call(values, key)) {
                 var val = values[key];
-
                 var finalVal = val;
                 if (typeof val === 'string') {
-                    // If it's a numeric string, keep it as a number literal to avoid string table indexing
-                    if (!isNaN(val) && val.trim() !== "") {
-                        finalVal = Number(val);
-                    } else {
-                        finalVal = getStringIndex(val);
-                    }
+                    if (!isNaN(val) && val.trim() !== "") finalVal = Number(val);
+                    else finalVal = getStringIndex(val);
                 }
-
                 propsArray.push(getStringIndex(key));
                 propsArray.push(finalVal);
             }
         }
-
-        serializedNodes.push([typeIdx, propsArray]);
+        engineNodes.push([typeIdx, propsArray]);
     }
 
-    // 5. Serialize Edges
+    // 3. Serialize Edges
     var serializedEdges = [];
+    for (var i = 0; i < allEdges.length; i++) {
+        var e = allEdges[i];
+        var srcIdx = uuidToIndex[e.source];
+        var tgtIdx = uuidToIndex[e.target];
 
-    for (var i = 0; i < rawEdges.length; i++) {
-        var edge = rawEdges[i];
-        var srcId = edge.source;
-        var tgtId = edge.target;
-        var srcHandle = edge.sourceHandle;
-        var tgtHandle = edge.targetHandle;
-
-        // Resolve indices
-        var srcIdx = uuidToIndex[srcId];
-        var tgtIdx = uuidToIndex[tgtId];
-
-        // Skip if connected to a node we filtered out
-        if (srcIdx === undefined || tgtIdx === undefined) continue;
-
-        var srcPortIdx = getStringIndex(srcHandle || "default");
-        var tgtPortIdx = getStringIndex(tgtHandle || "default");
-
-        serializedEdges.push([srcIdx, srcPortIdx, tgtIdx, tgtPortIdx]);
+        if (srcIdx !== undefined && tgtIdx !== undefined) {
+            serializedEdges.push([
+                srcIdx,
+                getStringIndex(e.sourceHandle || "default"),
+                tgtIdx,
+                getStringIndex(e.targetHandle || "default")
+            ]);
+        }
     }
 
-    // 6. Construct Final Object
-    var ane = {
-        v: "1.0",
+    return JSON.stringify({
+        v: "1.1",
         s: stringTable,
-        i: validNodes.map(function (n) { return n.id; }), // Node ID Table
-        n: serializedNodes,
+        i: engineIds,
+        n: engineNodes,
         e: serializedEdges
-    };
-
-    return JSON.stringify(ane);
+    });
 }
 
 /**

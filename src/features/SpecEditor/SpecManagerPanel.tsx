@@ -15,6 +15,8 @@ interface SpecManagerPanelProps {
     setActiveSpec: (spec: string) => void;
     nodeCount: number;
     edgeCount: number;
+    isSpecDirty: boolean;
+    navigateTo: (path: any[]) => void;
 }
 
 export default function SpecManagerPanel({
@@ -29,9 +31,21 @@ export default function SpecManagerPanel({
     activeSpec,
     setActiveSpec,
     nodeCount,
-    edgeCount
+    edgeCount,
+    isSpecDirty,
+    navigateTo
 }: SpecManagerPanelProps) {
     const [specToDelete, setSpecToDelete] = useState<string | null>(null);
+    const [specToSwitchTo, setSpecToSwitchTo] = useState<string | null>(null);
+
+    const onSelectSpec = (spec: string) => {
+        if (isSpecDirty) {
+            setSpecToSwitchTo(spec);
+        } else {
+            setActiveSpec(spec);
+            navigateTo([]); // Reset breadcrumbs on switch
+        }
+    };
 
     const stripExtension = (name: string) => {
         if (!name) return '';
@@ -130,7 +144,7 @@ export default function SpecManagerPanel({
                                     cursor: 'pointer',
                                     borderRadius: '4px'
                                 }}
-                                onClick={() => setActiveSpec(spec)}
+                                onClick={() => onSelectSpec(spec)}
                             >
                                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                     {stripExtension(spec)}
@@ -166,6 +180,30 @@ export default function SpecManagerPanel({
                     Edges: {edgeCount}
                 </div>
             </div>
+
+            {specToSwitchTo && (
+                <ConfirmModal
+                    title="Unsaved Changes"
+                    message="You have unsaved changes in your current behavior. If you switch now, those changes will be lost. Continue?"
+                    buttons={[
+                        {
+                            label: 'Discard & Switch',
+                            variant: 'danger',
+                            onClick: () => {
+                                setActiveSpec(specToSwitchTo);
+                                navigateTo([]);
+                                setSpecToSwitchTo(null);
+                            }
+                        },
+                        {
+                            label: 'Cancel',
+                            variant: 'secondary',
+                            onClick: () => setSpecToSwitchTo(null)
+                        }
+                    ]}
+                    onClose={() => setSpecToSwitchTo(null)}
+                />
+            )}
 
             {specToDelete && (
                 <ConfirmModal

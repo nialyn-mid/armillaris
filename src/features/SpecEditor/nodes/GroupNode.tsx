@@ -9,12 +9,15 @@ import { usePortHoverDebug } from '../hooks/usePortHoverDebug';
 import JsonTree from '../components/JsonTree';
 import { MdFullscreen, MdFullscreenExit, MdClose } from 'react-icons/md';
 import { useState } from 'react';
+import { useData } from '../../../context/DataContext';
+import { getDataType } from '../utils/debugUtils';
 import './Nodes.css';
 import './GroupNode.css';
 import './PortDebug.css';
 
 const GroupNode = ({ data, selected, id }: any) => {
     const { label, inputs, outputs, onEditGroup, onUpdate, color } = data;
+    const { debugNodes } = useData();
 
     // Dynamic Min Height based on ports (for layout hint)
     const portCount = Math.max(inputs?.length || 0, outputs?.length || 0);
@@ -34,7 +37,7 @@ const GroupNode = ({ data, selected, id }: any) => {
     const { saveCustomNode } = useCustomNodes();
     const {
         hoveredPort, showTooltip, onPortEnter, onPortLeave, onPortClick, clearDebug, debugData
-    } = usePortHoverDebug(id);
+    } = usePortHoverDebug(id, data.pathPrefix);
 
     const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -42,9 +45,12 @@ const GroupNode = ({ data, selected, id }: any) => {
         saveCustomNode(data, label);
     };
 
+    const fullId = data.pathPrefix ? `${data.pathPrefix}.${id}` : id;
+    const isExecuting = debugNodes.some(nid => nid === fullId || nid.startsWith(fullId + '.'));
+
     return (
         <div
-            className={`spec-node group-node ${selected ? 'selected' : ''} ${data.isDragTarget ? 'drop-target' : ''}`}
+            className={`spec-node group-node ${selected ? 'selected' : ''} ${data.isDragTarget ? 'drop-target' : ''} ${isExecuting ? 'executing-glow' : ''}`}
             onClick={clearDebug}
             style={{
                 '--node-accent-color': activeColor,
@@ -74,7 +80,7 @@ const GroupNode = ({ data, selected, id }: any) => {
                 >
                     <div className="tooltip-header">
                         <span style={{ fontWeight: 'bold', color: '#58a6ff' }}>
-                            Value ({hoveredPort?.id})
+                            {getDataType(debugData)} ({hoveredPort?.id})
                         </span>
                         <div className="tooltip-header-btns">
                             <button
@@ -94,7 +100,7 @@ const GroupNode = ({ data, selected, id }: any) => {
                         </div>
                     </div>
                     <div className="tooltip-content">
-                        {debugData !== null && debugData !== undefined ? (
+                        {debugData !== undefined ? (
                             <JsonTree data={debugData} isRoot />
                         ) : (
                             <div style={{ color: '#8b949e', fontStyle: 'italic', textAlign: 'center', padding: '10px' }}>

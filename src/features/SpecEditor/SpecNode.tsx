@@ -14,6 +14,7 @@ import type { SpecNodeData } from './types';
 import JsonTree from './components/JsonTree';
 import { MdFullscreen, MdFullscreenExit, MdClose } from 'react-icons/md';
 import { useState } from 'react';
+import { getDataType } from './utils/debugUtils';
 
 import './nodes/Nodes.css';
 import './nodes/PortDebug.css';
@@ -36,7 +37,7 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
     const { saveCustomNode } = useCustomNodes();
     const {
         hoveredPort, showTooltip, onPortEnter, onPortLeave, onPortClick, clearDebug, debugData
-    } = usePortHoverDebug(id);
+    } = usePortHoverDebug(id, data.pathPrefix);
 
     const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -44,7 +45,8 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
         saveCustomNode(data, def.label);
     };
 
-    const isExecuting = debugNodes.includes(id);
+    const fullId = data.pathPrefix ? `${data.pathPrefix}.${id}` : id;
+    const isExecuting = debugNodes.includes(fullId);
 
     return (
         <div
@@ -77,7 +79,7 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
                 >
                     <div className="tooltip-header">
                         <span style={{ fontWeight: 'bold', color: '#58a6ff' }}>
-                            Value ({hoveredPort?.id})
+                            {getDataType(debugData)} ({hoveredPort?.id})
                         </span>
                         <div className="tooltip-header-btns">
                             <button
@@ -97,7 +99,7 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
                         </div>
                     </div>
                     <div className="tooltip-content">
-                        {debugData !== null && debugData !== undefined ? (
+                        {debugData !== undefined ? (
                             <JsonTree data={debugData} isRoot />
                         ) : (
                             <div style={{ color: '#8b949e', fontStyle: 'italic', textAlign: 'center', padding: '10px' }}>

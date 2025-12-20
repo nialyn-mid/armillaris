@@ -5,6 +5,8 @@ export interface SpecNodeData {
     def: EngineSpecNodeDef;
     values: Record<string, any>;
     categoryColor?: string;
+    pathPrefix?: string;
+    onEditGroup?: (id: string, label: string) => void;
     onUpdate?: (id: string, data: any) => void;
     onDuplicate?: (id: string) => void;
     onDelete?: (id: string) => void;

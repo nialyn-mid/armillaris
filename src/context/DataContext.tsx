@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { GraphData, LoreEntry, MetaDefinition } from '../lib/types';
 import { useLoreData } from './hooks/useLoreData';
 import { useEngineState } from './hooks/useEngineState';
@@ -9,6 +9,8 @@ import { tutorialEntries } from '../features/Tutorial/tutorialData';
 interface DataContextType {
   graphData: GraphData | null;
   setGraphData: (data: GraphData) => void;
+  behaviorGraph: any | null;
+  setBehaviorGraph: (data: any) => void;
   entries: LoreEntry[];
   originalEntries: LoreEntry[];
   setEntries: (entries: LoreEntry[]) => void;
@@ -73,6 +75,14 @@ interface DataContextType {
   activePane: 'import' | 'export' | 'engine' | null;
   setActivePane: (pane: 'import' | 'export' | 'engine' | null) => void;
   togglePane: (pane: 'import' | 'export' | 'engine' | null) => void;
+
+  // Global Selection
+  selectedEntryId: string | null;
+  setSelectedEntryId: (id: string | null) => void;
+  pendingTab: string | null;
+  setPendingTab: (tab: string | null) => void;
+  pendingEntryId: string | null;
+  setPendingEntryId: (id: string | null) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -83,6 +93,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [debugNodes, setDebugNodes] = useState<string[]>([]);
   const [debugPorts, setDebugPorts] = useState<Record<string, Record<string, any>>>({});
   const [isSpecDirty, setIsSpecDirty] = useState(false);
+  const [behaviorGraph, setBehaviorGraph] = useState<any | null>(null);
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(() => {
+    return localStorage.getItem('dataview_selected_id');
+  });
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
+  const [pendingEntryId, setPendingEntryId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedEntryId) {
+      localStorage.setItem('dataview_selected_id', selectedEntryId);
+    } else {
+      localStorage.removeItem('dataview_selected_id');
+    }
+  }, [selectedEntryId]);
 
   const showNotification = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
     setNotification({ message: msg, type });
@@ -123,7 +147,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
       debugPorts,
       setDebugPorts,
       isSpecDirty,
-      setIsSpecDirty
+      setIsSpecDirty,
+      behaviorGraph,
+      setBehaviorGraph,
+      selectedEntryId,
+      setSelectedEntryId,
+      pendingTab,
+      setPendingTab,
+      pendingEntryId,
+      setPendingEntryId
     }}>
       {children}
     </DataContext.Provider>
