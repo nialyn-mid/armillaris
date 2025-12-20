@@ -74,6 +74,28 @@ function getEntryProps(entry) {
     return p;
 }
 
+function decompressJSON(val) {
+    if (val === null || typeof val !== 'object') return val;
+    if (Array.isArray(val)) {
+        return val.map(decompressJSON);
+    }
+    // Check if it looks like an entry { id, p, ... }
+    if (val.hasOwnProperty('id') && val.hasOwnProperty('p') && Array.isArray(val.p)) {
+        var props = getEntryProps(val);
+        var res = { id: val.id };
+        for (var key in props) res[key] = decompressJSON(props[key]);
+        return res;
+    }
+    // Generic object
+    var res = {};
+    for (var key in val) {
+        if (val.hasOwnProperty(key)) {
+            res[key] = decompressJSON(val[key]);
+        }
+    }
+    return res;
+}
+
 function compareValues(a, b, op) {
     switch (op) {
         case "==": return a == b;
@@ -92,6 +114,7 @@ function compareValues(a, b, op) {
 var memo = {};
 var executed_nodes = [];
 var rawHighlights = {}; // msgIndex -> [ { color, ranges: [[s,e]...] } ]
+var debug_ports = {}; // { nodeUUID: { portID: value } }
 
 function addHighlight(msgIdx, color, start, end) {
     if (!rawHighlights[msgIdx]) rawHighlights[msgIdx] = {};
@@ -121,16 +144,16 @@ function resolveInput(nodeIdx, portName) {
 }
 
 function executeNode(nodeIdx, portIdx) {
-    if (nodeIdx !== -1 && executed_nodes.indexOf(nodeIdx) === -1) executed_nodes.push(nodeIdx);
-
     var cacheKey = nodeIdx + ":" + portIdx;
     if (memo.hasOwnProperty(cacheKey)) return memo[cacheKey];
 
     var node = behaviorNodes[nodeIdx];
     if (!node) return null;
 
-    var type = getBStr(node[0]);
+    var nodeUuid = behaviorIds[nodeIdx];
     var portName = getBStr(portIdx);
+
+    var type = getBStr(node[0]);
     var props = getProps(nodeIdx);
     var label = (props.label || "").toLowerCase();
 
@@ -351,6 +374,18 @@ function executeNode(nodeIdx, portIdx) {
     }
 
     memo[cacheKey] = result;
+
+    if (nodeUuid) {
+        if (!debug_ports[nodeUuid]) debug_ports[nodeUuid] = {};
+        debug_ports[nodeUuid][portName] = decompressJSON(result);
+    }
+
+    // Only glow if the node produced something useful (non-falsy, non-empty list)
+    var isUseful = result && (!Array.isArray(result) || result.length > 0);
+    if (isUseful && nodeIdx !== -1 && executed_nodes.indexOf(nodeIdx) === -1) {
+        executed_nodes.push(nodeIdx);
+    }
+
     return result;
 }
 

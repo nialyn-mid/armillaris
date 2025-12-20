@@ -325,6 +325,14 @@ export function registerEngineHandlers() {
                 debugNodes = sandbox.context[debugNodesVarName];
             }
 
+            const debugPortsVarName = spec['debugports-var'] || 'debug_ports';
+            let debugPorts: any = {};
+            if (sandbox[debugPortsVarName]) {
+                debugPorts = sandbox[debugPortsVarName];
+            } else if (sandbox.context?.[debugPortsVarName]) {
+                debugPorts = sandbox.context[debugPortsVarName];
+            }
+
             let activatedIds = rawIds;
             if (fs.existsSync(adapterPath)) {
                 const adapterScript = fs.readFileSync(adapterPath, 'utf-8');
@@ -345,7 +353,8 @@ export function registerEngineHandlers() {
                 example_dialogs,
                 activatedIds,
                 chatHighlights,
-                debugNodes
+                debugNodes,
+                debugPorts
             };
 
         } catch (e: any) {

@@ -1,0 +1,113 @@
+/* Port Hover Visuals */
+.port-hover-ring {
+    position: absolute;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translateY(-50%);
+    z-index: 5;
+    opacity: 0.6;
+}
+
+.port-hover-ring.input {
+    left: -18px;
+}
+
+.port-hover-ring.output {
+    right: -18px;
+}
+
+/* Port Label Hover Feedback */
+.port-label-container {
+    cursor: pointer;
+    border-radius: 12px;
+    padding: 2px 8px;
+    transition: background-color 0.2s;
+    margin: 0 -4px;
+}
+
+.port-label-container:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Debug Tooltip Container */
+.port-debug-tooltip {
+    position: fixed;
+    z-index: 1001;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 0;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 11px;
+    color: #c9d1d9;
+    min-width: 150px;
+    max-width: 400px;
+    max-height: 400px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    pointer-events: auto;
+    white-space: pre-wrap;
+    line-height: 1.4;
+    transform: translate(10px, -50%);
+    display: flex;
+    flex-direction: column;
+}
+
+.port-debug-tooltip.fullscreen {
+    left: 20px !important;
+    top: 20px !important;
+    right: 20px !important;
+    bottom: 20px !important;
+    max-width: none !important;
+    max-height: none !important;
+    transform: none !important;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 12px;
+}
+
+/* Tooltip Header & Buttons */
+.tooltip-header {
+    background: #21262d;
+    border-bottom: 1px solid #30363d;
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 6px 6px 0 0;
+    flex-shrink: 0;
+}
+
+.tooltip-header-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.tooltip-btn {
+    background: none;
+    border: none;
+    color: #8b949e;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.tooltip-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.tooltip-content {
+    padding: 12px;
+    overflow: auto;
+    flex: 1;
+}

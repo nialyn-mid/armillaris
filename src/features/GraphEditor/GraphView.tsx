@@ -30,7 +30,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
     const {
         activeEngine, activeSpec, entries,
         minifyEnabled, compressEnabled, mangleEnabled, includeComments,
-        simulateUsingDevEngine, setDebugNodes
+        simulateUsingDevEngine, setDebugNodes, setDebugPorts
     } = useData();
     const { nodes, edges, onNodesChange, onEdgesChange, updateHighlights } = useGraphData();
     const session = useChatSession();
@@ -182,6 +182,8 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
                 if (response.activatedIds) updateHighlights(response.activatedIds);
                 setChatHighlights(response.chatHighlights);
                 setDebugNodes(response.debugNodes || []);
+                setDebugPorts(response.debugPorts || {});
+                console.log("Engine Execution Debug Ports:", response.debugPorts);
                 setExecutionError(null);
             } else {
                 setExecutionError(response.error);

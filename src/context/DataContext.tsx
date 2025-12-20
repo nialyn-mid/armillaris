@@ -51,6 +51,8 @@ interface DataContextType {
   reloadEngine: () => Promise<void>;
   debugNodes: string[];
   setDebugNodes: (nodes: string[]) => void;
+  debugPorts: Record<string, Record<string, any>>;
+  setDebugPorts: (ports: Record<string, Record<string, any>>) => void;
   isSpecDirty: boolean;
   setIsSpecDirty: (dirty: boolean) => void;
 
@@ -79,6 +81,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [debugNodes, setDebugNodes] = useState<string[]>([]);
+  const [debugPorts, setDebugPorts] = useState<Record<string, Record<string, any>>>({});
   const [isSpecDirty, setIsSpecDirty] = useState(false);
 
   const showNotification = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
@@ -117,6 +120,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       loadTutorialData,
       debugNodes,
       setDebugNodes,
+      debugPorts,
+      setDebugPorts,
       isSpecDirty,
       setIsSpecDirty
     }}>

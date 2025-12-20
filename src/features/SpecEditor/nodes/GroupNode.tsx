@@ -1,10 +1,17 @@
 import { memo } from 'react';
+import { createPortal } from 'react-dom';
 import { SpecNodeInputPorts, SpecNodeOutputPorts } from './SpecNodePorts';
 import SpecNodeHeader from './SpecNodeHeader';
 import { useContextMenu } from '../hooks/useContextMenu';
 import { NodeContextMenu } from '../components/NodeContextMenu';
 import { useCustomNodes } from '../context/CustomNodesContext';
+import { usePortHoverDebug } from '../hooks/usePortHoverDebug';
+import JsonTree from '../components/JsonTree';
+import { MdFullscreen, MdFullscreenExit, MdClose } from 'react-icons/md';
+import { useState } from 'react';
 import './Nodes.css';
+import './GroupNode.css';
+import './PortDebug.css';
 
 const GroupNode = ({ data, selected, id }: any) => {
     const { label, inputs, outputs, onEditGroup, onUpdate, color } = data;
@@ -25,6 +32,11 @@ const GroupNode = ({ data, selected, id }: any) => {
 
     const { contextMenu, onContextMenu, closeContextMenu } = useContextMenu();
     const { saveCustomNode } = useCustomNodes();
+    const {
+        hoveredPort, showTooltip, onPortEnter, onPortLeave, onPortClick, clearDebug, debugData
+    } = usePortHoverDebug(id);
+
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     const handleSaveCustom = () => {
         saveCustomNode(data, label);
@@ -33,6 +45,7 @@ const GroupNode = ({ data, selected, id }: any) => {
     return (
         <div
             className={`spec-node group-node ${selected ? 'selected' : ''} ${data.isDragTarget ? 'drop-target' : ''}`}
+            onClick={clearDebug}
             style={{
                 '--node-accent-color': activeColor,
                 '--node-bg-color': `color-mix(in srgb, ${activeColor} 15%, #1e1e1e)`,
@@ -48,6 +61,50 @@ const GroupNode = ({ data, selected, id }: any) => {
                 onDelete={() => data.onDelete?.(id)}
                 onSaveCustom={handleSaveCustom}
             />}
+
+            {/* Port Debug Tooltip */}
+            {showTooltip && hoveredPort && createPortal(
+                <div
+                    className={`port-debug-tooltip ${isFullscreen ? 'fullscreen' : ''}`}
+                    style={isFullscreen ? {} : {
+                        left: Math.min(window.innerWidth - 420, (hoveredPort?.x || 0)),
+                        top: Math.max(10, Math.min(window.innerHeight - 300, (hoveredPort?.y || 0)))
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="tooltip-header">
+                        <span style={{ fontWeight: 'bold', color: '#58a6ff' }}>
+                            Value ({hoveredPort?.id})
+                        </span>
+                        <div className="tooltip-header-btns">
+                            <button
+                                className="tooltip-btn"
+                                onClick={() => setIsFullscreen(!isFullscreen)}
+                                title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                            >
+                                {isFullscreen ? <MdFullscreenExit /> : <MdFullscreen />}
+                            </button>
+                            <button
+                                className="tooltip-btn"
+                                onClick={clearDebug}
+                                title="Close"
+                            >
+                                <MdClose />
+                            </button>
+                        </div>
+                    </div>
+                    <div className="tooltip-content">
+                        {debugData !== null && debugData !== undefined ? (
+                            <JsonTree data={debugData} isRoot />
+                        ) : (
+                            <div style={{ color: '#8b949e', fontStyle: 'italic', textAlign: 'center', padding: '10px' }}>
+                                {hoveredPort.isInput ? 'Not connected' : 'No data available'}
+                            </div>
+                        )}
+                    </div>
+                </div>,
+                document.body
+            )}
 
             {/* Header */}
             <div className="group-header-container">
@@ -102,12 +159,26 @@ const GroupNode = ({ data, selected, id }: any) => {
             <div className="group-ports-container">
                 {/* Inputs Column */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <SpecNodeInputPorts inputs={inputs || []} />
+                    <SpecNodeInputPorts
+                        inputs={inputs || []}
+                        onPortEnter={onPortEnter}
+                        onPortLeave={onPortLeave}
+                        onPortClick={onPortClick}
+                        hoveredPortId={hoveredPort?.id}
+                        hoveredPortIndex={hoveredPort?.index}
+                    />
                 </div>
 
                 {/* Outputs Column */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
-                    <SpecNodeOutputPorts outputs={outputs || []} />
+                    <SpecNodeOutputPorts
+                        outputs={outputs || []}
+                        onPortEnter={onPortEnter}
+                        onPortLeave={onPortLeave}
+                        onPortClick={onPortClick}
+                        hoveredPortId={hoveredPort?.id}
+                        hoveredPortIndex={hoveredPort?.index}
+                    />
                 </div>
             </div>
         </div>

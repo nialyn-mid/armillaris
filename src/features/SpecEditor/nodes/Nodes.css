@@ -21,29 +21,6 @@
     box-shadow: 0 0 0 1px var(--node-accent-color);
 }
 
-.group-node.selected {
-    border-color: #fff;
-    box-shadow: 0 0 0 2px var(--node-accent-color);
-}
-
-.group-node.drop-target,
-.group-io-node.drop-target {
-    border-color: #fff;
-    box-shadow: 0 0 0 4px var(--node-accent-color), 0 0 20px var(--node-accent-color);
-    background: color-mix(in srgb, var(--node-accent-color) 30%, #1e1e1e) !important;
-}
-
-.spec-node.group-node {
-    min-width: 220px;
-    background: var(--node-bg-color, #1e1e1e);
-    border-color: var(--node-accent-color);
-}
-
-.spec-node.group-node:not(.selected) {
-    border-color: var(--node-accent-color);
-    opacity: 0.9;
-}
-
 .spec-node-body {
     padding: 8px;
     display: flex;
@@ -91,45 +68,6 @@
     flex-direction: column;
     gap: 8px;
     align-items: flex-end;
-}
-
-/* Group Node specifics */
-.group-ports-container {
-    position: relative;
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 8px;
-}
-
-.group-header-container {
-    display: flex;
-    align-items: center;
-    width: 100%;
-}
-
-.group-properties-row {
-    display: flex;
-    gap: 8px;
-}
-
-.group-edit-button {
-    width: 100%;
-    padding: 4px;
-    background: var(--node-accent-color);
-    border: 1px solid #555;
-    color: #fff;
-    border-radius: 2px;
-    cursor: pointer;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-
-.group-edit-button:hover {
-    background: var(--bg-secondary);
 }
 
 .spec-node.executing-glow {

@@ -5,12 +5,18 @@ import RecursiveProperties from './nodes/RecursiveProperties';
 import SpecNodeHeader from './nodes/SpecNodeHeader';
 import { SpecNodeInputPorts, SpecNodeOutputPorts } from './nodes/SpecNodePorts';
 import { useNodeLogic } from './hooks/useNodeLogic';
+import { usePortHoverDebug } from './hooks/usePortHoverDebug';
 import { useContextMenu } from './hooks/useContextMenu';
 import { useCustomNodes } from './context/CustomNodesContext';
 import { NodeContextMenu } from './components/NodeContextMenu';
+import { createPortal } from 'react-dom';
 import type { SpecNodeData } from './types';
+import JsonTree from './components/JsonTree';
+import { MdFullscreen, MdFullscreenExit, MdClose } from 'react-icons/md';
+import { useState } from 'react';
 
 import './nodes/Nodes.css';
+import './nodes/PortDebug.css';
 
 const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
     const { def, values, categoryColor, onDuplicate, onDelete } = data;
@@ -28,6 +34,11 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
 
     const { contextMenu, onContextMenu, closeContextMenu } = useContextMenu();
     const { saveCustomNode } = useCustomNodes();
+    const {
+        hoveredPort, showTooltip, onPortEnter, onPortLeave, onPortClick, clearDebug, debugData
+    } = usePortHoverDebug(id);
+
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     const handleSaveCustom = () => {
         saveCustomNode(data, def.label);
@@ -38,6 +49,7 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
     return (
         <div
             className={`spec-node ${selected ? 'selected' : ''} ${isExecuting ? 'executing-glow' : ''}`}
+            onClick={clearDebug}
             style={{
                 '--node-accent-color': categoryColor || '#007fd4',
                 minWidth: isSideBySide ? '400px' : undefined
@@ -53,6 +65,50 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
                 onSaveCustom={def.type === 'Group' ? handleSaveCustom : undefined}
             />}
 
+            {/* Port Debug Tooltip */}
+            {showTooltip && hoveredPort && createPortal(
+                <div
+                    className={`port-debug-tooltip ${isFullscreen ? 'fullscreen' : ''}`}
+                    style={isFullscreen ? {} : {
+                        left: Math.min(window.innerWidth - 420, (hoveredPort?.x || 0)),
+                        top: Math.max(10, Math.min(window.innerHeight - 300, (hoveredPort?.y || 0)))
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="tooltip-header">
+                        <span style={{ fontWeight: 'bold', color: '#58a6ff' }}>
+                            Value ({hoveredPort?.id})
+                        </span>
+                        <div className="tooltip-header-btns">
+                            <button
+                                className="tooltip-btn"
+                                onClick={() => setIsFullscreen(!isFullscreen)}
+                                title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                            >
+                                {isFullscreen ? <MdFullscreenExit /> : <MdFullscreen />}
+                            </button>
+                            <button
+                                className="tooltip-btn"
+                                onClick={clearDebug}
+                                title="Close"
+                            >
+                                <MdClose />
+                            </button>
+                        </div>
+                    </div>
+                    <div className="tooltip-content">
+                        {debugData !== null && debugData !== undefined ? (
+                            <JsonTree data={debugData} isRoot />
+                        ) : (
+                            <div style={{ color: '#8b949e', fontStyle: 'italic', textAlign: 'center', padding: '10px' }}>
+                                {hoveredPort.isInput ? 'Not connected' : 'No data available'}
+                            </div>
+                        )}
+                    </div>
+                </div>,
+                document.body
+            )}
+
             <SpecNodeHeader
                 label={def.label}
                 type={def.type}
@@ -64,7 +120,15 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
             {/* Body */}
             <div className={`spec-node-body ${isSideBySide ? 'row' : 'column'}`}>
 
-                <SpecNodeInputPorts inputs={inputs} isSideBySide={isSideBySide} />
+                <SpecNodeInputPorts
+                    inputs={inputs}
+                    isSideBySide={isSideBySide}
+                    onPortEnter={onPortEnter}
+                    onPortLeave={onPortLeave}
+                    onPortClick={onPortClick}
+                    hoveredPortId={hoveredPort?.id}
+                    hoveredPortIndex={hoveredPort?.index}
+                />
 
                 {(!isSideBySide && inputs.length > 0 && (outputs.length > 0 || properties.length > 0)) &&
                     <div className="spec-node-separator-h" />}
@@ -89,7 +153,15 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
                 {(!isSideBySide && outputs.length > 0 && properties.length > 0) &&
                     <div className="spec-node-separator-h" />}
 
-                <SpecNodeOutputPorts outputs={outputs} isSideBySide={isSideBySide} />
+                <SpecNodeOutputPorts
+                    outputs={outputs}
+                    isSideBySide={isSideBySide}
+                    onPortEnter={onPortEnter}
+                    onPortLeave={onPortLeave}
+                    onPortClick={onPortClick}
+                    hoveredPortId={hoveredPort?.id}
+                    hoveredPortIndex={hoveredPort?.index}
+                />
             </div>
         </div>
     );
