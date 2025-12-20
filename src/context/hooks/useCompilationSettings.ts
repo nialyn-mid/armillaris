@@ -5,7 +5,7 @@ export const useCompilationSettings = () => {
     const [compressEnabled, setCompressEnabled] = useState(() => localStorage.getItem('compress_enabled') !== 'false');
     const [mangleEnabled, setMangleEnabled] = useState(() => localStorage.getItem('mangle_enabled') !== 'false');
     const [includeComments, setIncludeComments] = useState<boolean>(() => localStorage.getItem('minify_comments') === 'true');
-    const [simulateUsingDevEngine, setSimulateUsingDevEngine] = useState<boolean>(() => localStorage.getItem('simulate_dev') === 'true');
+    const [simulateUsingDevEngine, setSimulateUsingDevEngine] = useState<boolean>(() => localStorage.getItem('simulate_dev') !== 'false');
 
     const [hasDevEngine, setHasDevEngine] = useState(false);
     const [engineErrors, setEngineErrors] = useState<any[]>([]);
