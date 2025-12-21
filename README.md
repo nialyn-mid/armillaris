@@ -3,21 +3,17 @@
 Lorebook Graph Editor
 
 ## what do
-turns your notion databases into a lorebook for janitor.ai, using a graph to determine what entries to include in the prompt
+everything
+
+1. lorebook lore editor
+2. graphical node-based behavior system
+3. watch how your lore is applied in real time
+4. script engine development editor
+5. module compatible
 
 ## use
-1. set up notion databases with:
-    - Description (text)
-    - Keywords (text, json list of strings)
-    - Meta (select)
-
-2. set up notion integration (internal) to get API token
-
-3. put token and database ids in Armillaris
-
-4. fetch
-
-5. go to code view
+tutorial built in
 
 ## legal
 use at your own risk
+nialyn mid copyright 2025 all rights reserved
