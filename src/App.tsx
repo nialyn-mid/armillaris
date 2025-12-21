@@ -140,6 +140,7 @@ function App() {
             {activeTab === 'data' && (
               <DataView
                 showSchema={activeTools.includes('schema')}
+                showDataStorage={activeTools.includes('data_storage')}
               />
             )}
             {activeTab === 'modules' && <ModuleView />}

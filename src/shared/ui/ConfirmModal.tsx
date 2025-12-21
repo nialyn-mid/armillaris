@@ -51,20 +51,39 @@ export default function ConfirmModal({
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
                     {buttons.map((btn, i) => {
+                        const isDanger = btn.variant === 'danger';
+                        const isPrimary = btn.variant === 'primary';
+
+                        let backgroundColor = 'transparent';
+                        let color = 'var(--text-primary)';
+                        let borderColor = 'var(--border-color)';
+
+                        if (isPrimary) {
+                            backgroundColor = 'var(--accent-color)';
+                            color = '#fff';
+                            borderColor = 'var(--accent-color)';
+                        } else if (isDanger) {
+                            backgroundColor = 'var(--danger-color)';
+                            color = '#fff';
+                            borderColor = 'var(--danger-color)';
+                        }
+
                         const style: React.CSSProperties = {
                             padding: '10px 20px',
                             borderRadius: '8px',
                             fontSize: '0.9rem',
                             fontWeight: 600,
                             cursor: 'pointer',
-                            transition: 'all 0.2s ease'
+                            transition: 'all 0.2s ease',
+                            backgroundColor,
+                            color,
+                            border: `1px solid ${borderColor}`
                         };
 
                         return (
                             <button
                                 key={i}
                                 onClick={btn.onClick}
-                                className={btn.variant === 'primary' ? 'primary' : ''}
                                 style={style}
                             >
                                 {btn.label}

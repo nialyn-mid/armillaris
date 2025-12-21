@@ -4,15 +4,17 @@ import { useDataViewEntryEditing } from './hooks/useDataViewEntryEditing';
 import { DataListPane } from './components/DataListPane';
 import { DataEditorPane } from './components/DataEditorPane';
 import { DataSchemaPane } from './components/DataSchemaPane';
+import { DataManagerPane } from './components/DataManagerPane';
 import ConfirmModal from '../../shared/ui/ConfirmModal';
 import { useState } from 'react';
 import './DataView.css';
 
 interface DataViewProps {
     showSchema: boolean;
+    showDataStorage: boolean;
 }
 
-export default function DataView({ showSchema }: DataViewProps) {
+export default function DataView({ showSchema, showDataStorage }: DataViewProps) {
     const {
         entries,
         updateEntry,
@@ -107,6 +109,7 @@ export default function DataView({ showSchema }: DataViewProps) {
             )}
 
             <DataSchemaPane showSchema={showSchema} />
+            <DataManagerPane show={showDataStorage} />
         </div>
     );
 }

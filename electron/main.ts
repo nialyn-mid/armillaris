@@ -9,6 +9,7 @@ import { registerNotionHandlers } from './handlers/notion.js';
 import { registerSecretHandlers } from './handlers/secrets.js';
 import { registerSandboxHandlers } from './handlers/sandbox.js';
 import { registerModuleHandlers } from './handlers/modules.js';
+import { registerDataHandlers } from './handlers/data.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -79,6 +80,7 @@ app.whenReady().then(() => {
     registerSecretHandlers();
     registerSandboxHandlers();
     registerModuleHandlers();
+    registerDataHandlers();
 
     ipcMain.handle('get-app-version', () => app.getVersion());
 

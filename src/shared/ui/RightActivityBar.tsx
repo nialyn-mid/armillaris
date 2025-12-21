@@ -4,7 +4,8 @@ import {
     MdSchema,      // Node Editor / Spec
     MdDescription, // Schema / Docs
     MdAssignment,  // Context Inputs
-    MdInfoOutline  // Tutorial
+    MdInfoOutline, // Tutorial
+    MdStorage      // Data Management
 } from 'react-icons/md';
 
 interface RightActivityBarProps {
@@ -26,7 +27,8 @@ export default function RightActivityBar({ activeTab, activeTools, onToggleTool 
                 ];
             case 'data':
                 return [
-                    { id: 'schema', icon: <MdDescription />, title: 'Meta Schemas' }
+                    { id: 'schema', icon: <MdDescription />, title: 'Meta Schemas' },
+                    { id: 'data_storage', icon: <MdStorage />, title: 'Data Management' }
                 ];
             default:
                 return [];

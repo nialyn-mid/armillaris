@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { LoreEntry, GraphData, MetaDefinition } from '../../lib/types';
 import { GraphBuilder } from '../../lib/graph-builder';
 
@@ -9,9 +9,9 @@ export const useLoreData = (showNotification: (msg: string, type?: 'success' | '
     const [metaDefinitions, setMetaDefinitions] = useState<MetaDefinition[]>([]);
 
     // Helper to infer schema from data
-    const inferMetaDefinitions = (data: LoreEntry[]): MetaDefinition[] => {
+    const inferMetaDefinitions = useCallback((data: LoreEntry[]): MetaDefinition[] => {
         const map = new Map<string, Map<string, 'string' | 'list' | 'relation'>>();
-
+        // ... (rest same)
         data.forEach(entry => {
             const meta = String(entry.properties.Meta || 'Undefined');
             if (!map.has(meta)) map.set(meta, new Map());
@@ -53,23 +53,23 @@ export const useLoreData = (showNotification: (msg: string, type?: 'success' | '
 
         definitions.sort((a, b) => a.name.localeCompare(b.name));
         return definitions;
-    };
+    }, []);
 
-    const setEntries = (newEntries: LoreEntry[]) => {
+    const setEntries = useCallback((newEntries: LoreEntry[]) => {
         setOriginalEntries(newEntries);
         setEditableEntries(newEntries);
         setMetaDefinitions(inferMetaDefinitions(newEntries));
-    };
+    }, [inferMetaDefinitions]);
 
-    const updateMetaDefinitions = (defs: MetaDefinition[]) => {
+    const updateMetaDefinitions = useCallback((defs: MetaDefinition[]) => {
         setMetaDefinitions(defs);
-    };
+    }, []);
 
-    const updateEntry = (updatedEntry: LoreEntry) => {
+    const updateEntry = useCallback((updatedEntry: LoreEntry) => {
         setEditableEntries(prev => prev.map(e => e.id === updatedEntry.id ? updatedEntry : e));
-    };
+    }, []);
 
-    const addEntry = () => {
+    const addEntry = useCallback(() => {
         const newEntry: LoreEntry = {
             id: crypto.randomUUID(),
             label: 'New Entry',
@@ -84,12 +84,12 @@ export const useLoreData = (showNotification: (msg: string, type?: 'success' | '
         };
         setEditableEntries(prev => [newEntry, ...prev]);
         showNotification('New entry added.');
-    };
+    }, [showNotification]);
 
-    const deleteEntry = (id: string) => {
+    const deleteEntry = useCallback((id: string) => {
         setEditableEntries(prev => prev.filter(e => e.id !== id));
         showNotification('Entry deleted.');
-    };
+    }, [showNotification]);
 
     useEffect(() => {
         if (entries.length === 0) {

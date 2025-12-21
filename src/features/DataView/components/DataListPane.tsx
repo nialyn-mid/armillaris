@@ -1,6 +1,6 @@
 import type { LoreEntry, MetaDefinition } from '../../../lib/types';
 import { EmptyState } from '../../../shared/ui/EmptyState';
-import { MdLibraryBooks } from 'react-icons/md';
+import { MdLibraryBooks, MdError } from 'react-icons/md';
 
 interface DataListPaneProps {
     filteredEntries: LoreEntry[];
@@ -81,7 +81,7 @@ export function DataListPane({
                         >
                             <div className="data-list-item-title">
                                 <span>{entry.label}</span>
-                                {!isMetaDefined && <span title="Undefined Meta Type">⚠️</span>}
+                                {!isMetaDefined && <MdError title="Undefined Meta Type" style={{ color: 'var(--danger-color)' }} />}
                             </div>
                         </div>
                     );

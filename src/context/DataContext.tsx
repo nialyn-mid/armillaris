@@ -4,6 +4,7 @@ import { useLoreData } from './hooks/useLoreData';
 import { useEngineState } from './hooks/useEngineState';
 import { useCompilationSettings } from './hooks/useCompilationSettings';
 import { useUIState } from './hooks/useUIState';
+import { useDataStorage } from './hooks/useDataStorage';
 import { tutorialEntries } from '../features/Tutorial/tutorialData';
 
 interface DataContextType {
@@ -83,6 +84,21 @@ interface DataContextType {
   setPendingTab: (tab: string | null) => void;
   pendingEntryId: string | null;
   setPendingEntryId: (id: string | null) => void;
+
+  // Data Storage & Projects
+  projects: any[];
+  activeProjectId: string | null;
+  setActiveProjectId: (id: string | null) => void;
+  versions: any[];
+  manualSave: () => Promise<void>;
+  createProject: (name: string) => Promise<void>;
+  renameProject: (projectId: string, newName: string) => Promise<void>;
+  duplicateProject: (projectId: string, newName: string) => Promise<void>;
+  deleteProject: (projectId: string) => Promise<void>;
+  loadVersion: (versionId: string) => Promise<void>;
+  compressOldVersions: (cutoffDate: number) => Promise<void>;
+  pruneVersions: (options: { cutoff?: number, feather?: boolean }) => Promise<void>;
+  refreshProjects: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -114,6 +130,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const loreData = useLoreData(showNotification);
+  const storage = useDataStorage(loreData.entries, loreData.setEntries, showNotification);
   const compilation = useCompilationSettings();
   const engine = useEngineState(compilation.setHasDevEngine, compilation.setEngineErrors);
   const ui = useUIState();
@@ -133,6 +150,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   return (
     <DataContext.Provider value={{
       ...loreData,
+      ...storage,
       ...engine,
       ...compilation,
       ...ui,
