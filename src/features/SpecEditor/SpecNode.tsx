@@ -36,7 +36,7 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
     const { contextMenu, onContextMenu, closeContextMenu } = useContextMenu();
     const { saveCustomNode } = useCustomNodes();
     const {
-        hoveredPort, showTooltip, onPortEnter, onPortLeave, onPortClick, clearDebug, debugData
+        hoveredPort, showTooltip, onPortEnter, onPortLeave, onPortClick, clearDebug, debugData, isConnected
     } = usePortHoverDebug(id, data.pathPrefix);
 
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -101,9 +101,13 @@ const SpecNode = ({ data, id, selected }: NodeProps<SpecNodeData>) => {
                     <div className="tooltip-content">
                         {debugData !== undefined ? (
                             <JsonTree data={debugData} isRoot />
+                        ) : isConnected ? (
+                            <div style={{ color: '#8b949e', fontStyle: 'italic', textAlign: 'center', padding: '10px' }}>
+                                Data not available. Run the engine to see current port values.
+                            </div>
                         ) : (
                             <div style={{ color: '#8b949e', fontStyle: 'italic', textAlign: 'center', padding: '10px' }}>
-                                {hoveredPort.isInput ? 'Not connected' : 'No data available'}
+                                Not connected
                             </div>
                         )}
                     </div>

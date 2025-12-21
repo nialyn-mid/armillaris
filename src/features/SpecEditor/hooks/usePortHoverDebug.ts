@@ -42,13 +42,13 @@ export const usePortHoverDebug = (nodeId: string, pathPrefix?: string) => {
     }, [showTooltip, clearDebug]);
 
     const debugData = useMemo(() => {
-        if (!hoveredPort || !masterGraph) return null;
+        if (!hoveredPort || !masterGraph) return { data: undefined, isConnected: false };
 
         /**
          * Recursively finds the source functional node for a signal.
-         * returns { id, port } where id is the hierarchical engine ID.
+         * returns { id, port, isConnected } where id is the hierarchical engine ID.
          */
-        const resolveSource = (nid: string, pid: string, isInput: boolean, currentPrefix?: string): { id: string, port: string } | null => {
+        const resolveSource = (nid: string, pid: string, isInput: boolean, currentPrefix?: string): { id: string, port: string, isConnected: boolean } | null => {
             const fullId = currentPrefix ? `${currentPrefix}.${nid}` : nid;
 
             const path = currentPrefix ? currentPrefix.split('.').filter(Boolean).map(id => ({ id })) : [];
@@ -62,7 +62,7 @@ export const usePortHoverDebug = (nodeId: string, pathPrefix?: string) => {
                 // TRACING BACKWARD FROM AN INPUT PORT
                 if (node.type === 'GroupInput') {
                     // Inside group: jump OUTSIDE to parent Group's corresponding input port
-                    if (path.length === 0) return null;
+                    if (path.length === 0) return { id: fullId, port: pid, isConnected: false };
                     const parentPath = path.slice(0, -1);
                     const parentGroupId = path[path.length - 1].id;
                     const parentPrefix = parentPath.map(p => p.id).join('.');
@@ -70,28 +70,23 @@ export const usePortHoverDebug = (nodeId: string, pathPrefix?: string) => {
                 } else {
                     // Normal node input: jump across the incoming edge to the source OUTPUT
                     const incomingEdge = graph.edges?.find((e: any) => e.target === nid && e.targetHandle === pid);
-                    if (!incomingEdge) return null;
+                    if (!incomingEdge) return { id: fullId, port: pid, isConnected: false };
                     // Switch to isInput = false because we are now at the source's OUTPUT side
                     return resolveSource(incomingEdge.source, incomingEdge.sourceHandle || 'default', false, currentPrefix);
                 }
             } else {
                 // TRACING BACKWARD FROM AN OUTPUT PORT
 
-                // 1. Functional Node Check: If this node has data for this port, STOP.
-                if (debugPorts[fullId] && debugPorts[fullId].hasOwnProperty(pid)) {
-                    return { id: fullId, port: pid };
-                }
-
                 // 2. Group Output: If this is a group, trace INSIDE to find the source.
                 if (node.type === 'Group') {
                     const internalPrefix = currentPrefix ? `${currentPrefix}.${nid}` : nid;
                     const internalGraph = getGraphAt(masterGraph, [...path, { id: nid }]);
-                    if (!internalGraph) return null;
+                    if (!internalGraph) return { id: fullId, port: pid, isConnected: true }; // Should exist though
                     // Find which GroupOutput node inside matches this port
                     const internalGout = internalGraph.nodes?.find((n: any) =>
                         n.type === 'GroupOutput' && (n.data.ports || []).some((p: any) => p.id === pid)
                     );
-                    if (!internalGout) return null;
+                    if (!internalGout) return { id: fullId, port: pid, isConnected: true };
                     // GroupOutput nodes effectively pass through their internal input to their external output.
                     // Trace backward from this GroupOutput node's input side.
                     return resolveSource(internalGout.id, pid, true, internalPrefix);
@@ -100,20 +95,26 @@ export const usePortHoverDebug = (nodeId: string, pathPrefix?: string) => {
                 // 3. GroupOutput Node (Inside): Trace backward from its own input handle inside the level.
                 if (node.type === 'GroupOutput') {
                     const incomingEdge = graph.edges?.find((e: any) => e.target === nid && e.targetHandle === pid);
-                    if (!incomingEdge) return null;
+                    if (!incomingEdge) return { id: fullId, port: pid, isConnected: false };
                     return resolveSource(incomingEdge.source, incomingEdge.sourceHandle || 'default', false, currentPrefix);
                 }
-            }
 
-            return null;
+                // 4. Functional Node (Default): This IS the source.
+                return { id: fullId, port: pid, isConnected: true };
+            }
         };
 
         const resolved = resolveSource(nodeId, hoveredPort.id, hoveredPort.isInput, pathPrefix);
         if (resolved) {
-            return debugPorts[resolved.id]?.[resolved.port];
+            return {
+                data: debugPorts[resolved.id]?.[resolved.port],
+                isConnected: resolved.isConnected,
+                resolvedId: resolved.id,
+                resolvedPort: resolved.port
+            };
         }
 
-        return undefined;
+        return { data: undefined, isConnected: false };
     }, [hoveredPort, nodeId, pathPrefix, debugPorts, masterGraph]);
 
     return {
@@ -123,6 +124,9 @@ export const usePortHoverDebug = (nodeId: string, pathPrefix?: string) => {
         onPortLeave,
         onPortClick,
         clearDebug,
-        debugData
+        debugData: debugData.data,
+        isConnected: debugData.isConnected,
+        resolvedId: debugData.resolvedId,
+        resolvedPort: debugData.resolvedPort
     };
 };

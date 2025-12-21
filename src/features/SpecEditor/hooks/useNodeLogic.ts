@@ -1,6 +1,7 @@
 import { useMemo, useCallback, useEffect } from 'react';
 import { useEdges, useNodes } from 'reactflow';
 import { resolveNodeSchema } from '../../../utils/engine-spec-utils';
+import { applyTypeTransformation } from '../utils/specTypeInference';
 import type { SpecNodeData } from '../types';
 
 export function useNodeLogic(id: string, data: SpecNodeData) {
@@ -48,16 +49,18 @@ export function useNodeLogic(id: string, data: SpecNodeData) {
         const baseInputs = resolvedSchema.inputs;
         const storedInputs = (data as any).inputs || [];
 
-        if (baseInputs.length === 0 && storedInputs.length > 0) return storedInputs; // Use stored if base is empty (e.g. some proxy cases?)
+        if (baseInputs.length === 0 && storedInputs.length > 0) return storedInputs;
 
         return baseInputs.map(port => {
             const stored = storedInputs.find((p: any) => p.id === port.id);
-            if (stored && stored.type !== port.type) {
-                return { ...port, type: stored.type };
-            }
-            return port;
+            let type = (stored && stored.type !== port.type) ? stored.type : port.type;
+
+            // Apply Dynamic Spec Transformations
+            type = applyTypeTransformation(type, port.typeTransformation, values);
+
+            return { ...port, type };
         });
-    }, [resolvedSchema.inputs, (data as any).inputs]);
+    }, [resolvedSchema.inputs, (data as any).inputs, values]);
 
     const outputs = useMemo(() => {
         const baseOutputs = resolvedSchema.outputs;
@@ -67,12 +70,14 @@ export function useNodeLogic(id: string, data: SpecNodeData) {
 
         return baseOutputs.map(port => {
             const stored = storedOutputs.find((p: any) => p.id === port.id);
-            if (stored && stored.type !== port.type) {
-                return { ...port, type: stored.type };
-            }
-            return port;
+            let type = (stored && stored.type !== port.type) ? stored.type : port.type;
+
+            // Apply Dynamic Spec Transformations
+            type = applyTypeTransformation(type, port.typeTransformation, values);
+
+            return { ...port, type };
         });
-    }, [resolvedSchema.outputs, (data as any).outputs]);
+    }, [resolvedSchema.outputs, (data as any).outputs, values]);
 
     const properties = resolvedSchema.properties;
 

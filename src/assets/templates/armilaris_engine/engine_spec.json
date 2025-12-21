@@ -271,7 +271,7 @@
                 {
                     "id": "attribute_name",
                     "label": "Attribute",
-                    "type": "string"
+                    "type": "String"
                 },
                 {
                     "id": "values",
@@ -306,7 +306,7 @@
                 {
                     "name": "attribute_name",
                     "label": "Attribute",
-                    "type": "string",
+                    "type": "String",
                     "default": ""
                 },
                 {
@@ -542,7 +542,11 @@
                 {
                     "id": "list_output",
                     "label": "Output List",
-                    "type": "List"
+                    "type": "List",
+                    "typeTransformation": {
+                        "type": "de-list",
+                        "property_trigger": "return_single"
+                    }
                 }
             ],
             "properties": [
@@ -563,6 +567,12 @@
                     "label": "Include Every Nth",
                     "type": "Number",
                     "default": 1
+                },
+                {
+                    "name": "return_single",
+                    "label": "Output First as Single",
+                    "type": "Boolean",
+                    "default": false
                 }
             ],
             "typeConstraints": [
@@ -782,9 +792,9 @@
                     "type": "Entry List"
                 },
                 {
-                    "id": "attribute",
-                    "label": "Attribute",
-                    "type": "Attribute"
+                    "id": "attribute_name",
+                    "label": "Attribute Name",
+                    "type": "String"
                 }
             ],
             "outputs": [
@@ -801,9 +811,9 @@
             ],
             "properties": [
                 {
-                    "name": "attribute",
-                    "label": "Attribute",
-                    "type": "Attribute"
+                    "name": "attribute_name",
+                    "label": "Attribute Name",
+                    "type": "String"
                 }
             ]
         },
@@ -837,6 +847,60 @@
                     "label": "Distance",
                     "type": "Number",
                     "default": 1
+                }
+            ]
+        },
+        {
+            "type": "StringRegex",
+            "label": "String Regex",
+            "category": "Utility",
+            "description": "Extract matches and positions from a string using a regular expression.",
+            "inputs": [
+                {
+                    "id": "input",
+                    "label": "Input",
+                    "type": "String"
+                },
+                {
+                    "id": "regex",
+                    "label": "Regex",
+                    "type": "String"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "matches",
+                    "label": "Matches",
+                    "type": "String List"
+                },
+                {
+                    "id": "start_positions",
+                    "label": "Start Positions",
+                    "type": "Value List"
+                },
+                {
+                    "id": "end_positions",
+                    "label": "End Positions",
+                    "type": "Value List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "regex",
+                    "label": "Regex",
+                    "type": "String"
+                },
+                {
+                    "name": "case_sensitive",
+                    "label": "Case Sensitive",
+                    "type": "Boolean",
+                    "default": false
+                },
+                {
+                    "name": "global",
+                    "label": "Global",
+                    "type": "Boolean",
+                    "default": true
                 }
             ]
         },

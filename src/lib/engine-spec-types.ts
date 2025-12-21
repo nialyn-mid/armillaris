@@ -29,10 +29,19 @@ export interface ExpansionDef<T> {
     $item: T; // The template item to repeat
 }
 
+export interface TypeTransformation {
+    type: 'de-list' | 'map' | 'replace';
+    property_trigger?: string; // Single boolean property trigger
+    property_conditions?: Record<string, any>; // Complex conditions: propertyId: exactValue
+    target_type?: string;     // For 'replace' or 'map'
+    source_pattern?: string;  // For 'map' or 'replace' (future use)
+}
+
 export interface PortDef {
     id: string; // Can contain {{_value}}
     label: string; // Can contain {{_value}}
     type: 'any' | 'string' | 'number' | 'object' | 'array' | 'entry' | 'map' | 'List' | 'Entry List' | 'Entry' | 'Value' | 'Message List' | 'String List' | 'Value List' | 'Attribute List' | 'String' | 'Number' | 'Boolean' | 'Date';
+    typeTransformation?: TypeTransformation;
 }
 
 export interface PropertyDef {

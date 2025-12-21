@@ -39,7 +39,10 @@ function getProps(nodeIdx) {
         var isStringKey = (
             key === "label" || key === "type" || key === "attribute" ||
             key === "message_user_type" || key === "deduplicate" ||
-            key === "attribute_name" || key.indexOf("value_") === 0 ||
+            key === "attribute_name" || key === "regex" ||
+            key === "operator" || key === "sort_by" ||
+            key === "attribute_type" || key === "value_type" ||
+            key.indexOf("value_") === 0 ||
             key.indexOf("attribute_") === 0 ||
             key.indexOf("mapping_") === 0 ||
             key.indexOf("input_") === 0 ||
@@ -408,8 +411,62 @@ function executeNode(nodeIdx, portIdx) {
                 for (var i = 0; i < list.length; i++) {
                     if (i % freq === 0) result.push(list[i]);
                 }
+                if (props.return_single) {
+                    result = result.length > 0 ? result[0] : null;
+                }
             } else {
                 result = resolveInput(nodeIdx, "entries") || resolveInput(nodeIdx, "list_input") || null;
+            }
+            break;
+
+        case "StringRegex":
+        case "Transformation":
+            // StringRegex can sometimes be typed as Transformation in legacy behaviors
+            if (type === "StringRegex" || label.indexOf("regex") !== -1) {
+                var inputStr = String(resolveInput(nodeIdx, "input") || "");
+                var regexPattern = resolveInput(nodeIdx, "regex") || props.regex || "";
+                var caseSensitive = props.case_sensitive || false;
+                var isGlobal = props.global !== undefined ? props.global : true;
+
+                var flags = (isGlobal ? "g" : "") + (caseSensitive ? "" : "i");
+                var matches = [];
+                var starts = [];
+                var ends = [];
+
+                if (regexPattern) {
+                    try {
+                        var re = new RegExp(String(regexPattern), flags);
+                        var match;
+                        if (isGlobal) {
+                            while ((match = re.exec(inputStr)) !== null) {
+                                // Add full match and all capture groups
+                                for (var i = 0; i < match.length; i++) {
+                                    if (match[i] !== undefined) matches.push(match[i]);
+                                }
+                                starts.push(match.index);
+                                ends.push(match.index + match[0].length);
+                                if (re.lastIndex === match.index) re.lastIndex++;
+                            }
+                        } else {
+                            match = re.exec(inputStr);
+                            if (match) {
+                                for (var i = 0; i < match.length; i++) {
+                                    if (match[i] !== undefined) matches.push(match[i]);
+                                }
+                                starts.push(match.index);
+                                ends.push(match.index + match[0].length);
+                            }
+                        }
+                    } catch (e) { }
+                }
+
+                if (portName === "matches") result = matches;
+                else if (portName === "start_positions") result = starts;
+                else if (portName === "end_positions") result = ends;
+                else result = matches;
+            } else {
+                // Generic transformation fallback
+                result = resolveInput(nodeIdx, "input") || null;
             }
             break;
 
@@ -580,7 +637,7 @@ function executeNode(nodeIdx, portIdx) {
                 if (!portName) portName = "sorted_messages";
             } else if (label.indexOf("sort entries") !== -1 || type === "SortEntriesByAttribute") {
                 var entriesToSort = resolveInput(nodeIdx, "entries") || [];
-                var attr = resolveInput(nodeIdx, "attribute") || props.attribute;
+                var attr = resolveInput(nodeIdx, "attribute_name") || props.attribute_name;
                 var sortedEntries = entriesToSort.slice();
                 if (attr) {
                     sortedEntries.sort(function (a, b) {

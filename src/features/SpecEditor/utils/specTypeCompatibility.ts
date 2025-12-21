@@ -28,22 +28,29 @@ export const checkConnectionCompatibility = (sourceType: string, targetType: str
     // 3. Exact Match
     if (src === tgt) return true;
 
-    // 4. Subtype -> Supertype
-    // 'Value' accepts primitives
+    const primitives = ['string', 'number', 'boolean', 'date', 'entry', 'attribute', 'message'];
+    const primitiveLists = ['string list', 'number list', 'boolean list', 'date list', 'entry list', 'attribute list', 'message list'];
+
+    // 4. Subtype -> Supertype (and vice versa for generic Value)
+    // 'Value' accepts primitives, and primitives accept 'Value' (generic fallback)
     if (tgt === 'value') {
-        const primitives = ['string', 'number', 'boolean', 'date'];
         if (primitives.includes(src)) return true;
+        if (src.endsWith(' list')) return true; // Loose typing for Value
+    }
+    if (src === 'value') {
+        if (primitives.includes(tgt)) return true;
     }
 
-    // 'Value List' accepts primitive lists?
+    // 'Value List' accepts primitive lists
     if (tgt === 'value list') {
-        const primitiveLists = ['string list', 'number list', 'boolean list', 'date list'];
         if (primitiveLists.includes(src)) return true;
+    }
+    if (src === 'value list') {
+        if (primitiveLists.includes(tgt)) return true;
     }
 
     // 5. Single -> List Promotion
     // Check if target is a list version of source
-    // e.g. src='entry', tgt='entry list'
     if (tgt.endsWith(' list')) {
         const baseTarget = tgt.replace(' list', '');
         // Direct match with base (Entry -> Entry List)
@@ -51,18 +58,8 @@ export const checkConnectionCompatibility = (sourceType: string, targetType: str
 
         // Also handle Value List promotion rules (String -> Value List)
         if (baseTarget === 'value') {
-            const primitives = ['string', 'number', 'boolean', 'date'];
             if (primitives.includes(src)) return true;
         }
-    }
-
-    // 6. Special Case: String List is a type of Value? 
-    // User Note: "String List is also a type of Value" -> Usually Value implies single scalar. 
-    // Use case: Maybe 'Value' input can accept a List object?
-    // If 'Value' represents "Any Data", then yes.
-    // Let's assume 'Value' is a generic wrapper.
-    if (tgt === 'value') {
-        if (src.endsWith(' list')) return true; // Loose typing for Value?
     }
 
     return false;
