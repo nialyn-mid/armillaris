@@ -7,7 +7,7 @@ import { checkConnectionCompatibility } from './specTypeCompatibility';
  */
 export const requireConstraintPorts = (node: Node, validPorts: string[], constraint: any): string[] => {
     // 1. Static Ports
-    let resolvedPorts = constraint.ports.filter((p: string) => !p.includes('{{'));
+    let resolvedPorts = (constraint.ports || []).filter((p: string) => !p.includes('{{'));
 
     // 2. Dynamic Ports (Expansions)
     if (constraint.expansions) {
@@ -32,7 +32,7 @@ export const requireConstraintPorts = (node: Node, validPorts: string[], constra
                 resolvedPorts = [...resolvedPorts, ...dynamicPorts];
             }
         });
-    } else {
+    } else if (constraint.ports) {
         // Fallback: If no explicit expansion config, try basic prefix matching for patterns?
         const patterns = constraint.ports.filter((p: string) => p.includes('{{'));
         patterns.forEach((pat: string) => {
@@ -82,6 +82,7 @@ export const checkConstraintCompatibility = (targetNode: Node, targetHandle: str
 
     const constraints = targetNode.data.def.typeConstraints;
     const activeConstraint = constraints.find((c: any) => {
+        if (!c.ports) return false;
         return c.ports.some((pattern: string) => {
             if (pattern.includes('{{')) {
                 const prefix = pattern.split('{{')[0];

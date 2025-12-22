@@ -57,57 +57,70 @@ export const resolveExpansion = <T extends { id?: string; name?: string; label?:
 
     const results: T[] = [];
 
-    // Case 2/3 Mix: Handle static sibling keys (if def is Object/Record)
-    // Process STATIC items FIRST (e.g. "values" input) so they appear above dynamic items
-    if (!Array.isArray(def) && typeof def === 'object') {
-        Object.entries(def).forEach(([key, val]) => {
-            if (key === '$for' || key === '$item') return;
+    // Case 2/3/4 Mix: Handle Object definitions
+    if (!Array.isArray(def) && typeof def === 'object' && def !== null) {
 
-            // Should verify val is an object?
+        // Expansion Object ($for) - Handle dynamic part
+        if ('$for' in def) {
+            const expandKey = (def as ExpansionDef<T>).$for;
+
+            let ids: any[] = [];
+
+            // Scope detection
+            let valuesKey = expandKey;
+
+            if (expandKey.startsWith('node.')) {
+                // Global Scope
+                const baseKey = expandKey.replace('node.', '');
+                // Backward compatibility: check both 'items' and '_items'
+                const hasBase = Array.isArray(rootValues[baseKey]) && rootValues[baseKey].length > 0;
+                const hasPrefixed = Array.isArray(rootValues['_' + baseKey]) && rootValues['_' + baseKey].length > 0;
+
+                valuesKey = (hasBase || !hasPrefixed) ? baseKey : `_${baseKey}`;
+                ids = Array.isArray(rootValues[valuesKey]) ? rootValues[valuesKey] : defaultValueList;
+            } else {
+                // Local Scope
+                valuesKey = expandKey;
+                ids = Array.isArray(localValues[valuesKey]) ? localValues[valuesKey] : defaultValueList;
+            }
+
+            ids.forEach((id: string | number) => {
+                const itemTemplate = (def as ExpansionDef<T>).$item;
+                const resolved = deepReplace(itemTemplate, id);
+                const items = Array.isArray(resolved) ? resolved : [resolved];
+
+                items.forEach((resolvedItem: any) => {
+                    // Auto-Unique ID check: 
+                    if (resolvedItem.id === (itemTemplate as any).id || (Array.isArray(itemTemplate) && itemTemplate.some(t => t.id === resolvedItem.id))) {
+                        // If it's a static ID in a list, we MUST disambiguate.
+                        if (resolvedItem.id && !String(resolvedItem.id).includes(String(id))) {
+                            resolvedItem.id = `${resolvedItem.id}_${id}`;
+                        }
+                    }
+
+                    // Attach metadata for removal
+                    resolvedItem._sourceId = id;
+                    resolvedItem._listKey = valuesKey;
+                    results.push(resolvedItem as T);
+                });
+            });
+            return results;
+        }
+
+        // Single Definition Item (if it has identifying keys)
+        if ('name' in def || 'id' in def || 'label' in def) {
+            return [def as unknown as T];
+        }
+
+        // Record of definitions (e.g. { "prop1": { ... } })
+        Object.entries(def).forEach(([key, val]) => {
             if (typeof val === 'object' && val !== null) {
                 // Inject name/id from key if missing
                 const item = { id: key, name: key, ...val } as T;
                 results.push(item);
             }
         });
-    }
-
-    // Case 3: Expansion Object ($for) - Handle dynamic part
-    if ('$for' in def) {
-        const expandKey = (def as ExpansionDef<T>).$for;
-
-        let ids: any[] = [];
-
-        // Scope detection
-        let valuesKey = expandKey;
-
-        if (expandKey.startsWith('node.')) {
-            // Global Scope
-            valuesKey = expandKey.replace('node.', '_');
-            ids = Array.isArray(rootValues[valuesKey]) ? rootValues[valuesKey] : defaultValueList;
-        } else {
-            // Local Scope
-            valuesKey = expandKey;
-            ids = Array.isArray(localValues[valuesKey]) ? localValues[valuesKey] : defaultValueList;
-        }
-
-        ids.forEach((id: string | number) => {
-            const itemTemplate = (def as ExpansionDef<T>).$item;
-            // Use structural replace instead of stringify
-            const resolvedItem = deepReplace(itemTemplate, id);
-
-            // Auto-Unique ID check: 
-            // If the resolved ID is identical to the template ID (no substitution happened),
-            // we must append the index/value to prevent ID collision.
-            if (resolvedItem.id === itemTemplate.id) {
-                resolvedItem.id = `${resolvedItem.id}_${id}`;
-            }
-
-            // Attach metadata for removal
-            (resolvedItem as any)._sourceId = id;
-            (resolvedItem as any)._listKey = valuesKey;
-            results.push(resolvedItem);
-        });
+        return results;
     }
 
     return results;

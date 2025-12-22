@@ -9,17 +9,23 @@
         "Input": {
             "color": "#0078d4"
         },
-        "Output": {
-            "color": "#d83b01"
+        "Math": {
+            "color": "#107c10"
         },
-        "Filter": {
+        "Logic": {
+            "color": "#e0115f"
+        },
+        "List": {
             "color": "#8e44ad"
         },
-        "Graph": {
-            "color": "#16a085"
+        "Sort": {
+            "color": "#f1c40f"
         },
         "Utility": {
             "color": "#607d8b"
+        },
+        "Output": {
+            "color": "#d83b01"
         }
     },
     "nodes": [
@@ -133,18 +139,21 @@
             "label": "Custom Attributes Input",
             "category": "Input",
             "description": "Create a custom attribute list from names and values.",
-            "inputs": [
-                {
-                    "id": "names",
-                    "label": "Names",
-                    "type": "String List"
-                },
-                {
-                    "id": "values",
-                    "label": "Values",
-                    "type": "Value List"
-                }
-            ],
+            "inputs": {
+                "$for": "node.custom_attributes",
+                "$item": [
+                    {
+                        "id": "names_{{_value}}",
+                        "label": "Name {{_value}}",
+                        "type": "String"
+                    },
+                    {
+                        "id": "values_{{_value}}",
+                        "label": "Value {{_value}}",
+                        "type": "Value"
+                    }
+                ]
+            },
             "outputs": [
                 {
                     "id": "attributes",
@@ -226,26 +235,10 @@
                     "label": "Value Type",
                     "type": "select",
                     "options": [
-                        {
-                            "value": "String",
-                            "label": "String"
-                        },
-                        {
-                            "value": "Number",
-                            "label": "Number"
-                        },
-                        {
-                            "value": "Boolean",
-                            "label": "Boolean"
-                        },
-                        {
-                            "value": "Date",
-                            "label": "Date"
-                        },
-                        {
-                            "value": "String List",
-                            "label": "String List"
-                        }
+                        "String",
+                        "Number",
+                        "Boolean",
+                        "Date"
                     ],
                     "default": "String"
                 },
@@ -550,7 +543,7 @@
         {
             "type": "Filter",
             "label": "List Filter",
-            "category": "Filter",
+            "category": "List",
             "description": "Filter a list based on numeric patterns.",
             "inputs": [
                 {
@@ -658,7 +651,7 @@
         {
             "type": "DataUtility",
             "label": "Join List",
-            "category": "Utility",
+            "category": "List",
             "description": "Join multiple lists of the same type into a single list.",
             "inputs": {
                 "$for": "node.expandable_inputs",
@@ -762,7 +755,7 @@
         {
             "type": "DataUtility",
             "label": "Sort Messages",
-            "category": "Utility",
+            "category": "Sort",
             "description": "Sort messages based on a chosen method.",
             "inputs": [
                 {
@@ -797,6 +790,123 @@
                             "value": "random",
                             "label": "Random"
                         }
+                    ],
+                    "default": "date"
+                }
+            ]
+        },
+        {
+            "type": "InputSource",
+            "label": "Custom Entry Input",
+            "category": "Input",
+            "description": "Create an entry from attributes and properties.",
+            "inputs": [
+                {
+                    "id": "attributes",
+                    "label": "Attributes",
+                    "type": "Attribute List"
+                },
+                {
+                    "id": "keywords",
+                    "label": "Keywords",
+                    "type": "String List"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "entry",
+                    "label": "Entry",
+                    "type": "Entry"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "id",
+                    "label": "ID",
+                    "type": "String",
+                    "placeholder": "Auto-generated UUID if empty"
+                },
+                {
+                    "name": "name",
+                    "label": "Name",
+                    "type": "String"
+                },
+                {
+                    "name": "keywords_header",
+                    "label": "Keywords",
+                    "type": "Label"
+                },
+                {
+                    "$for": "node.keyword_items",
+                    "$item": {
+                        "name": "kw_{{_value}}",
+                        "label": "Keyword {{_value}}",
+                        "type": "String"
+                    }
+                },
+                {
+                    "name": "attributes_header",
+                    "label": "Custom Attributes",
+                    "type": "Label"
+                },
+                {
+                    "$for": "node.custom_attributes",
+                    "$item": {
+                        "name": "attr_{{_value}}",
+                        "label": "Attribute {{_value}}",
+                        "type": "Property Block",
+                        "content": [
+                            {
+                                "name": "name",
+                                "label": "Name",
+                                "type": "String",
+                                "default": "Meta"
+                            },
+                            {
+                                "name": "type",
+                                "label": "Type",
+                                "type": "select",
+                                "options": [
+                                    "String",
+                                    "Number",
+                                    "Boolean",
+                                    "Date",
+                                    "String List"
+                                ],
+                                "default": "String"
+                            },
+                            {
+                                "name": "value",
+                                "label": "Value",
+                                "type": "Value"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "typeConstraints": [
+                {
+                    "id": "custom_keywords",
+                    "ports": [
+                        "keywords"
+                    ],
+                    "expansions": [
+                        {
+                            "pattern": "kw_{{_value}}",
+                            "for": "keyword_items"
+                        }
+                    ]
+                },
+                {
+                    "id": "custom_attributes",
+                    "ports": [
+                        "attributes"
+                    ],
+                    "expansions": [
+                        {
+                            "pattern": "attr_{{_value}}",
+                            "for": "custom_attributes"
+                        }
                     ]
                 }
             ]
@@ -804,7 +914,7 @@
         {
             "type": "DataUtility",
             "label": "Sort Entries By Attribute",
-            "category": "Utility",
+            "category": "Sort",
             "description": "Sort entries based on an attribute.",
             "inputs": [
                 {
@@ -841,7 +951,7 @@
         {
             "type": "Adjacency",
             "label": "Graph Adjacency",
-            "category": "Graph",
+            "category": "Utility",
             "description": "Output the entries which are a distance from the input entries.",
             "inputs": [
                 {
@@ -922,6 +1032,308 @@
                     "label": "Global",
                     "type": "Boolean",
                     "default": true
+                }
+            ]
+        },
+        {
+            "type": "InputSource",
+            "label": "Custom Value Input",
+            "category": "Input",
+            "description": "Provide a single value of a selected type.",
+            "outputs": [
+                {
+                    "id": "value",
+                    "label": "Value",
+                    "type": "Value",
+                    "typeTransformation": {
+                        "type": "replace_from_property",
+                        "property_id": "value_type"
+                    }
+                }
+            ],
+            "properties": [
+                {
+                    "name": "value_type",
+                    "label": "Type",
+                    "type": "select",
+                    "options": [
+                        "String",
+                        "Number",
+                        "Boolean",
+                        "Date"
+                    ],
+                    "default": "String"
+                },
+                {
+                    "name": "value",
+                    "label": "Value",
+                    "type": "Value"
+                }
+            ]
+        },
+        {
+            "type": "Operation",
+            "label": "Math Operation",
+            "category": "Math",
+            "description": "Perform basic math operations on a number list.",
+            "inputs": [
+                {
+                    "id": "values",
+                    "label": "Values",
+                    "type": "Number List"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "result",
+                    "label": "Result",
+                    "type": "Number"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "operation",
+                    "label": "Operation",
+                    "type": "select",
+                    "options": [
+                        "Sum",
+                        "Average",
+                        "Min",
+                        "Max",
+                        "Product"
+                    ],
+                    "default": "Sum"
+                }
+            ]
+        },
+        {
+            "type": "Condition",
+            "label": "Condition",
+            "category": "Logic",
+            "description": "Compare two values.",
+            "inputs": [
+                {
+                    "id": "a",
+                    "label": "A",
+                    "type": "Dynamic"
+                },
+                {
+                    "id": "b",
+                    "label": "B",
+                    "type": "Dynamic"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "result",
+                    "label": "Result",
+                    "type": "Boolean"
+                }
+            ],
+            "typeConstraints": [
+                {
+                    "id": "compare_type",
+                    "subtype_of": "Value",
+                    "ports": [
+                        "a",
+                        "b"
+                    ]
+                }
+            ],
+            "properties": [
+                {
+                    "name": "operator",
+                    "label": "Operator",
+                    "type": "select",
+                    "options": [
+                        "==",
+                        "!=",
+                        ">",
+                        "<",
+                        ">=",
+                        "<=",
+                        "contains"
+                    ],
+                    "default": "=="
+                }
+            ]
+        },
+        {
+            "type": "Switch",
+            "label": "Switch",
+            "category": "Logic",
+            "description": "Pass through a value if condition is true, else returns empty.",
+            "inputs": [
+                {
+                    "id": "condition",
+                    "label": "Condition",
+                    "type": "Boolean"
+                },
+                {
+                    "id": "input",
+                    "label": "Input",
+                    "type": "Dynamic"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "output",
+                    "label": "Output",
+                    "type": "Value"
+                }
+            ],
+            "typeConstraints": [
+                {
+                    "id": "switch_flow",
+                    "subtype_of": "Value",
+                    "ports": [
+                        "input",
+                        "output"
+                    ]
+                }
+            ],
+            "properties": []
+        },
+        {
+            "type": "StringUtility",
+            "label": "Concatenate List",
+            "category": "List",
+            "description": "Concatenate a list of values into a string.",
+            "inputs": [
+                {
+                    "id": "values",
+                    "label": "Values",
+                    "type": "Value List"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "result",
+                    "label": "Result",
+                    "type": "String"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "separator",
+                    "label": "Separator",
+                    "type": "String",
+                    "default": ", "
+                }
+            ]
+        },
+        {
+            "type": "DataUtility",
+            "label": "Singles to List",
+            "category": "List",
+            "description": "Combine multiple single values into a list.",
+            "inputs": {
+                "$for": "node.items",
+                "$item": {
+                    "id": "item_{{_value}}",
+                    "label": "Item {{_value}}",
+                    "type": "Value"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "list",
+                    "label": "List",
+                    "type": "Value List",
+                    "typeTransformation": {
+                        "type": "en-list"
+                    }
+                }
+            ],
+            "typeConstraints": [
+                {
+                    "id": "singles_flow",
+                    "subtype_of": "Value",
+                    "ports": [
+                        "item_{{_value}}",
+                        "list"
+                    ],
+                    "expansions": [
+                        {
+                            "pattern": "item_{{_value}}",
+                            "for": "items"
+                        }
+                    ]
+                }
+            ],
+            "properties": []
+        },
+        {
+            "type": "DataUtility",
+            "label": "List to Singles",
+            "category": "List",
+            "description": "Split a list into multiple single values.",
+            "inputs": [
+                {
+                    "id": "list",
+                    "label": "List",
+                    "type": "Value List"
+                }
+            ],
+            "outputs": {
+                "$for": "node.items",
+                "$item": {
+                    "id": "item_{{_value}}",
+                    "label": "Item {{_value}}",
+                    "type": "Value",
+                    "typeTransformation": {
+                        "type": "de-list"
+                    }
+                }
+            },
+            "typeConstraints": [
+                {
+                    "id": "singles_flow",
+                    "subtype_of": "Value",
+                    "ports": [
+                        "item_{{_value}}",
+                        "list"
+                    ],
+                    "expansions": [
+                        {
+                            "pattern": "item_{{_value}}",
+                            "for": "items"
+                        }
+                    ]
+                }
+            ],
+            "properties": []
+        },
+        {
+            "type": "DataUtility",
+            "label": "Value Convert",
+            "category": "List",
+            "description": "Convert a list of values to a target type.",
+            "inputs": [
+                {
+                    "id": "input",
+                    "label": "Input",
+                    "type": "Value List"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "output",
+                    "label": "Output",
+                    "type": "Value List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "target_type",
+                    "label": "Target Type",
+                    "type": "select",
+                    "options": [
+                        "String",
+                        "Number",
+                        "Boolean"
+                    ],
+                    "default": "String"
                 }
             ]
         },

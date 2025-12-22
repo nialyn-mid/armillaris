@@ -30,9 +30,10 @@ export interface ExpansionDef<T> {
 }
 
 export interface TypeTransformation {
-    type: 'de-list' | 'map' | 'replace';
+    type: 'de-list' | 'en-list' | 'map' | 'replace' | 'replace_from_property';
     property_trigger?: string; // Single boolean property trigger
     property_conditions?: Record<string, any>; // Complex conditions: propertyId: exactValue
+    property_id?: string;      // For 'replace_from_property'
     target_type?: string;     // For 'replace' or 'map'
     source_pattern?: string;  // For 'map' or 'replace' (future use)
 }
@@ -40,14 +41,14 @@ export interface TypeTransformation {
 export interface PortDef {
     id: string; // Can contain {{_value}}
     label: string; // Can contain {{_value}}
-    type: 'any' | 'string' | 'number' | 'object' | 'array' | 'entry' | 'map' | 'List' | 'Entry List' | 'Entry' | 'Value' | 'Message List' | 'String List' | 'Value List' | 'Attribute List' | 'String' | 'Number' | 'Boolean' | 'Date';
+    type: string; // Relaxed to string to allow specialized types like 'Message List'
     typeTransformation?: TypeTransformation;
 }
 
 export interface PropertyDef {
     name: string; // Can contain {{_value}}
     label: string;
-    type: 'string' | 'number' | 'boolean' | 'select' | 'code' | 'Property Block' | 'String' | 'Number' | 'Boolean' | 'Value' | 'Attribute List' | 'Value List' | 'Entry List' | 'Message List' | 'String List' | 'Date' | 'Attribute';
+    type: 'string' | 'number' | 'boolean' | 'select' | 'code' | 'Property Block' | 'Label' | 'String' | 'Number' | 'Boolean' | 'Value' | 'Attribute List' | 'Value List' | 'Entry List' | 'Message List' | 'String List' | 'Date' | 'Attribute';
     options?: { value: string, label: string }[] | string[]; // Support object options too
     default?: any;
     content?: PropertyDef[] | ExpansionDef<PropertyDef> | Record<string, PropertyDef>; // For Property Block (Recursive)

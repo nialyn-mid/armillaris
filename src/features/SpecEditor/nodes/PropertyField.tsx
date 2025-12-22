@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import RecursiveProperties from './RecursiveProperties';
 import type { PropertyDef } from '../../../lib/engine-spec-types';
 
@@ -31,7 +32,13 @@ const PropertyField = ({
 }: PropertyFieldProps) => {
 
     // 0. Global Control Check
-    const isControlled = connectedPorts?.includes(def.name);
+    const isControlled = useMemo(() => {
+        if (connectedPorts?.includes(def.name)) return true;
+        // Parent dependency check (e.g. 'attributes' input controls 'attr_0' property)
+        if (def.name.startsWith('attr_') && connectedPorts?.includes('attributes')) return true;
+        if (def.name.startsWith('kw_') && connectedPorts?.includes('keywords')) return true;
+        return false;
+    }, [def.name, connectedPorts]);
 
     // 1. Handle Property Block (Container)
     if (def.type === 'Property Block') {
@@ -63,66 +70,122 @@ const PropertyField = ({
 
         return (
             <div className="property-block" style={{ marginLeft: level * 4, opacity: shouldCollapse ? 0.6 : 1 }}>
-                <div className="property-block-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>
-                        {def.label}
-                        {isControlled && <span style={{ fontSize: '9px', marginLeft: '6px', color: '#4ec9b0' }}>(Linked)</span>}
-                    </span>
-                    {/* Block Remove Button */}
-                    {onRemoveSelf && !isControlled && (
-                        <button
-                            className="btn-remove"
-                            style={{
-                                background: 'transparent',
-                                border: 'none',
-                                color: '#888',
-                                cursor: 'pointer',
-                                fontSize: '14px',
-                                padding: '0 4px',
-                            }}
-                            onClick={(e) => { e.stopPropagation(); onRemoveSelf(); }}
-                            title="Remove Mapping"
-                        >
-                            ×
-                        </button>
+                <div style={{ display: isCompact ? 'flex' : 'block', gap: isCompact ? '8px' : '0' }}>
+                    <div className="property-block-header" style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        minWidth: isCompact ? '16px' : undefined,
+                        textAlign: isCompact ? 'right' : 'left',
+                        paddingTop: isCompact ? '4px' : '0'
+                    }}>
+                        <span>
+                            {def.label}
+                            {isControlled && <span style={{ fontSize: '9px', marginLeft: '6px', color: '#4ec9b0' }}>(Linked)</span>}
+                        </span>
+                        {/* Block Remove Button moves to end of content if compact? No, let's keep it near label or handle in RecursiveProperties */}
+                        {onRemoveSelf && !isControlled && !isCompact && (
+                            <button
+                                className="btn-remove"
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: '#888',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    padding: '0 4px',
+                                }}
+                                onClick={(e) => { e.stopPropagation(); onRemoveSelf(); }}
+                                title="Remove Mapping"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                        {!shouldCollapse && (
+                            <RecursiveProperties
+                                definitions={def.content as any}
+                                values={blockValue}
+                                onChange={handleChildChange}
+                                onAddExpandable={handleChildAddExpandable}
+                                onRemoveExpandable={handleChildRemoveExpandable}
+                                rootValues={rootValues}
+                                level={level + 1}
+                                availableAttributes={availableAttributes}
+                                connectedPorts={connectedPorts}
+                                // If controlled mapping, we disable inputs
+                                disableInputs={isControlled && isMappingBlock}
+                                hideTypeSelector={hideTypeSelector}
+                            />
+                        )}
+                        {shouldCollapse && (
+                            <div style={{ fontSize: '10px', color: '#888', fontStyle: 'italic', padding: '4px' }}>
+                                Controlled by Graph Input
+                            </div>
+                        )}
+                    </div>
+
+                    {onRemoveSelf && !isControlled && isCompact && (
+                        <div style={{ paddingTop: '2px' }}>
+                            <button
+                                className="btn-remove"
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: '#888',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    padding: '0 4px',
+                                }}
+                                onClick={(e) => { e.stopPropagation(); onRemoveSelf(); }}
+                                title="Remove Item"
+                            >
+                                ×
+                            </button>
+                        </div>
                     )}
                 </div>
-
-                {!shouldCollapse && (
-                    <RecursiveProperties
-                        definitions={def.content as any}
-                        values={blockValue}
-                        onChange={handleChildChange}
-                        onAddExpandable={handleChildAddExpandable}
-                        onRemoveExpandable={handleChildRemoveExpandable}
-                        rootValues={rootValues}
-                        level={level + 1}
-                        availableAttributes={availableAttributes}
-                        connectedPorts={connectedPorts}
-                        // If controlled mapping, we disable inputs
-                        disableInputs={isControlled && isMappingBlock}
-                        hideTypeSelector={hideTypeSelector}
-                    />
-                )}
-                {shouldCollapse && (
-                    <div style={{ fontSize: '10px', color: '#888', fontStyle: 'italic', padding: '4px' }}>
-                        Controlled by Graph Input
-                    </div>
-                )}
             </div>
         );
     }
 
-    // 2. Standard Fields
+    // 2. Handle Label Type (Header)
+    if (def.type === 'Label') {
+        return (
+            <div className="property-label-section-header" style={{
+                fontSize: '10px',
+                fontWeight: 'bold',
+                color: '#aaa',
+                marginTop: '12px',
+                marginBottom: '4px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                borderBottom: '1px solid #333',
+                paddingBottom: '2px'
+            }}>
+                {def.label}
+            </div>
+        );
+    }
+
+    // 3. Standard Fields
     const val = values[def.name];
 
     // 3. Value & Value List Handling
     if (def.type === 'Value' || def.type === 'Value List') {
         const typeHint = values.value_type || values.attribute_type || values.type;
+
+        // If val is an object with {type, value}, it might be a remnant of being self-contained
+        const isValObject = (typeof val === 'object' && val !== null && 'type' in val && 'value' in val);
+
         const isSelfContained = (def.type === 'Value' && !typeHint && !hideTypeSelector);
 
         const currentType = isSelfContained ? (val?.type || 'String') : (typeHint || 'String');
-        const currentVal = isSelfContained ? (val?.value) : val;
+
+        // Unwrap if not self-contained or if it's already an object
+        const currentVal = (isValObject) ? val.value : val;
 
         const handleValChange = (v: any) => {
             if (isSelfContained) {
@@ -185,6 +248,7 @@ const PropertyField = ({
                             onChange={(e) => onValChange(e.target.value)}
                             style={{ flex: 1 }}
                             disabled={isControlled}
+                            placeholder={(def as any).placeholder}
                         />
                     );
             }
@@ -368,6 +432,7 @@ const PropertyField = ({
                     onChange={(e) => onChange(def.name, e.target.value)}
                     style={{ flex: 1 }}
                     disabled={isControlled}
+                    placeholder={(def as any).placeholder}
                 />
                 {/* Input Remove Button - In row, pushed down/centered? User said "moved down". In-row aligns it naturally. */}
                 {onRemoveSelf && !isControlled && (

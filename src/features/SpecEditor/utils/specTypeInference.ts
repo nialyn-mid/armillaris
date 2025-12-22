@@ -30,8 +30,30 @@ export const applyTypeTransformation = (type: string, transformation: TypeTransf
         if (lowerType === 'list') return 'Value';
     }
 
+    if (transformType === 'en-list') {
+        const trimmedType = type.trim();
+        const lowerType = trimmedType.toLowerCase();
+        if (!lowerType.endsWith(' list') && lowerType !== 'any') {
+            return `${trimmedType} List`;
+        }
+    }
+
     if (transformType === 'replace' && target_type) {
         return target_type;
+    }
+
+    if (transformType === 'replace_from_property' && (transformation as any).property_id) {
+        const propId = (transformation as any).property_id;
+        let val = values;
+        if (propId.includes('.')) {
+            const parts = propId.split('.');
+            for (const part of parts) {
+                val = val?.[part];
+            }
+        } else {
+            val = values?.[propId];
+        }
+        return val || type;
     }
 
     return type;
@@ -56,11 +78,18 @@ export const inferTypeFromNode = (node: Node | undefined, handleId: string | nul
         }
     }
 
-    // 2. Standard Def
+    // 2. Standard Def (Static or Expandable in Array)
     if (Array.isArray(node.data.def?.outputs)) {
         const outputDef = node.data.def.outputs.find((o: any) => o.id === handleId);
         if (outputDef?.type) {
             return applyTypeTransformation(outputDef.type, outputDef.typeTransformation, node.data.values);
+        }
+
+        // Check for expansion $item within the array
+        for (const item of node.data.def.outputs) {
+            if (typeof item === 'object' && item !== null && '$item' in item) {
+                return (item as any).$item.type;
+            }
         }
     }
 
@@ -85,10 +114,18 @@ export const inferInputTypeFromNode = (node: Node | undefined, handleId: string 
     // 3. Check Element-wise Definition (Expandable Inputs)
     // Only if handleId matches an expansion pattern? 
     // Usually expansion IDs are not in def.inputs, so checking def.inputs.$item is the fallback.
+    // 3. Dynamic Def Handling (Expanded)
     if (node.data.def?.inputs?.$item?.type) {
-        // TODO: Should strictly check if handleId matches the pattern for $item?
-        // For now, if we survived the overrides check, and it's not a static def, assume it's dynamic.
         return node.data.def.inputs.$item.type;
+    }
+
+    // Check array-nested expansion
+    if (Array.isArray(node.data.def?.inputs)) {
+        for (const item of node.data.def.inputs) {
+            if (typeof item === 'object' && item !== null && '$item' in item) {
+                return (item as any).$item.type;
+            }
+        }
     }
 
     return 'any';

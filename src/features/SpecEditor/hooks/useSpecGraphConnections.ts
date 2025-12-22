@@ -9,7 +9,7 @@ interface UseSpecGraphConnectionsProps {
     setIsSpecDirty: (dirty: boolean) => void;
 }
 
-import { inferTypeFromNode, inferInputTypeFromNode } from '../utils/specTypeInference';
+import { inferTypeFromNode, inferInputTypeFromNode, applyTypeTransformation } from '../utils/specTypeInference';
 import { checkConnectionCompatibility } from '../utils/specTypeCompatibility';
 import { requireConstraintPorts, resolveNodePorts, checkConstraintCompatibility } from '../utils/specConstraintUtils';
 
@@ -118,6 +118,7 @@ export const useSpecGraphConnections = ({ setEdges, nodes, setNodes, setIsSpecDi
                 const constraints = targetNode.data.def.typeConstraints;
 
                 const activeConstraint = constraints.find((c: any) => {
+                    if (!c.ports) return false;
                     return c.ports.some((pattern: string) => {
                         if (pattern.includes('{{')) {
                             const prefix = pattern.split('{{')[0];
@@ -149,43 +150,43 @@ export const useSpecGraphConnections = ({ setEdges, nodes, setNodes, setIsSpecDi
                         let hasChanges = false;
 
                         portIdsToUpdate.forEach((pid: string) => {
+                            // Find the base definition for this port to check for transformations
+                            const defaultIn = allInputs.find((p: any) => p.id === pid);
+                            const defaultOut = allOutputs.find((p: any) => p.id === pid);
+                            const defaultPort = defaultIn || defaultOut;
+
+                            // Apply transformation to the INFERRED type (e.g. String -> String List)
+                            const finalResolvedType = applyTypeTransformation(
+                                inferredType,
+                                defaultPort?.typeTransformation,
+                                targetNode.data.values
+                            );
+
                             // --- INPUTS ---
-                            // Check if pid is intended to be an input (exists in resolved inputs)
-                            const isInput = allInputs.some((p: any) => p.id === pid);
-                            if (isInput) {
+                            if (defaultIn) {
                                 const inIdx = newInputs.findIndex((np: any) => np.id === pid);
                                 if (inIdx >= 0) {
-                                    // Update existing override
-                                    if (newInputs[inIdx].type !== inferredType) {
-                                        newInputs[inIdx] = { ...newInputs[inIdx], type: inferredType };
+                                    if (newInputs[inIdx].type !== finalResolvedType) {
+                                        newInputs[inIdx] = { ...newInputs[inIdx], type: finalResolvedType };
                                         hasChanges = true;
                                     }
                                 } else {
-                                    // Create new override from resolved default
-                                    const defaultPort = allInputs.find((p: any) => p.id === pid);
-                                    if (defaultPort) {
-                                        newInputs.push({ ...defaultPort, type: inferredType });
-                                        hasChanges = true;
-                                    }
+                                    newInputs.push({ ...defaultIn, type: finalResolvedType });
+                                    hasChanges = true;
                                 }
                             }
 
                             // --- OUTPUTS ---
-                            const isOutput = allOutputs.some((p: any) => p.id === pid);
-                            if (isOutput) {
+                            if (defaultOut) {
                                 const outIdx = newOutputs.findIndex((np: any) => np.id === pid);
                                 if (outIdx >= 0) {
-                                    if (newOutputs[outIdx].type !== inferredType) {
-                                        newOutputs[outIdx] = { ...newOutputs[outIdx], type: inferredType };
+                                    if (newOutputs[outIdx].type !== finalResolvedType) {
+                                        newOutputs[outIdx] = { ...newOutputs[outIdx], type: finalResolvedType };
                                         hasChanges = true;
                                     }
                                 } else {
-                                    // Create new override
-                                    const defaultPort = allOutputs.find((p: any) => p.id === pid);
-                                    if (defaultPort) {
-                                        newOutputs.push({ ...defaultPort, type: inferredType });
-                                        hasChanges = true;
-                                    }
+                                    newOutputs.push({ ...defaultOut, type: finalResolvedType });
+                                    hasChanges = true;
                                 }
                             }
                         });

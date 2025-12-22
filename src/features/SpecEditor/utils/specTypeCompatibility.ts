@@ -12,15 +12,16 @@
  *    - e.g. 'Entry' -> 'Entry List'.
  */
 export const checkConnectionCompatibility = (sourceType: string, targetType: string): boolean => {
-    // Normalize types (handle undefined/null as 'any'?)
-    const src = (sourceType || 'any').toLowerCase();
-    const tgt = (targetType || 'any').toLowerCase();
+    // Normalize types (handle undefined/null as 'any')
+    const normalize = (t: string) => (t || 'any').trim().toLowerCase().replace(/\s+/g, ' ');
+
+    const src = normalize(sourceType);
+    const tgt = normalize(targetType);
 
     // 1. Target is 'any' (Wildcard input) -> Always accept
     if (tgt === 'any') return true;
 
     // 2. Source is 'any' -> Only acceptable if target is 'any' 
-    // (User Rule: any -> String should FAIL)
     if (src === 'any') {
         return tgt === 'any';
     }
@@ -28,36 +29,40 @@ export const checkConnectionCompatibility = (sourceType: string, targetType: str
     // 3. Exact Match
     if (src === tgt) return true;
 
-    const primitives = ['string', 'number', 'boolean', 'date', 'entry', 'attribute', 'message'];
-    const primitiveLists = ['string list', 'number list', 'boolean list', 'date list', 'entry list', 'attribute list', 'message list'];
+    // Synonyms
+    const isGeneric = (t: string) => t === 'any' || t === 'value' || t === 'object';
 
-    // 4. Subtype -> Supertype (and vice versa for generic Value)
-    // 'Value' accepts primitives, and primitives accept 'Value' (generic fallback)
-    if (tgt === 'value') {
+    const primitives = ['string', 'number', 'boolean', 'date', 'entry', 'attribute', 'message', 'object', 'value'];
+    const primitiveLists = ['string list', 'number list', 'boolean list', 'date list', 'entry list', 'attribute list', 'message list', 'value list', 'object list'];
+
+    // 4. Subtype -> Supertype (and vice versa for generic Value/Any/Object)
+    if (isGeneric(tgt)) {
         if (primitives.includes(src)) return true;
-        if (src.endsWith(' list')) return true; // Loose typing for Value
+        if (src.endsWith(' list')) return true; // Loose typing for Generic
     }
-    if (src === 'value') {
+    if (isGeneric(src)) {
         if (primitives.includes(tgt)) return true;
     }
 
-    // 'Value List' accepts primitive lists
-    if (tgt === 'value list') {
+    // List Generics
+    const isGenericList = (t: string) => t === 'list' || t === 'value list' || t === 'any list' || t === 'object list';
+
+    if (isGenericList(tgt)) {
         if (primitiveLists.includes(src)) return true;
+        if (src.endsWith(' list')) return true;
     }
-    if (src === 'value list') {
+    if (isGenericList(src)) {
         if (primitiveLists.includes(tgt)) return true;
     }
 
     // 5. Single -> List Promotion
-    // Check if target is a list version of source
     if (tgt.endsWith(' list')) {
         const baseTarget = tgt.replace(' list', '');
         // Direct match with base (Entry -> Entry List)
         if (src === baseTarget) return true;
 
-        // Also handle Value List promotion rules (String -> Value List)
-        if (baseTarget === 'value') {
+        // Also handle Generic List promotion rules (String -> Value List)
+        if (isGeneric(baseTarget)) {
             if (primitives.includes(src)) return true;
         }
     }

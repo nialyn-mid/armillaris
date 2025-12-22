@@ -33,57 +33,62 @@ function getProps(nodeIdx) {
     if (!node || !node[1]) return {};
     var arr = node[1];
     var p = {};
-    for (var i = 0; i < arr.length; i += 2) {
-        var key = getBStr(arr[i]);
-        var val = arr[i + 1];
-        var isStringKey = (
+
+    function innerResolve(key, val) {
+        if (val === null || val === undefined) return val;
+
+        // 1. Unwrap {value} if it's a simple scalar wrapped for the UI
+        if (typeof val === 'object' && val !== null) {
+            if (val.hasOwnProperty('value') && Object.keys(val).length === 1) {
+                val = val.value;
+            } else if (val.hasOwnProperty('type') && val.hasOwnProperty('value') && Object.keys(val).length === 2) {
+                // Also unwrap {type, value} objects (from Value type properties)
+                val = val.value;
+            }
+        }
+
+        var isStr = (
             key === "label" || key === "type" || key === "attribute" ||
             key === "message_user_type" || key === "deduplicate" ||
             key === "attribute_name" || key === "regex" ||
-            key === "operator" || key === "sort_by" ||
+            key === "operator" || key === "sort_by" || key === "operation" ||
+            key === "target_type" || key === "separator" || key === "name" || key === "keywords" ||
             key === "attribute_type" || key === "value_type" ||
-            key === "value" || key === "values" ||
+            key === "value" || key === "values" || key === "val" ||
             key.indexOf("value_") === 0 ||
             key.indexOf("attribute_") === 0 ||
+            key.indexOf("attr_") === 0 ||
             key.indexOf("mapping_") === 0 ||
             key.indexOf("input_") === 0 ||
             key.indexOf("output_") === 0
         );
-        if (typeof val === 'number' && val >= 0 && val < behaviorStrings.length && isStringKey) {
-            p[key] = getBStr(val);
-        } else if (val !== null && typeof val === 'object' && !Array.isArray(val)) {
-            // Recursively resolve object properties
+
+        if (typeof val === 'number' && val >= 0 && val < behaviorStrings.length && isStr) {
+            return getBStr(val);
+        }
+
+        if (Array.isArray(val)) {
+            var list = [];
+            for (var i = 0; i < val.length; i++) {
+                list.push(innerResolve(key, val[i]));
+            }
+            return list;
+        }
+
+        if (typeof val === 'object') {
             var sub = {};
             for (var sk in val) {
-                var sval = val[sk];
-                var isSubStringKey = (
-                    sk.indexOf("input_") === 0 ||
-                    sk.indexOf("output_") === 0 ||
-                    sk.indexOf("value_") === 0 ||
-                    sk === "type" || sk === "value" || sk === "val"
-                );
-                if (typeof sval === 'number' && sval >= 0 && sval < behaviorStrings.length && isSubStringKey) {
-                    sub[sk] = getBStr(sval);
-                } else {
-                    sub[sk] = sval;
-                }
+                sub[sk] = innerResolve(sk, val[sk]);
             }
-            p[key] = sub;
-        } else if (Array.isArray(val)) {
-            // Resolve strings inside arrays (e.g. Value List properties)
-            var list = [];
-            for (var j = 0; j < val.length; j++) {
-                var v = val[j];
-                if (typeof v === 'number' && v >= 0 && v < behaviorStrings.length && isStringKey) {
-                    list.push(getBStr(v));
-                } else {
-                    list.push(v);
-                }
-            }
-            p[key] = list;
-        } else {
-            p[key] = val;
+            return sub;
         }
+
+        return val;
+    }
+
+    for (var i = 0; i < arr.length; i += 2) {
+        var key = getBStr(arr[i]);
+        p[key] = innerResolve(key, arr[i + 1]);
     }
     return p;
 }
@@ -92,7 +97,7 @@ function getEntryProps(entry) {
     var arr = entry.p || [];
     var p = {};
     for (var i = 0; i < arr.length; i += 2) {
-        var key = getDStr(arr[i]);
+        var key = (typeof arr[i] === 'number') ? getDStr(arr[i]) : arr[i];
         var val = arr[i + 1];
         if (Array.isArray(val)) {
             var list = [];
@@ -267,11 +272,57 @@ function executeNode(nodeIdx, portIdx) {
 
     switch (type) {
         case "InputSource":
-            if (portName === "entries" || label.indexOf("entry list") !== -1) {
+            if (label.indexOf("custom entry input") !== -1) {
+                var rawId = resolveInput(nodeIdx, "id") || props.id;
+                var id = rawId || ("entry_" + Math.random().toString(36).substr(2, 6));
+                var name = resolveInput(nodeIdx, "name") || props.name || "New Entry";
+
+                var keywords = [];
+                var kwInput = resolveInput(nodeIdx, "keywords") || [];
+                if (Array.isArray(kwInput)) keywords = keywords.concat(kwInput);
+                else if (kwInput) keywords.push(kwInput);
+
+                for (var key in props) {
+                    if (key.indexOf("kw_") === 0) {
+                        keywords.push(props[key]);
+                    }
+                }
+                keywords = Array.from(new Set(keywords)).filter(Boolean);
+
+                var finalAttrs = [];
+                var attrIn = resolveInput(nodeIdx, "attributes") || [];
+                if (Array.isArray(attrIn)) {
+                    for (var i = 0; i < attrIn.length; i++) {
+                        var a = attrIn[i];
+                        if (a && typeof a === 'object' && a.name) {
+                            finalAttrs.push({ name: a.name, value: a.value });
+                        }
+                    }
+                }
+
+                for (var key in props) {
+                    if (key.indexOf("attr_") === 0 && typeof props[key] === 'object') {
+                        var ap = props[key];
+                        if (ap && ap.name) {
+                            finalAttrs.push({ name: ap.name, value: ap.value });
+                        }
+                    }
+                }
+
+                var entryP = [];
+                entryP.push("Keywords", keywords);
+                for (var i = 0; i < finalAttrs.length; i++) {
+                    var attr = finalAttrs[i];
+                    entryP.push(attr.name, attr.value);
+                }
+
+                result = { id: id, name: name, p: entryP };
+            } else if (label.indexOf("custom value input") !== -1) {
+                result = props.value;
+            } else if (portName === "entries" || label.indexOf("entry list") !== -1 || type === "InputEntryList") {
                 result = dataEntries;
                 if (!portName) portName = "entries";
-            } else if (portName === "values" || label.indexOf("custom value list") !== -1) {
-                // Aggregate value_1, value_2, etc.
+            } else if (portName === "values" || label.indexOf("custom value list") !== -1 || type === "CustomValueListInput") {
                 result = [];
                 for (var key in props) {
                     if (key.indexOf("value_") === 0) {
@@ -279,9 +330,42 @@ function executeNode(nodeIdx, portIdx) {
                     }
                 }
                 if (!portName) portName = "values";
-            } else if (portName === "attributes" || label.indexOf("custom attributes") !== -1) {
-                // Aggregate attribute_1, attribute_2, etc.
+            } else if (portName === "attributes" || label.indexOf("custom attributes") !== -1 || type === "CustomAttributesInput") {
                 result = [];
+                // 1. Handle zipped list inputs (if connected)
+                var namesIn = resolveInput(nodeIdx, "names") || [];
+                var valuesIn = resolveInput(nodeIdx, "values") || [];
+                var zipCount = Math.max(namesIn.length, valuesIn.length);
+                for (var i = 0; i < zipCount; i++) {
+                    result.push({
+                        name: namesIn[i] || ("Attr " + i),
+                        type: "String",
+                        value: valuesIn[i]
+                    });
+                }
+
+                // 2. Handle expanded port inputs (new way)
+                // Only check for ports that were actually connected or are possible prefixes
+                // We use behaviorStrings to find what ports exist in this lore
+                for (var i = 0; i < 20; i++) {
+                    var namePort = "names_" + i;
+                    var valuePort = "values_" + i;
+
+                    // Check if either port exists in behaviorStrings OR has a prop
+                    var hasPort = (behaviorStrings.indexOf(namePort) !== -1 || behaviorStrings.indexOf(valuePort) !== -1);
+                    var n = resolveInput(nodeIdx, namePort);
+                    var v = resolveInput(nodeIdx, valuePort);
+
+                    if (n !== null || v !== null) {
+                        result.push({
+                            name: n || ("Attr " + i),
+                            type: "String",
+                            value: v
+                        });
+                    }
+                }
+
+                // 3. Handle manual properties (legacy/fallback)
                 for (var key in props) {
                     if (key.indexOf("attribute_") === 0 && typeof props[key] === 'object') {
                         var attr = props[key];
@@ -475,7 +559,7 @@ function executeNode(nodeIdx, portIdx) {
                 }
                 if (!portName) portName = "filtered_entries";
             } else if (label.indexOf("list filter") !== -1 || type === "ListFilter") {
-                var sourceList = resolveInput(nodeIdx, "list_input") || [];
+                var sourceList = resolveInput(nodeIdx, "list_input") || resolveInput(nodeIdx, "entries") || [];
                 var trimStart = Number(props.trim_start) || 0;
                 var trimEnd = Number(props.trim_end) || 0;
                 var endIndex = sourceList.length;
@@ -734,6 +818,15 @@ function executeNode(nodeIdx, portIdx) {
             }
             break;
 
+        case "Concatenate":
+        case "StringUtility":
+            if (label.indexOf("concatenate list") !== -1) {
+                var concatVals = resolveInput(nodeIdx, "values") || resolveInput(nodeIdx, "list") || [];
+                if (!Array.isArray(concatVals)) concatVals = [concatVals];
+                var sep = props.separator !== undefined ? props.separator : ", ";
+                result = concatVals.join(sep);
+            }
+            break;
         case "OutputRoot":
         case "ActivationOutput":
             result = resolveInput(nodeIdx, "entries") || [];
@@ -769,6 +862,7 @@ if (rootIdx !== -1) {
 
     for (var i = 0; i < finalEntries.length; i++) {
         var entry = finalEntries[i];
+        if (!entry) continue;
         var ep = getEntryProps(entry);
         if (ep.Personality) personalities.push(ep.Personality);
         if (ep.Scenario) scenarios.push(ep.Scenario);

@@ -108,7 +108,10 @@ export function useNodeLogic(id: string, data: SpecNodeData) {
         if (isMappingsNode) return;
 
         if (def.inputs && '$for' in def.inputs) {
-            const expandKey = (def.inputs as any).$for.replace('node.', '_');
+            const baseKey = (def.inputs as any).$for.replace('node.', '');
+            const hasBase = Array.isArray(values[baseKey]) && values[baseKey].length > 0;
+            const hasPrefixed = Array.isArray(values['_' + baseKey]) && values['_' + baseKey].length > 0;
+            const expandKey = (hasBase || !hasPrefixed) ? baseKey : `_${baseKey}`;
 
             if (def.properties && '$for' in def.properties && (def.properties as any).$for === (def.inputs as any).$for) {
                 return;
