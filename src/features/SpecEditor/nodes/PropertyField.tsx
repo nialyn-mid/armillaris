@@ -26,10 +26,42 @@ const PropertyField = ({
     availableAttributes,
     connectedPorts,
     onRemoveSelf,
+    onAddExpandable,
     level = 0,
     hideTypeSelector,
     isCompact
 }: PropertyFieldProps) => {
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            const isTextarea = e.currentTarget.tagName === 'TEXTAREA';
+            const isShift = e.shiftKey;
+
+            // Allow Shift+Enter for newlines in textareas
+            if (isTextarea && isShift) return;
+
+            e.preventDefault();
+            const allInputs = Array.from(document.querySelectorAll('.nodrag.property-input:not([disabled])'));
+            const currentIndex = allInputs.indexOf(e.currentTarget as any);
+
+            if (currentIndex !== -1 && currentIndex < allInputs.length - 1) {
+                (allInputs[currentIndex + 1] as HTMLElement).focus();
+            } else if (currentIndex === allInputs.length - 1) {
+                // If it's the last one, and it's a dynamic item, call onAddExpandable
+                const listKey = (def as any)._listKey;
+                if (listKey && onAddExpandable) {
+                    onAddExpandable(listKey);
+                    // Focus the new input after render
+                    setTimeout(() => {
+                        const newInputs = Array.from(document.querySelectorAll('.nodrag.property-input:not([disabled])'));
+                        if (newInputs.length > allInputs.length) {
+                            (newInputs[newInputs.length - 1] as HTMLElement).focus();
+                        }
+                    }, 50);
+                }
+            }
+        }
+    };
 
     // 0. Global Control Check
     const isControlled = useMemo(() => {
@@ -208,10 +240,11 @@ const PropertyField = ({
                     return (
                         <input
                             type="checkbox"
-                            className="nodrag"
+                            className="nodrag property-input"
                             style={{ margin: '4px' }}
                             checked={!!v}
                             onChange={(e) => onValChange(e.target.checked)}
+                            onKeyDown={handleKeyDown}
                             disabled={isControlled}
                         />
                     );
@@ -223,6 +256,7 @@ const PropertyField = ({
                             className="nodrag property-input"
                             value={v ?? ''}
                             onChange={(e) => onValChange(e.target.value === '' ? null : Number(e.target.value))}
+                            onKeyDown={handleKeyDown}
                             style={{ flex: 1 }}
                             disabled={isControlled}
                         />
@@ -235,6 +269,7 @@ const PropertyField = ({
                             className="nodrag property-input"
                             value={v ?? ''}
                             onChange={(e) => onValChange(e.target.value)}
+                            onKeyDown={handleKeyDown}
                             style={{ flex: 1 }}
                             disabled={isControlled}
                         />
@@ -246,6 +281,7 @@ const PropertyField = ({
                             className="nodrag property-input"
                             value={v ?? ''}
                             onChange={(e) => onValChange(e.target.value)}
+                            onKeyDown={handleKeyDown}
                             style={{ flex: 1 }}
                             disabled={isControlled}
                             placeholder={(def as any).placeholder}
@@ -275,6 +311,7 @@ const PropertyField = ({
                             style={{ width: 'auto', minWidth: '80px', fontSize: '11px', padding: '2px 4px' }}
                             value={currentType}
                             onChange={(e) => handleTypeChange(e.target.value)}
+                            onKeyDown={handleKeyDown}
                         >
                             <option value="String">String</option>
                             <option value="Number">Number</option>
@@ -330,6 +367,7 @@ const PropertyField = ({
                     className="nodrag property-input"
                     value={val ?? ''}
                     onChange={(e) => onChange(def.name, e.target.value)}
+                    onKeyDown={handleKeyDown}
                     disabled={isControlled}
                 >
                     <option value="" disabled>Select Attribute</option>
@@ -362,6 +400,7 @@ const PropertyField = ({
                     className="nodrag property-input"
                     value={val ?? def.default ?? (def.options?.[0] as any)?.value ?? def.options?.[0]}
                     onChange={(e) => onChange(def.name, e.target.value)}
+                    onKeyDown={handleKeyDown}
                     disabled={isControlled}
                 >
                     {def.options?.map((opt: any) => {
@@ -380,9 +419,10 @@ const PropertyField = ({
             <div className="property-row" style={{ flexDirection: 'row', alignItems: 'center', gap: '8px', opacity: isControlled ? 0.6 : 1 }}>
                 <input
                     type="checkbox"
-                    className="nodrag"
+                    className="nodrag property-input"
                     checked={val ?? def.default ?? false}
                     onChange={(e) => onChange(def.name, e.target.checked)}
+                    onKeyDown={handleKeyDown}
                     disabled={isControlled}
                 />
                 <span className="property-label">
@@ -402,6 +442,7 @@ const PropertyField = ({
                     className="nodrag property-input"
                     value={val ?? def.default ?? ''}
                     onChange={(e) => onChange(def.name, e.target.value)}
+                    onKeyDown={handleKeyDown}
                     style={{ minHeight: '60px', fontFamily: 'monospace' }}
                 />
             </div>
@@ -430,6 +471,7 @@ const PropertyField = ({
                     className="nodrag property-input"
                     value={val ?? def.default ?? ''}
                     onChange={(e) => onChange(def.name, e.target.value)}
+                    onKeyDown={handleKeyDown}
                     style={{ flex: 1 }}
                     disabled={isControlled}
                     placeholder={(def as any).placeholder}

@@ -4,7 +4,7 @@ export const useEngineState = (
     setHasDevEngine: (has: boolean) => void,
     setEngineErrors: (errors: any[]) => void
 ) => {
-    const [activeEngine, setActiveEngine] = useState<string>(() => localStorage.getItem('active_engine') || 'armilaris_engine');
+    const [activeEngine, setActiveEngine] = useState<string>(() => localStorage.getItem('active_engine') || 'armillaris_engine');
     const [activeSpec, setActiveSpec] = useState<string>(() => localStorage.getItem('active_spec') || 'default_spec.behavior');
     const [availableEngines, setAvailableEngines] = useState<string[]>([]);
     const [availableSpecs, setAvailableSpecs] = useState<string[]>([]);

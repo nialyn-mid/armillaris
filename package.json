@@ -12,7 +12,8 @@
     "build:electron": "tsc -p electron/tsconfig.json && node scripts/copy-assets.js",
     "dist": "npm run build && electron-builder",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy-engine": "node scripts/deploy-engine.js"
   },
   "build": {
     "appId": "com.nialyn.armillaris",

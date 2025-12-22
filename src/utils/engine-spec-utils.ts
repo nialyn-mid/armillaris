@@ -104,16 +104,16 @@ export const resolveExpansion = <T extends { id?: string; name?: string; label?:
                     results.push(resolvedItem as T);
                 });
             });
-            return results;
         }
 
-        // Single Definition Item (if it has identifying keys)
-        if ('name' in def || 'id' in def || 'label' in def) {
+        // Single Definition Item (if it has identifying keys and ISN'T an expansion object themselves)
+        if (!('$for' in def) && ('name' in def || 'id' in def || 'label' in def)) {
             return [def as unknown as T];
         }
 
         // Record of definitions (e.g. { "prop1": { ... } })
         Object.entries(def).forEach(([key, val]) => {
+            if (key === '$for' || key === '$item') return; // Handled above
             if (typeof val === 'object' && val !== null) {
                 // Inject name/id from key if missing
                 const item = { id: key, name: key, ...val } as T;

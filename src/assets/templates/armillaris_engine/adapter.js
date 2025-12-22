@@ -60,10 +60,28 @@ function adapt(behaviorData) {
             if (Object.prototype.hasOwnProperty.call(values, key)) {
                 var val = values[key];
                 var finalVal = val;
+
+                var isCategorical = (
+                    key === "label" || key === "type" || key === "attribute" ||
+                    key === "attribute_name" || key === "operator" || key === "sort_by" ||
+                    key === "operation" || key === "target_type" || key === "separator" ||
+                    key === "name" || key === "attribute_type" || key === "value_type" ||
+                    key === "message_user_type" || key === "deduplicate"
+                );
+
                 if (typeof val === 'string') {
-                    if (!isNaN(val) && val.trim() !== "") finalVal = Number(val);
-                    else finalVal = getStringIndex(val);
+                    if (isCategorical) {
+                        finalVal = getStringIndex(val);
+                    } else {
+                        // Data key, keep as raw string (don't auto-convert to number index)
+                        finalVal = val;
+                    }
+                } else if (Array.isArray(val)) {
+                    // For arrays (like keywords), only index if we decide it's categorical 
+                    // (usually keywords are NOT interned to avoid collision with numbers)
+                    finalVal = val;
                 }
+
                 propsArray.push(getStringIndex(key));
                 propsArray.push(finalVal);
             }

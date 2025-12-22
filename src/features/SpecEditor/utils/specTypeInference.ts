@@ -44,6 +44,7 @@ export const applyTypeTransformation = (type: string, transformation: TypeTransf
 
     if (transformType === 'replace_from_property' && (transformation as any).property_id) {
         const propId = (transformation as any).property_id;
+        const suffix = (transformation as any).suffix || '';
         let val = values;
         if (propId.includes('.')) {
             const parts = propId.split('.');
@@ -53,7 +54,7 @@ export const applyTypeTransformation = (type: string, transformation: TypeTransf
         } else {
             val = values?.[propId];
         }
-        return val || type;
+        return (val || type) + suffix;
     }
 
     return type;

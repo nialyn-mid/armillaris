@@ -174,7 +174,7 @@ export default function SpecManagerPanel({
 
             {/* Compilation Status / Live Preview (Stub) */}
             <div className="panel-section" style={{ height: '80px' }}>
-                <div className="panel-section-title">Behavior Stats</div>
+                <div className="panel-section-title">View Stats</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '-1em' }}>
                     Nodes: {nodeCount} <br />
                     Edges: {edgeCount}

@@ -53,8 +53,8 @@ export const TutorialManager = () => {
                             onNextClick: (_el: any, _step: any, { driver }: any) => {
                                 // Pre-open the panel before moving to the next step
                                 setActivePane('engine');
-                                setActiveEngine('armilaris_engine');
-                                setActiveSpec('spec_default.behavior');
+                                setActiveEngine('armillaris_engine');
+                                setActiveSpec('default.behavior');
                                 // Giving React some time to mount the panel
                                 setTimeout(() => driver.moveNext(), 400);
                             }
@@ -82,8 +82,8 @@ export const TutorialManager = () => {
                             align: 'start'
                         },
                         onHighlightStarted: () => {
-                            setActiveEngine('armilaris_engine');
-                            setActiveSpec('spec_default.behavior');
+                            setActiveEngine('armillaris_engine');
+                            setActiveSpec('default.behavior');
                             resetPanels();
                             setActiveTab('data');
                         }

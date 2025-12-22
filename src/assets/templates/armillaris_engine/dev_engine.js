@@ -20,14 +20,24 @@ try {
 var behaviorStrings = BEHAVIOR_DATA.s || [];
 var behaviorNodes = BEHAVIOR_DATA.n || [];
 var behaviorEdges = BEHAVIOR_DATA.e || [];
+var behaviorIds = BEHAVIOR_DATA.i || [];
 
 var dataStrings = ENTRY_DATA.s || [];
 var dataEntries = ENTRY_DATA.d || [];
 
-// 3. Property Utilities
+// Debug Instrumentation
+var dtrace = [];
+function dlog(msg) { dtrace.push(msg); }
+
+dlog("--- Engine Start ---");
+dlog("Behavior: Nodes=" + behaviorNodes.length + ", Edges=" + behaviorEdges.length);
+dlog("Data: Entries=" + dataEntries.length);
+
+// Helper: Safe string resolution
 function getBStr(idx) { return idx === -1 ? null : behaviorStrings[idx]; }
 function getDStr(idx) { return idx === -1 ? null : dataStrings[idx]; }
 
+// 3. Property Utilities
 function getProps(nodeIdx) {
     var node = behaviorNodes[nodeIdx];
     if (!node || !node[1]) return {};
@@ -50,17 +60,9 @@ function getProps(nodeIdx) {
         var isStr = (
             key === "label" || key === "type" || key === "attribute" ||
             key === "message_user_type" || key === "deduplicate" ||
-            key === "attribute_name" || key === "regex" ||
-            key === "operator" || key === "sort_by" || key === "operation" ||
-            key === "target_type" || key === "separator" || key === "name" || key === "keywords" ||
-            key === "attribute_type" || key === "value_type" ||
-            key === "value" || key === "values" || key === "val" ||
-            key.indexOf("value_") === 0 ||
-            key.indexOf("attribute_") === 0 ||
-            key.indexOf("attr_") === 0 ||
-            key.indexOf("mapping_") === 0 ||
-            key.indexOf("input_") === 0 ||
-            key.indexOf("output_") === 0
+            key === "attribute_name" || key === "operator" || key === "sort_by" ||
+            key === "operation" || key === "target_type" || key === "separator" ||
+            key === "name" || key === "attribute_type" || key === "value_type"
         );
 
         if (typeof val === 'number' && val >= 0 && val < behaviorStrings.length && isStr) {
@@ -112,6 +114,27 @@ function getEntryProps(entry) {
     return p;
 }
 
+function decompressJSON(val) {
+    if (val === null || typeof val !== 'object') return val;
+    if (Array.isArray(val)) {
+        return val.map(decompressJSON);
+    }
+    // Check if it looks like an entry { id, p, ... }
+    if (val.hasOwnProperty('id') && val.hasOwnProperty('p') && Array.isArray(val.p)) {
+        var props = getEntryProps(val);
+        var res = { id: val.id };
+        for (var key in props) res[key] = decompressJSON(props[key]);
+        return res;
+    }
+    // Generic object
+    var res = {};
+    for (var key in val) {
+        if (val.hasOwnProperty(key)) {
+            res[key] = decompressJSON(val[key]);
+        }
+    }
+    return res;
+}
 
 function compareValues(a, b, op) {
     // Handle List Attributes (e.g. Keywords or tagged traits)
@@ -167,7 +190,17 @@ function compareValues(a, b, op) {
 
 // 4. Graph Execution Engine
 var memo = {};
+var executed_nodes = [];
+var rawHighlights = {}; // msgIndex -> [ { color, ranges: [[s,e]...] } ]
+var debug_ports = {}; // { nodeUUID: { portID: value } }
 var recursionStack = {};
+
+// Tag messages with original index for stable highlighting
+if (typeof context !== 'undefined' && context.chat && context.chat.last_messages) {
+    for (var i = 0; i < context.chat.last_messages.length; i++) {
+        context.chat.last_messages[i].__idx = i;
+    }
+}
 
 // Graph Adjacency Helpers
 var _entryGraph = null;
@@ -212,6 +245,11 @@ function buildEntryGraph() {
     return _entryGraph;
 }
 
+function addHighlight(msgIdx, color, start, end) {
+    if (!rawHighlights[msgIdx]) rawHighlights[msgIdx] = {};
+    if (!rawHighlights[msgIdx][color]) rawHighlights[msgIdx][color] = [];
+    rawHighlights[msgIdx][color].push([start, end]);
+}
 
 function getIncomingEdges(nodeIdx, targetPortIdx) {
     var edges = [];
@@ -226,18 +264,29 @@ function getIncomingEdges(nodeIdx, targetPortIdx) {
 
 function resolveInput(nodeIdx, portName) {
     var portIdx = behaviorStrings.indexOf(portName);
+    var nodeUuid = behaviorIds[nodeIdx];
+    var result = null;
+
     if (portIdx === -1) {
         var props = getProps(nodeIdx);
-        return props.hasOwnProperty(portName) ? props[portName] : null;
+        result = props.hasOwnProperty(portName) ? props[portName] : null;
+    } else {
+        var edges = getIncomingEdges(nodeIdx, portIdx);
+        if (edges.length === 0) {
+            var props = getProps(nodeIdx);
+            result = props.hasOwnProperty(portName) ? props[portName] : null;
+        } else {
+            result = executeNode(edges[0][0], edges[0][1]);
+        }
     }
 
-    var edges = getIncomingEdges(nodeIdx, portIdx);
-    if (edges.length === 0) {
-        var props = getProps(nodeIdx);
-        return props.hasOwnProperty(portName) ? props[portName] : null;
+    // Record for debug view
+    if (nodeUuid && portName && typeof debug_ports !== 'undefined') {
+        if (!debug_ports[nodeUuid]) debug_ports[nodeUuid] = {};
+        debug_ports[nodeUuid][portName] = decompressJSON(result);
     }
 
-    return executeNode(edges[0][0], edges[0][1]);
+    return result;
 }
 
 function executeNode(nodeIdx, portIdx) {
@@ -247,7 +296,7 @@ function executeNode(nodeIdx, portIdx) {
     if (recursionStack[nodeIdx]) {
         if (typeof context !== 'undefined') {
             if (!context.warnings) context.warnings = [];
-            var msg = "Cycle detected at node " + nodeIdx;
+            var msg = "Cycle detected at node " + behaviorIds[nodeIdx];
             if (context.warnings.indexOf(msg) === -1) context.warnings.push(msg);
         }
         return null;
@@ -266,6 +315,7 @@ function executeNode(nodeIdx, portIdx) {
         return null;
     }
 
+    var nodeUuid = behaviorIds[nodeIdx];
     var portName = (portIdx === -1) ? null : getBStr(portIdx);
 
     // Fallback for root execution or null ports
@@ -331,13 +381,35 @@ function executeNode(nodeIdx, portIdx) {
                 if (!portName) portName = "entries";
             } else if (portName === "values" || label.indexOf("custom value list") !== -1 || type === "CustomValueListInput") {
                 result = [];
-                for (var key in props) {
-                    if (key.indexOf("value_") === 0) {
-                        result.push(props[key]);
+                // 1. Get ordered list of IDs
+                var ids = props._expandable_properties || props.expandable_properties || props._values || props.values;
+                if (ids && Array.isArray(ids)) {
+                    for (var i = 0; i < ids.length; i++) {
+                        var val = props["value_" + ids[i]];
+                        if (val !== undefined) {
+                            if (val !== null && typeof val === 'object' && val.hasOwnProperty('value')) {
+                                result.push(val.value);
+                            } else {
+                                result.push(val);
+                            }
+                        }
+                    }
+                } else {
+                    // Fallback to prefix search if no ID list (rare)
+                    for (var key in props) {
+                        if (key.indexOf("value_") === 0 && key !== "value_type") {
+                            var val = props[key];
+                            if (val !== null && typeof val === 'object' && val.hasOwnProperty('value')) {
+                                result.push(val.value);
+                            } else {
+                                result.push(val);
+                            }
+                        }
                     }
                 }
                 if (!portName) portName = "values";
-            } else if (portName === "attributes" || label.indexOf("custom attributes") !== -1 || type === "CustomAttributesInput") {
+            }
+            else if (portName === "attributes" || label.indexOf("custom attributes") !== -1 || type === "CustomAttributesInput") {
                 result = [];
                 // 1. Handle zipped list inputs (if connected)
                 var namesIn = resolveInput(nodeIdx, "names") || [];
@@ -352,14 +424,10 @@ function executeNode(nodeIdx, portIdx) {
                 }
 
                 // 2. Handle expanded port inputs (new way)
-                // Only check for ports that were actually connected or are possible prefixes
-                // We use behaviorStrings to find what ports exist in this lore
                 for (var i = 0; i < 20; i++) {
                     var namePort = "names_" + i;
                     var valuePort = "values_" + i;
 
-                    // Check if either port exists in behaviorStrings OR has a prop
-                    var hasPort = (behaviorStrings.indexOf(namePort) !== -1 || behaviorStrings.indexOf(valuePort) !== -1);
                     var n = resolveInput(nodeIdx, namePort);
                     var v = resolveInput(nodeIdx, valuePort);
 
@@ -391,6 +459,30 @@ function executeNode(nodeIdx, portIdx) {
             } else if (portName === "last_messages" || portName === "messages") {
                 result = (context.chat && context.chat.last_messages) ? context.chat.last_messages : [];
                 if (!portName) portName = "messages";
+            }
+            break;
+        case "Operation":
+            var values = resolveInput(nodeIdx, "values") || [];
+            if (!Array.isArray(values)) values = [values];
+            var op = props.operation || "Sum";
+            if (values.length === 0) {
+                result = 0;
+            } else {
+                if (op === "Sum") {
+                    result = 0;
+                    for (var i = 0; i < values.length; i++) result += Number(values[i]);
+                } else if (op === "Average") {
+                    var sum = 0;
+                    for (var i = 0; i < values.length; i++) sum += Number(values[i]);
+                    result = sum / values.length;
+                } else if (op === "Min") {
+                    result = Math.min.apply(null, values.map(Number));
+                } else if (op === "Max") {
+                    result = Math.max.apply(null, values.map(Number));
+                } else if (op === "Product") {
+                    result = 1;
+                    for (var i = 0; i < values.length; i++) result *= Number(values[i]);
+                }
             }
             break;
 
@@ -462,6 +554,8 @@ function executeNode(nodeIdx, portIdx) {
                                 entryMatched = true;
                                 matchesInThisMsg++;
 
+                                addHighlight(msg.__idx !== undefined ? msg.__idx : m, "#58a6ff", match.index, match.index + match[0].length);
+
                                 if (matchLimit > 0 && matchesInThisMsg >= matchLimit) break;
                                 if (re.lastIndex === match.index) re.lastIndex++;
                             }
@@ -518,6 +612,7 @@ function executeNode(nodeIdx, portIdx) {
                         while ((match = re.exec(msgStr)) !== null) {
                             msgMatch = true;
                             globalMatchedConds[cond] = true;
+                            addHighlight(msg.__idx !== undefined ? msg.__idx : m, "#d2a8ff", match.index, match.index + match[0].length);
                             if (re.lastIndex === match.index) re.lastIndex++;
                         }
                     }
@@ -643,7 +738,9 @@ function executeNode(nodeIdx, portIdx) {
                                 ends.push(match.index + match[0].length);
                             }
                         }
-                    } catch (e) { }
+                    } catch (e) {
+                        console.error("Regex Error:", e.message, "pattern:", regexPattern);
+                    }
                 }
 
                 if (portName === "matches") result = matches;
@@ -704,10 +801,40 @@ function executeNode(nodeIdx, portIdx) {
             if (!portName) portName = "adjacency";
             break;
 
-        case "DataUtility":
+        case "SinglesToList":
+        case "ListToSingles":
+        case "ValueConvert":
         case "JoinList":
         case "ValueMap":
-            if (label.indexOf("join list") !== -1 || type === "JoinList" || portName === "joined_list") {
+        case "DataUtility":
+            if (label.indexOf("singles to list") !== -1 || type === "SinglesToList") {
+                result = [];
+                var itemIndices = props.items || props._items || [];
+                for (var i = 0; i < itemIndices.length; i++) {
+                    var idxStr = itemIndices[i];
+                    var val = resolveInput(nodeIdx, "item_" + idxStr);
+                    if (val !== undefined && val !== null) result.push(val);
+                }
+            } else if (label.indexOf("list to singles") !== -1 || type === "ListToSingles") {
+                var ltsList = resolveInput(nodeIdx, "list") || [];
+                if (!Array.isArray(ltsList)) ltsList = [ltsList];
+                if (portName && portName.indexOf("item_") === 0) {
+                    var ltsIdx = parseInt(portName.split("_")[1]);
+                    result = ltsList[ltsIdx];
+                } else {
+                    result = ltsList[0];
+                }
+            } else if (label.indexOf("value convert") !== -1 || type === "ValueConvert") {
+                var convInput = resolveInput(nodeIdx, "input") || resolveInput(nodeIdx, "values") || [];
+                if (!Array.isArray(convInput)) convInput = [convInput];
+                var targetT = props.target_type || "String";
+                result = convInput.map(function (v) {
+                    if (targetT === "String") return String(v);
+                    if (targetT === "Number") return Number(v);
+                    if (targetT === "Boolean") return Boolean(v);
+                    return v;
+                });
+            } else if (label.indexOf("join list") !== -1 || type === "JoinList" || portName === "joined_list") {
                 result = [];
                 var incoming = getIncomingEdges(nodeIdx, -1);
                 for (var i = 0; i < incoming.length; i++) {
@@ -800,7 +927,8 @@ function executeNode(nodeIdx, portIdx) {
                     }
                 }
                 if (!portName) portName = "outputs";
-            } else if (label.indexOf("sort messages") !== -1 || type === "SortMessages") {
+            }
+            else if (label.indexOf("sort messages") !== -1 || type === "SortMessages") {
                 var msgs = resolveInput(nodeIdx, "messages") || [];
                 var sortBy = props.sort_by || "date";
                 var sorted = msgs.slice();
@@ -853,10 +981,14 @@ function executeNode(nodeIdx, portIdx) {
                 result = concatVals.join(sep);
             }
             break;
+
         case "OutputRoot":
         case "ActivationOutput":
             result = resolveInput(nodeIdx, "entries") || [];
             if (!portName) portName = "entries";
+            break;
+        case "ContextRoot":
+            result = resolveInput(nodeIdx, portName);
             break;
 
         default:
@@ -866,36 +998,106 @@ function executeNode(nodeIdx, portIdx) {
 
     memo[cacheKey] = result;
 
+    if (nodeUuid) {
+        if (!debug_ports[nodeUuid]) debug_ports[nodeUuid] = {};
+        debug_ports[nodeUuid][portName] = decompressJSON(result);
+    }
+
+    // Only glow if the node produced something useful (non-falsy, non-empty list)
+    // AND it's not a bridge node (InputSource/GroupInput/GroupOutput/Proxy)
+    var isBridge = (type === "GroupInput" || type === "GroupOutput" || type === "Proxy");
+    var isUseful = result && (!Array.isArray(result) || result.length > 0);
+    if (isUseful && !isBridge && nodeIdx !== -1 && executed_nodes.indexOf(nodeIdx) === -1) {
+        executed_nodes.push(nodeIdx);
+    }
+
     recursionStack[nodeIdx] = false;
     return result;
 }
 
 // 5. Execution Logic
-var rootIdx = -1;
+var roots = [];
 for (var i = 0; i < behaviorNodes.length; i++) {
     var t = getBStr(behaviorNodes[i][0]);
-    if (t === "OutputRoot" || t === "ActivationOutput") { rootIdx = i; break; }
-}
-
-
-
-if (rootIdx !== -1) {
-    var finalEntries = executeNode(rootIdx, behaviorStrings.indexOf("entries")) || [];
-
-    var personalities = [];
-    var scenarios = [];
-    var exampleDialogsArr = [];
-
-    for (var i = 0; i < finalEntries.length; i++) {
-        var entry = finalEntries[i];
-        if (!entry) continue;
-        var ep = getEntryProps(entry);
-        if (ep.Personality) personalities.push(ep.Personality);
-        if (ep.Scenario) scenarios.push(ep.Scenario);
-        if (ep['Example Dialogs']) exampleDialogsArr.push(ep['Example Dialogs']);
+    if (t === "OutputRoot" || t === "ActivationOutput" || t === "ContextRoot") {
+        var order = Number(resolveInput(i, "order")) || 0;
+        roots.push({ idx: i, type: t, order: order });
     }
-
-    context.character.personality = personalities.join("\n\n");
-    context.character.scenario = scenarios.join("\n\n");
-    context.character.example_dialogs = exampleDialogsArr.join("\n\n");
 }
+
+roots.sort(function (a, b) { return a.order - b.order; });
+
+var personalities = [];
+var scenarios = [];
+var exampleDialogsArr = [];
+var activatedEntryIds = [];
+
+for (var i = 0; i < roots.length; i++) {
+    var root = roots[i];
+    if (root.type === "OutputRoot" || root.type === "ActivationOutput") {
+        var finalEntries = executeNode(root.idx, behaviorStrings.indexOf("entries")) || [];
+        dlog("Root " + i + " (" + root.type + ") Activated Entries: " + finalEntries.length);
+
+        for (var j = 0; j < finalEntries.length; j++) {
+            var entry = finalEntries[j];
+            if (!entry) continue;
+            if (entry.id && activatedEntryIds.indexOf(entry.id) === -1) activatedEntryIds.push(entry.id);
+            var ep = getEntryProps(entry);
+            if (ep.Personality) personalities.push(ep.Personality);
+            if (ep.Scenario) scenarios.push(ep.Scenario);
+            if (ep['Example Dialogs']) exampleDialogsArr.push(ep['Example Dialogs']);
+        }
+    } else if (root.type === "ContextRoot") {
+        var p = executeNode(root.idx, behaviorStrings.indexOf("personality")) || resolveInput(root.idx, "personality") || "";
+        var s = executeNode(root.idx, behaviorStrings.indexOf("scenario")) || resolveInput(root.idx, "scenario") || "";
+        var ed = executeNode(root.idx, behaviorStrings.indexOf("example_dialogs")) || resolveInput(root.idx, "example_dialogs") || "";
+
+        if (p) personalities.push(p);
+        if (s) scenarios.push(s);
+        if (ed) exampleDialogsArr.push(ed);
+    }
+}
+
+context.character.personality = personalities.join("\n\n");
+context.character.scenario = scenarios.join("\n\n");
+context.character.example_dialogs = exampleDialogsArr.join("\n\n");
+
+// 6. Highlight Formatting (Reverse order for ChatOverlay)
+var totalMsgs = (context.chat && context.chat.last_messages) ? context.chat.last_messages.length : 0;
+var formattedHighlights = [];
+
+for (var i = totalMsgs - 1; i >= 0; i--) {
+    var msgHighlights = [];
+    if (rawHighlights[i]) {
+        for (var color in rawHighlights[i]) {
+            msgHighlights.push({ color: color, ranges: rawHighlights[i][color] });
+        }
+    }
+    formattedHighlights.push(msgHighlights);
+}
+
+// 6. Export Results
+var executed_uuids = executed_nodes.map(function (idx) {
+    return behaviorIds[idx];
+});
+
+// 7. Highlighting Export
+dlog("Highlights Exported: " + activatedEntryIds.length + " entry(s)");
+
+if (typeof context !== 'undefined') {
+    context.activated_ids = activatedEntryIds;
+    context.chat_highlights = formattedHighlights;
+    context.debug_nodes = executed_uuids;
+    if (context.character) {
+        // Trace logic removed as requested by user to keep actual scenario data
+    }
+}
+if (typeof activated_ids !== 'undefined') activated_ids = activatedEntryIds;
+if (typeof chat_highlights !== 'undefined') chat_highlights = formattedHighlights;
+if (typeof debug_nodes !== 'undefined') debug_nodes = executed_uuids;
+
+// For Electron host extractor
+var _activated_ids = activatedEntryIds;
+var _chat_highlights = formattedHighlights;
+var _debug_nodes = executed_uuids;
+var _debug_ports = debug_ports;

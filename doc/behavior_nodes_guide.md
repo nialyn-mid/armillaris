@@ -44,8 +44,8 @@ graph TD
 All nodes must be defined here to appear in the **Node Palette**.
 
 ### Schema Structure
-- **`type`**: The functional type (used for logic branching in `engine.js`).
-- **`label`**: The display name in the UI.
+- **`type`**: The functional type (used for logic branching in `engine.js`). `type` is NOT unique to a node.
+- **`label`**: The display name in the UI, which IS unique to a node.
 - **`category`**: Groups nodes in the palette (Input, Filter, Utility, etc.).
 - **`inputs` / `outputs`**: Defined with `id`, `label`, and `type` (used for connection validation).
 - **`properties`**: UI fields (select, string, number, boolean) stored in the node's `values` object.
@@ -155,7 +155,9 @@ Add `typeTransformation` to a `PortDef`:
     }
 }
 ```
-- **Supported Types**: `de-list` (removes " List" suffix), `replace` (requires `target_type`).
+- **Supported Types**: `de-list` (removes " List" suffix), `en-list` (adds " List" suffix), `replace` (requires `target_type`).
+- **`replace_from_property`**: Dynamically pulls the type from a node property (e.g., `value_type`).
+    - **`suffix`**: (Optional) Appends a string to the property value (e.g., property `Number` + suffix ` List` = `Number List`).
 - **Trigger**: `property_trigger` (boolean property) or `property_conditions` (map of property IDs to exact values).
 
 #### System Architecture
@@ -255,3 +257,8 @@ The Electron host (`engines.ts`) extracts debug data by looking for specific var
 The `String Regex` node handles both full matches and capturing groups.
 - **Logic**: It flattens all capture groups into the `matches` list: `[FullMatch, Group1, Group2, ...]`.
 - **Global Flag**: When the `global` property is enabled, the engine loops through all matches in the input string, appending each set of full-match + groups to the output list.
+
+### Property Blocks vs. Primitives
+When using `Property Block` for expandable items (e.g., to add "Name" labels to list items for easier editor organization), it is crucial to **unwrap** the values in the engine.
+- **The rule**: The graph's internal technical representation (JSON state) can include metadata for the UI, but the engine's functional output (port values) should stay as **primitives** or **domain objects** (Entry, Message).
+- **The Lesson**: If a list item is a block containing `{name, value}`, the engine must loop through and `result.push(block.value)` so that downstream nodes (like `Concatenate List`) receive the expected primitive array, not a list of metadata objects.

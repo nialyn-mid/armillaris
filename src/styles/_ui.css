@@ -232,6 +232,27 @@
     border-color: var(--accent-color);
 }
 
+/* Dark mode scan buttons for number inputs */
+.property-input::-webkit-inner-spin-button,
+.property-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+    opacity: 1;
+    background: #333;
+    border-left: 1px solid #444;
+    cursor: pointer;
+    height: 100%;
+}
+
+.property-input[type=number] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.property-input[type=number]:hover::-webkit-inner-spin-button {
+    -webkit-appearance: inner-spin-button;
+}
+
 /* Add Item Button (for expandable lists) */
 .add-item-btn {
     background: var(--bg-secondary);

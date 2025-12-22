@@ -24,6 +24,9 @@
         "Utility": {
             "color": "#607d8b"
         },
+        "Filter": {
+            "color": "#892eb3"
+        },
         "Output": {
             "color": "#d83b01"
         }
@@ -216,23 +219,23 @@
             "label": "Custom Value List Input",
             "category": "Input",
             "description": "Create a custom value list by defining the type and values.",
-            "inputs": [
-                {
-                    "id": "type",
-                    "label": "Type",
-                    "type": "String"
-                }
-            ],
+            "inputs": [],
             "outputs": [
                 {
                     "id": "values",
                     "label": "Values",
-                    "type": "Value List"
+                    "type": "Value",
+                    "typeTransformation": {
+                        "type": "replace_from_property",
+                        "property_id": "value_type",
+                        "suffix": " List"
+                    }
                 }
             ],
-            "properties": {
-                "value_type": {
-                    "label": "Value Type",
+            "properties": [
+                {
+                    "name": "value_type",
+                    "label": "Type",
                     "type": "select",
                     "options": [
                         "String",
@@ -242,13 +245,20 @@
                     ],
                     "default": "String"
                 },
-                "$for": "node.expandable_properties",
-                "$item": {
-                    "name": "value_{{_value}}",
-                    "label": "Value {{_value}}",
-                    "type": "Value"
+                {
+                    "name": "label",
+                    "label": "Values",
+                    "type": "Label"
+                },
+                {
+                    "$for": "node.expandable_properties",
+                    "$item": {
+                        "name": "value_{{_value}}",
+                        "label": "Value {{_value}}",
+                        "type": "Value"
+                    }
                 }
-            }
+            ]
         },
         {
             "type": "Filter",
@@ -279,8 +289,9 @@
                     "type": "Entry List"
                 }
             ],
-            "properties": {
-                "combine": {
+            "properties": [
+                {
+                    "name": "combine",
                     "label": "Combine",
                     "type": "select",
                     "options": [
@@ -295,12 +306,14 @@
                     ],
                     "default": "or"
                 },
-                "attribute_name": {
+                {
+                    "name": "attribute_name",
                     "label": "Attribute Name",
                     "type": "String",
                     "default": "Meta"
                 },
-                "operator": {
+                {
+                    "name": "operator",
                     "label": "Operator Is",
                     "type": "select",
                     "options": [
@@ -339,7 +352,8 @@
                     ],
                     "default": "=="
                 },
-                "value_type": {
+                {
+                    "name": "value_type",
                     "label": "Value Type",
                     "type": "select",
                     "options": [
@@ -362,13 +376,15 @@
                     ],
                     "default": "String"
                 },
-                "$for": "node.values_list",
-                "$item": {
-                    "name": "value_{{_value}}",
-                    "label": "Value {{_value}}",
-                    "type": "Value"
+                {
+                    "$for": "node.values_list",
+                    "$item": {
+                        "name": "value_{{_value}}",
+                        "label": "Value {{_value}}",
+                        "type": "Value"
+                    }
                 }
-            }
+            ]
         },
         {
             "type": "Filter",
@@ -1346,10 +1362,76 @@
                     "id": "entries",
                     "label": "Entries",
                     "type": "Entry List"
+                },
+                {
+                    "id": "order",
+                    "label": "Order",
+                    "type": "Number"
                 }
             ],
             "outputs": [],
-            "properties": []
+            "properties": [
+                {
+                    "name": "order",
+                    "label": "Order",
+                    "type": "Number",
+                    "default": 0
+                }
+            ]
+        },
+        {
+            "type": "ContextRoot",
+            "label": "Context Output",
+            "category": "Output",
+            "inputs": [
+                {
+                    "id": "personality",
+                    "label": "Personality",
+                    "type": "String"
+                },
+                {
+                    "id": "scenario",
+                    "label": "Scenario",
+                    "type": "String"
+                },
+                {
+                    "id": "example_dialogs",
+                    "label": "Example Dialogs",
+                    "type": "String"
+                },
+                {
+                    "id": "order",
+                    "label": "Order",
+                    "type": "Number"
+                }
+            ],
+            "outputs": [],
+            "properties": [
+                {
+                    "name": "order",
+                    "label": "Order",
+                    "type": "Number",
+                    "default": 0
+                },
+                {
+                    "name": "personality",
+                    "label": "Personality",
+                    "type": "String",
+                    "default": ""
+                },
+                {
+                    "name": "scenario",
+                    "label": "Scenario",
+                    "type": "String",
+                    "default": ""
+                },
+                {
+                    "name": "example_dialogs",
+                    "label": "Example Dialogs",
+                    "type": "String",
+                    "default": ""
+                }
+            ]
         }
     ]
 }

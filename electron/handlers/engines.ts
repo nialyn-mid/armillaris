@@ -69,26 +69,26 @@ export function registerEngineHandlers() {
     });
 
     ipcMain.handle('get-specs', async (_, engineName: string) => {
-        const specDir = path.join(ENGINES_DIR, engineName, 'behavior_spec');
+        const specDir = path.join(ENGINES_DIR, engineName, 'behavior');
         if (!fs.existsSync(specDir)) return [];
         return fs.readdirSync(specDir).filter(f => f.endsWith('.behavior'));
     });
 
     ipcMain.handle('read-spec', async (_, engineName: string, specName: string) => {
-        const specPath = path.join(ENGINES_DIR, engineName, 'behavior_spec', specName);
+        const specPath = path.join(ENGINES_DIR, engineName, 'behavior', specName);
         if (fs.existsSync(specPath)) return fs.readFileSync(specPath, 'utf-8');
         return '';
     });
 
     ipcMain.handle('save-behavior', async (_, engineName: string, specName: string, content: string) => {
-        const specDir = path.join(ENGINES_DIR, engineName, 'behavior_spec');
+        const specDir = path.join(ENGINES_DIR, engineName, 'behavior');
         if (!fs.existsSync(specDir)) fs.mkdirSync(specDir, { recursive: true });
         fs.writeFileSync(path.join(specDir, specName), content);
         return true;
     });
 
     ipcMain.handle('delete-behavior', async (_, engineName: string, specName: string) => {
-        const specPath = path.join(ENGINES_DIR, engineName, 'behavior_spec', specName);
+        const specPath = path.join(ENGINES_DIR, engineName, 'behavior', specName);
         if (fs.existsSync(specPath)) {
             fs.unlinkSync(specPath);
             return true;
@@ -130,7 +130,7 @@ export function registerEngineHandlers() {
 
         // Resolve spec path
         const specFilename = specName.endsWith('.behavior') ? specName : `${specName}.behavior`;
-        const specPath = path.join(enginePath, 'behavior_spec', specFilename);
+        const specPath = path.join(enginePath, 'behavior', specFilename);
 
         if (!fs.existsSync(adapterPath)) throw new Error('Adapter not found');
         if (!graphOverride && !fs.existsSync(specPath)) throw new Error(`Spec file '${specFilename}' not found`);
@@ -370,7 +370,7 @@ export function registerEngineHandlers() {
             const engineName = data.engine || 'armillaris_engine'; // Default to armillaris_engine if not specified
             const fileName = path.basename(filePath);
 
-            const specDir = path.join(ENGINES_DIR, engineName, 'behavior_spec');
+            const specDir = path.join(ENGINES_DIR, engineName, 'behavior');
             if (!fs.existsSync(specDir)) fs.mkdirSync(specDir, { recursive: true });
 
             fs.writeFileSync(path.join(specDir, fileName), content);
