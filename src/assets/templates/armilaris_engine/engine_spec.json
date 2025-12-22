@@ -1107,20 +1107,20 @@
             ]
         },
         {
-            "type": "Condition",
+            "type": "Logic",
             "label": "Condition",
             "category": "Logic",
             "description": "Compare two values.",
             "inputs": [
                 {
-                    "id": "a",
-                    "label": "A",
-                    "type": "Dynamic"
+                    "id": "input_a",
+                    "label": "Input A",
+                    "type": "Value"
                 },
                 {
-                    "id": "b",
-                    "label": "B",
-                    "type": "Dynamic"
+                    "id": "input_b",
+                    "label": "Input B",
+                    "type": "Value"
                 }
             ],
             "outputs": [
@@ -1135,8 +1135,8 @@
                     "id": "compare_type",
                     "subtype_of": "Value",
                     "ports": [
-                        "a",
-                        "b"
+                        "input_a",
+                        "input_b"
                     ]
                 }
             ],
@@ -1159,7 +1159,7 @@
             ]
         },
         {
-            "type": "Switch",
+            "type": "Logic",
             "label": "Switch",
             "category": "Logic",
             "description": "Pass through a value if condition is true, else returns empty.",
@@ -1170,9 +1170,9 @@
                     "type": "Boolean"
                 },
                 {
-                    "id": "input",
-                    "label": "Input",
-                    "type": "Dynamic"
+                    "id": "input_value",
+                    "label": "Input Value",
+                    "type": "Value"
                 }
             ],
             "outputs": [
@@ -1187,7 +1187,7 @@
                     "id": "switch_flow",
                     "subtype_of": "Value",
                     "ports": [
-                        "input",
+                        "input_value",
                         "output"
                     ]
                 }

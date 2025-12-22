@@ -173,6 +173,13 @@ function compareValues(a, b, op) {
 
     var valA = a;
     var valB = b;
+
+    // Normalize null/undefined to empty strings for "==" and "!=" to allow (String == null) checks
+    if (op === "==" || op === "!=") {
+        if (valA === null || valA === undefined) valA = "";
+        if (valB === null || valB === undefined) valB = "";
+    }
+
     if (typeof valA === 'string') valA = valA.trim();
     if (typeof valB === 'string') valB = valB.trim();
 
@@ -436,6 +443,25 @@ function executeNode(nodeIdx, portIdx) {
             } else if (portName === "last_messages" || portName === "messages") {
                 result = (context.chat && context.chat.last_messages) ? context.chat.last_messages : [];
                 if (!portName) portName = "messages";
+            }
+            break;
+
+        case "Logic":
+            if (label.indexOf("condition") !== -1) {
+                var valA = resolveInput(nodeIdx, "input_a");
+                var valB = resolveInput(nodeIdx, "input_b");
+                var op = props.operator || "==";
+                result = compareValues(valA, valB, op);
+            } else if (label.indexOf("switch") !== -1) {
+                var cond = resolveInput(nodeIdx, "condition");
+                var val = resolveInput(nodeIdx, "input_value");
+                if (cond) {
+                    result = val;
+                } else {
+                    // Return falsy of the same type if possible
+                    if (Array.isArray(val)) result = [];
+                    else result = null;
+                }
             }
             break;
 
