@@ -935,8 +935,7 @@ function executeNode(nodeIdx, portIdx) {
     }
 
     // Only glow if the node produced something useful (non-falsy, non-empty list)
-    // AND it's not a bridge node (GroupInput/GroupOutput/Proxy)
-    // Custom Inputs ARE allowed to glow.
+    // AND it's not a bridge node (InputSource/GroupInput/GroupOutput/Proxy)
     var isBridge = (type === "GroupInput" || type === "GroupOutput" || type === "Proxy");
     var isUseful = result && (!Array.isArray(result) || result.length > 0);
     if (isUseful && !isBridge && nodeIdx !== -1 && executed_nodes.indexOf(nodeIdx) === -1) {

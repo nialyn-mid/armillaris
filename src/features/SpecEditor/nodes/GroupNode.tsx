@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { SpecNodeInputPorts, SpecNodeOutputPorts } from './SpecNodePorts';
 import SpecNodeHeader from './SpecNodeHeader';
@@ -10,6 +10,7 @@ import JsonTree from '../components/JsonTree';
 import { MdFullscreen, MdFullscreenExit, MdClose } from 'react-icons/md';
 import { useState } from 'react';
 import { useData } from '../../../context/DataContext';
+import { getGraphAt } from '../utils/specTraversals';
 import { getDataType } from '../utils/debugUtils';
 import './Nodes.css';
 import './GroupNode.css';
@@ -17,7 +18,7 @@ import './PortDebug.css';
 
 const GroupNode = ({ data, selected, id }: any) => {
     const { label, inputs, outputs, onEditGroup, onUpdate, color } = data;
-    const { debugNodes } = useData();
+    const { debugNodes, behaviorGraph: masterGraph } = useData();
 
     // Dynamic Min Height based on ports (for layout hint)
     const portCount = Math.max(inputs?.length || 0, outputs?.length || 0);
@@ -46,7 +47,31 @@ const GroupNode = ({ data, selected, id }: any) => {
     };
 
     const fullId = data.pathPrefix ? `${data.pathPrefix}.${id}` : id;
-    const isExecuting = debugNodes.some(nid => nid === fullId || nid.startsWith(fullId + '.'));
+
+    const internalNodesConnectedToOutputs = useMemo(() => {
+        if (!masterGraph) return [];
+        // Resolve the sub-graph for THIS group
+        const path = (data.pathPrefix ? data.pathPrefix.split('.') : []).map((pid: string) => ({ id: pid }));
+        const graph = getGraphAt(masterGraph, [...path, { id }]);
+        if (!graph) return [];
+
+        // Find GroupOutput nodes inside
+        const goutNodes = graph.nodes?.filter((n: any) => n.type === 'GroupOutput') || [];
+        const connections = new Set<string>();
+
+        // For each GroupOutput, see what's connected to it
+        for (const gout of goutNodes) {
+            const incoming = graph.edges?.filter((e: any) => e.target === gout.id) || [];
+            for (const edge of incoming) {
+                // The source node relative to this group
+                connections.add(fullId + '.' + edge.source);
+            }
+        }
+        return Array.from(connections);
+    }, [masterGraph, data.pathPrefix, id, fullId]);
+
+    const isExecuting = debugNodes.includes(fullId) ||
+        internalNodesConnectedToOutputs.some((nid: string) => debugNodes.includes(nid));
 
     return (
         <div
