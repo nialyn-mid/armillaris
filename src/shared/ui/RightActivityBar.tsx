@@ -5,7 +5,8 @@ import {
     MdDescription, // Schema / Docs
     MdAssignment,  // Context Inputs
     MdInfoOutline, // Tutorial
-    MdStorage      // Data Management
+    MdStorage,     // Data Management
+    MdMonitorWeight // Size Viz
 } from 'react-icons/md';
 
 interface RightActivityBarProps {
@@ -29,6 +30,10 @@ export default function RightActivityBar({ activeTab, activeTools, onToggleTool 
                 return [
                     { id: 'schema', icon: <MdDescription />, title: 'Meta Schemas' },
                     { id: 'data_storage', icon: <MdStorage />, title: 'Data Management' }
+                ];
+            case 'output':
+                return [
+                    { id: 'size_visualization', icon: <MdMonitorWeight />, title: 'Size Statistics' }
                 ];
             default:
                 return [];

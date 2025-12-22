@@ -66,6 +66,16 @@
     font-size: 0.9rem;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+}
+
+.entry-size-tag {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    padding: 1px 4px;
+    border-radius: 3px;
+    opacity: 0.8;
 }
 
 .data-list-item.invalid {

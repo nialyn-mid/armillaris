@@ -1,7 +1,10 @@
-import { useMemo, useRef, useEffect } from 'react';
-import Editor from '@monaco-editor/react';
 import { useCodeViewLogic } from './hooks/useCodeViewLogic';
 import { DebugToolbar } from '../TemplateView/components/DebugToolbar';
+import SizeVisualizationPane from './components/SizeVisualizationPane';
+import { useData } from '../../context/DataContext';
+import { MdMonitorWeight } from 'react-icons/md';
+import { useMemo, useRef, useEffect } from 'react';
+import Editor from '@monaco-editor/react';
 
 export default function CodeView() {
     const {
@@ -13,8 +16,12 @@ export default function CodeView() {
         handleCopy,
         activeEngine,
         activeSpec,
-        refresh
+        refresh,
+        sizeBreakdown
     } = useCodeViewLogic();
+
+    const { activeTools, toggleTool } = useData();
+    const showSizeViz = activeTools.includes('size_visualization');
 
     const editorRef = useRef<any>(null);
 
@@ -83,25 +90,43 @@ export default function CodeView() {
                         <button onClick={handleCopy} className="btn-secondary btn-toolbar">
                             Copy
                         </button>
+                        <button
+                            onClick={() => toggleTool('size_visualization')}
+                            className={`btn-secondary btn-toolbar ${showSizeViz ? 'active' : ''}`}
+                            title="Toggle Size Statistics"
+                        >
+                            <MdMonitorWeight size={14} />
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {/* Monaco Editor */}
-            <Editor
-                height="100%"
-                defaultLanguage="javascript"
-                theme="vs-dark"
-                value={code}
-                onMount={handleEditorMount}
-                options={{
-                    readOnly: true,
-                    fontSize: 12,
-                    minimap: { enabled: true },
-                    wordWrap: wordWrap ? 'on' : 'off',
-                    automaticLayout: true
-                }}
-            />
+            <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Monaco Editor */}
+                    <Editor
+                        height="100%"
+                        defaultLanguage="javascript"
+                        theme="vs-dark"
+                        value={code}
+                        onMount={handleEditorMount}
+                        options={{
+                            readOnly: true,
+                            fontSize: 12,
+                            minimap: { enabled: true },
+                            wordWrap: wordWrap ? 'on' : 'off',
+                            automaticLayout: true
+                        }}
+                    />
+                </div>
+
+                {showSizeViz && (
+                    <SizeVisualizationPane
+                        breakdown={sizeBreakdown}
+                        onClose={() => toggleTool('size_visualization')}
+                    />
+                )}
+            </div>
 
             {/* SHARED DEBUG TOOLBAR */}
             <DebugToolbar

@@ -171,6 +171,9 @@ const ModuleView = () => {
                                 <span className="version-tag">v{selectedModule.version}</span>
                             </div>
                             <p className="author">By <span className="author-name">{selectedModule.author}</span></p>
+                            <div className="module-meta-stats">
+                                <span className="stat-item">Size: {((selectedModule.size || 0) / 1024).toFixed(2)} KB</span>
+                            </div>
                             <div className="description-text">
                                 {selectedModule.description}
                             </div>
@@ -268,6 +271,11 @@ const ModuleView = () => {
                         <div className="panel-content">
                             <div className="module-header-large">
                                 <h2>Configure {selectedModule.name}</h2>
+                            </div>
+                            <div className="config-module-meta">
+                                <span>Version {selectedModule.version}</span>
+                                <span> • </span>
+                                <span>Size: {((selectedModule.size || 0) / 1024).toFixed(2)} KB</span>
                             </div>
                             <p className="config-subtitle">Execution Order # {selectedModule.order + 1}</p>
 

@@ -163,6 +163,24 @@ Actually let's use a 3-column system where we shift the container.
     font-weight: 600;
 }
 
+.module-meta-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 4px 12px;
+    border-radius: 4px;
+    width: fit-content;
+    margin-bottom: 4px;
+}
+
+.config-module-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 4px 0 12px 0;
+}
+
 .description-text {
     line-height: 1.7;
     color: var(--text-secondary);

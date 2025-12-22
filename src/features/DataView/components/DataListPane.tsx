@@ -10,8 +10,8 @@ interface DataListPaneProps {
     setSearchTerm: (term: string) => void;
     filterMeta: string;
     setFilterMeta: (meta: string) => void;
-    sortOrder: 'asc' | 'desc';
-    setSortOrder: (order: 'asc' | 'desc') => void;
+    sortOrder: 'asc' | 'desc' | 'size';
+    setSortOrder: (order: 'asc' | 'desc' | 'size') => void;
     availableMetas: string[];
     metaDefinitions: MetaDefinition[];
     addEntry: () => void;
@@ -53,12 +53,13 @@ export function DataListPane({
                     </select>
                     <select
                         value={sortOrder}
-                        onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                        onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc' | 'size')}
                         className="form-control form-select"
-                        style={{ width: '70px' }}
+                        style={{ width: '85px' }}
                     >
                         <option value="asc">A-Z</option>
                         <option value="desc">Z-A</option>
+                        <option value="size">Size</option>
                     </select>
                 </div>
             </div>
@@ -81,7 +82,17 @@ export function DataListPane({
                         >
                             <div className="data-list-item-title">
                                 <span>{entry.label}</span>
-                                {!isMetaDefined && <MdError title="Undefined Meta Type" style={{ color: 'var(--danger-color)' }} />}
+                                <div className="flex-row items-center gap-xs">
+                                    <span className="entry-size-tag">
+                                        {(() => {
+                                            const content = JSON.stringify(entry.properties);
+                                            const size = new TextEncoder().encode(content).length;
+                                            if (size < 1024) return size + ' B';
+                                            return (size / 1024).toFixed(1) + ' KB';
+                                        })()}
+                                    </span>
+                                    {!isMetaDefined && <MdError title="Undefined Meta Type" style={{ color: 'var(--danger-color)' }} />}
+                                </div>
                             </div>
                         </div>
                     );

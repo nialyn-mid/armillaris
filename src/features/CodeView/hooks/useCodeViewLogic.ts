@@ -9,6 +9,7 @@ export function useCodeViewLogic() {
     const [code, setCode] = useState<string>('// Loading...');
     const [isCompiling, setIsCompiling] = useState(false);
     const [errors, setErrors] = useState<any[]>([]);
+    const [sizeBreakdown, setSizeBreakdown] = useState<any | null>(null);
 
     // Toggles
     const [wordWrap, setWordWrap] = useState<boolean>(() => localStorage.getItem('codeview_wordwrap') === 'true');
@@ -53,9 +54,11 @@ export function useCodeViewLogic() {
             if (generated && typeof generated === 'object') {
                 if (generated.success) {
                     setCode(generated.code || '');
+                    setSizeBreakdown(generated.sizeBreakdown || null);
                     setErrors([]);
                 } else {
                     setCode(generated.code || '// Compilation Failed with errors.');
+                    setSizeBreakdown(generated.sizeBreakdown || null);
                     setErrors(generated.errors || []);
                 }
             } else {
@@ -129,6 +132,7 @@ export function useCodeViewLogic() {
         errors,
         wordWrap, setWordWrap,
         pretty, setPretty,
+        sizeBreakdown,
         handleCopy,
         handleExport,
         activeEngine,

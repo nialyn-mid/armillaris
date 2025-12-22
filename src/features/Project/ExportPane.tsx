@@ -2,6 +2,8 @@ import { useData } from '../../context/DataContext';
 import { useValidation } from '../../context/ValidationContext';
 import { Toggle } from '../../shared/ui/Toggle';
 import SidePane from '../../shared/ui/SidePane';
+import { SizeBar, type SizeBreakdown } from '../../shared/ui/SizeBar';
+import { useState, useEffect, useCallback } from 'react';
 import {
     MdError,
     MdWarning,
@@ -23,9 +25,38 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
         minifyEnabled, setMinifyEnabled,
         compressEnabled, setCompressEnabled,
         mangleEnabled, setMangleEnabled,
-        includeComments, setIncludeComments
+        includeComments, setIncludeComments,
+        setActiveTab, toggleTool, isSpecDirty, setPendingTab
     } = useData();
     const { issues } = useValidation();
+
+    const [breakdown, setBreakdown] = useState<SizeBreakdown | null>(null);
+    const [isCompiling, setIsCompiling] = useState(false);
+
+    const runCompilation = useCallback(async () => {
+        if (!activeEngine || !activeSpec) return;
+        setIsCompiling(true);
+        const ipc = (window as any).ipcRenderer;
+        try {
+            const res = await ipc.invoke('compile-engine', activeEngine, activeSpec, entries || [], {
+                minify: minifyEnabled,
+                compress: compressEnabled,
+                mangle: mangleEnabled,
+                comments: includeComments
+            });
+            if (res.success) {
+                setBreakdown(res.sizeBreakdown);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsCompiling(false);
+        }
+    }, [activeEngine, activeSpec, entries, minifyEnabled, compressEnabled, mangleEnabled, includeComments]);
+
+    useEffect(() => {
+        runCompilation();
+    }, [runCompilation]);
 
     const handleDownload = async () => {
         if (!activeEngine || !activeSpec) {
@@ -36,6 +67,7 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
         const ipc = (window as any).ipcRenderer;
         if (!ipc) return;
 
+        setIsCompiling(true);
         try {
             const generated = await ipc.invoke('compile-engine', activeEngine, activeSpec, entries || [], {
                 minify: minifyEnabled,
@@ -64,6 +96,22 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
         } catch (e) {
             console.error(e);
             showNotification('Export failed.', 'error');
+        } finally {
+            setIsCompiling(false);
+        }
+    };
+
+    const handleSizeBarClick = () => {
+        if (isSpecDirty) {
+            setPendingTab('output');
+            // We need to ensure that when they confirm, size_visualization is also toggled.
+            // But App.tsx's confirmNavigation only sets activeTab.
+            // We'll just assume they'll have to toggle it or we can try to force it via localstorage?
+            // Actually, we can just toggle it now, and if they cancel navigation, it doesn't matter much.
+            toggleTool('size_visualization');
+        } else {
+            setActiveTab('output');
+            toggleTool('size_visualization');
         }
     };
 
@@ -82,6 +130,19 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
                             Export your lorebook script. You can verify the content & size in the Output View.
                         </div>
                     </div>
+
+                    {/* Size Visualization Section */}
+                    {breakdown && (
+                        <div className="panel-section">
+                            <div className="panel-section-title">
+                                <span>Export Size</span>
+                                {isCompiling && <span className="compiling-indicator">Updating...</span>}
+                            </div>
+                            <div className="p-sm">
+                                <SizeBar breakdown={breakdown} onClick={handleSizeBarClick} />
+                            </div>
+                        </div>
+                    )}
 
                     {/* Settings Section */}
                     <div className="panel-section border-b">

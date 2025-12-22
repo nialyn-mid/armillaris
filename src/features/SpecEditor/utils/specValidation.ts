@@ -30,13 +30,6 @@ export function validateBehaviorSpec(graph: any): ValidationIssue[] {
             message: 'No Activation Output node found. Lorebook output will be empty.',
             source: 'behavior'
         });
-    } else if (outputNodes.length > 1) {
-        issues.push({
-            id: 'graph-multiple-outputs',
-            severity: 'error',
-            message: `Found ${outputNodes.length} Activation Output nodes. Only one is allowed.`,
-            source: 'behavior'
-        });
     }
 
     // 2. Check connectivity for all output nodes

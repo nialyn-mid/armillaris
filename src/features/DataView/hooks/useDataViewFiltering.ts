@@ -3,7 +3,7 @@ import type { LoreEntry } from '../../../lib/types';
 
 export function useDataViewFiltering(entries: LoreEntry[]) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | 'size'>('asc');
     const [filterMeta, setFilterMeta] = useState<string>('all');
 
     const availableMetas = useMemo(() => {
@@ -33,6 +33,11 @@ export function useDataViewFiltering(entries: LoreEntry[]) {
 
         // 3. Sort
         result = [...result].sort((a, b) => {
+            if (sortOrder === 'size') {
+                const sizeA = new TextEncoder().encode(JSON.stringify(a.properties)).length;
+                const sizeB = new TextEncoder().encode(JSON.stringify(b.properties)).length;
+                return sizeB - sizeA; // Largest first for size sort
+            }
             const labelA = a.label.toLowerCase();
             const labelB = b.label.toLowerCase();
             if (sortOrder === 'asc') return labelA.localeCompare(labelB);

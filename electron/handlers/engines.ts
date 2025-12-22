@@ -139,6 +139,7 @@ export function registerEngineHandlers() {
         let behaviorOutput = '{}';
         let dataOutput = '[]';
         const engineTemplate = fs.readFileSync(engineJsPath, 'utf-8');
+        const engineSize = Buffer.byteLength(engineTemplate, 'utf-8');
 
         // 1. Run Adapter (Behavior & Data)
         try {
@@ -171,6 +172,9 @@ export function registerEngineHandlers() {
                 errors: [{ source: 'Adapter', message: e.message, stack: e.stack }]
             };
         }
+
+        const behaviorSize = Buffer.byteLength(behaviorOutput, 'utf-8');
+        const dataSize = Buffer.byteLength(dataOutput, 'utf-8');
 
         // 2. Injection
         let compiled = engineTemplate;
@@ -208,10 +212,23 @@ export function registerEngineHandlers() {
         };
 
         let preCode = '// --- Modules (Before) ---\n';
-        for (const m of beforeModules) preCode += getModuleCode(m);
+        const moduleSizes: Record<string, number> = {};
+
+        for (const m of beforeModules) {
+            const code = getModuleCode(m);
+            preCode += code;
+            moduleSizes[m.id] = Buffer.byteLength(code, 'utf-8');
+        }
 
         let postCode = '\n// --- Modules (After) ---\n';
-        for (const m of afterModules) postCode += getModuleCode(m);
+        for (const m of afterModules) {
+            const code = getModuleCode(m);
+            postCode += code;
+            moduleSizes[m.id] = Buffer.byteLength(code, 'utf-8');
+        }
+
+        let modulesSize = 0;
+        Object.values(moduleSizes).forEach(s => modulesSize += s);
 
         compiled = preCode + '\n// --- Core Engine ---\n' + compiled + postCode;
 
@@ -227,9 +244,19 @@ export function registerEngineHandlers() {
         }
 
         // 4. Minification
+        const totalSize = Buffer.byteLength(compiled, 'utf-8');
+        const breakdown = {
+            engine: engineSize,
+            behavior: behaviorSize,
+            data: dataSize,
+            modules: modulesSize,
+            moduleDetails: moduleSizes,
+            total: totalSize
+        };
+
         if (!doMinify) {
             fs.writeFileSync(compiledOutputPath, compiled);
-            return { success: true, code: compiled };
+            return { success: true, code: compiled, sizeBreakdown: breakdown };
         }
 
         try {
@@ -242,15 +269,21 @@ export function registerEngineHandlers() {
 
             fs.writeFileSync(compiledOutputPath, code);
 
+            const minifiedBreakdown = {
+                ...breakdown,
+                total: Buffer.byteLength(code, 'utf-8')
+            };
+
             const metaPath = path.join(enginePath, 'engine.compiled.json');
             fs.writeFileSync(metaPath, JSON.stringify({
                 lastCompiled: new Date().toISOString(),
                 specName: specName,
                 minified: true,
-                useDevEngine
+                useDevEngine,
+                sizeBreakdown: minifiedBreakdown
             }));
 
-            return { success: true, code };
+            return { success: true, code, sizeBreakdown: minifiedBreakdown };
         } catch (e: any) {
             const fallback = `// Minification Failed: ${e.message}\n\n${compiled}`;
             fs.writeFileSync(compiledOutputPath, fallback);

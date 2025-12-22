@@ -17,4 +17,5 @@ export interface Module {
     settingsSchema?: SettingField[]; // The definition of fields
     order: number;
     isLocked?: boolean; // Cannot be uninstalled
+    size?: number;
 }

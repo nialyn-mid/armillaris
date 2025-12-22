@@ -31,6 +31,9 @@ export function registerModuleHandlers() {
                     const specContent = fs.readFileSync(specPath, 'utf-8');
                     const spec = JSON.parse(specContent);
 
+                    const indexPath = path.join(modulePath, 'index.js');
+                    const size = fs.existsSync(indexPath) ? fs.statSync(indexPath).size : 0;
+
                     modulesFromDisk.push({
                         id: folder,
                         name: spec.name || folder,
@@ -41,7 +44,8 @@ export function registerModuleHandlers() {
                         order: 0,
                         config: spec.config || {},
                         settingsSchema: spec.settingsSchema || [],
-                        isLocked: spec.isLocked || false
+                        isLocked: spec.isLocked || false,
+                        size: size
                     });
                 } catch (e) {
                     console.error(`Failed to parse spec in ${folder}:`, e);
