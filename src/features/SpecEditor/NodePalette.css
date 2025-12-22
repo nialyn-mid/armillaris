@@ -7,6 +7,64 @@
     position: relative;
 }
 
+.node-palette-search-container {
+    padding: 8px 10px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.node-palette-search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.node-palette-search-input {
+    width: 100%;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 6px 28px;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    outline: none;
+    transition: all 0.2s;
+}
+
+.node-palette-search-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 1px var(--accent-color);
+}
+
+.node-palette-search-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+.search-icon {
+    position: absolute;
+    left: 8px;
+    color: var(--text-secondary);
+    pointer-events: none;
+}
+
+.search-clear-btn {
+    position: absolute;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 2px;
+}
+
+.search-clear-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
 .node-palette-tabs {
     background: rgba(0, 0, 0, 0.2);
     border-right: 1px solid var(--border-color);

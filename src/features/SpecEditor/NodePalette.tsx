@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import './NodePalette.css';
 import type { EngineSpec, EngineSpecNodeDef } from '../../lib/engine-spec-types';
 import { SYSTEM_NODES } from './nodes/SystemNodes';
@@ -14,6 +14,8 @@ interface NodePaletteProps {
 export default function NodePalette({ engineSpec, onDragStart, width, setWidth }: NodePaletteProps) {
     const { customNodes, requestDeleteCustomNode } = useCustomNodes();
     const [activeTab, setActiveTab] = useState('Input');
+    const [searchQuery, setSearchQuery] = useState('');
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     // Filter nodes by category
     const categories = useMemo(() => {
@@ -26,8 +28,22 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
             if (b === 'Output') return -1;
             return a.localeCompare(b);
         });
-        return [...sorted, 'Group', 'Custom'];
-    }, [engineSpec]);
+
+        const baseCategories = [...sorted, 'Group', 'Custom'];
+        if (searchQuery.trim() !== '') {
+            return ['Search', ...baseCategories];
+        }
+        return baseCategories;
+    }, [engineSpec, searchQuery]);
+
+    // Auto-switch to Search tab when typing
+    useEffect(() => {
+        if (searchQuery.trim() !== '') {
+            setActiveTab('Search');
+        } else if (activeTab === 'Search') {
+            setActiveTab('Input');
+        }
+    }, [searchQuery]);
 
     // Ensure activeTab is valid
     useEffect(() => {
@@ -37,6 +53,55 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
     }, [categories, activeTab]);
 
     const filteredNodes = useMemo(() => {
+        if (activeTab === 'Search') {
+            const query = searchQuery.toLowerCase().trim();
+            if (!query) return [];
+
+            const specNodes = (engineSpec?.nodes || []).map(n => ({ ...n, source: 'spec' }));
+            const customNodesMapped = customNodes.map((cn: any) => ({
+                type: cn.baseType as 'Group',
+                category: 'Custom',
+                label: cn.name,
+                description: cn.description,
+                inputs: [],
+                outputs: [],
+                properties: [],
+                customData: cn.data,
+                id: cn.id,
+                source: 'custom'
+            }));
+            const systemNodes = Object.values(SYSTEM_NODES).map(n => ({ ...n, source: 'system' }));
+
+            const allPossibleNodes = [...specNodes, ...customNodesMapped, ...systemNodes];
+
+            return allPossibleNodes
+                .map(n => {
+                    let score = 0;
+                    const label = n.label.toLowerCase();
+                    const type = n.type.toLowerCase();
+                    const description = (n.description || '').toLowerCase();
+
+                    if (label.startsWith(query)) {
+                        score = 100;
+                    } else if (label.includes(query)) {
+                        score = 80;
+                    } else if (type.includes(query)) {
+                        score = 60;
+                    } else if (description.includes(query)) {
+                        score = 40;
+                    }
+
+                    return { ...n, score };
+                })
+                .filter(n => n.score > 0)
+                .sort((a, b) => {
+                    if (b.score !== a.score) {
+                        return b.score - a.score;
+                    }
+                    return a.label.localeCompare(b.label);
+                });
+        }
+
         if (activeTab === 'Group') {
             return [
                 SYSTEM_NODES.Group,
@@ -58,12 +123,22 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
             }));
         }
         return engineSpec?.nodes.filter(n => n.category === activeTab) || [];
-    }, [engineSpec, activeTab, customNodes]);
+    }, [engineSpec, activeTab, customNodes, searchQuery]);
 
     const handleDeleteCustom = (e: React.MouseEvent, id: string, name: string) => {
         e.stopPropagation();
         requestDeleteCustomNode(id, name);
     };
+
+    const handleClearSearch = () => {
+        setSearchQuery('');
+        searchInputRef.current?.focus();
+    };
+
+    const handleSearchInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        e.target.select();
+    };
+
 
     return (
         <div style={{ width: width }} className="node-palette">
@@ -84,10 +159,34 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
 
             <div className="panel-header">Node Palette</div>
 
+            <div className="node-palette-search-container">
+                <div className="node-palette-search-wrapper">
+                    <svg className="search-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                    </svg>
+                    <input
+                        ref={searchInputRef}
+                        type="text"
+                        className="node-palette-search-input"
+                        placeholder="Search nodes..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onFocus={handleSearchInputFocus}
+                    />
+                    {searchQuery && (
+                        <div className="search-clear-btn" onClick={handleClearSearch}>
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                            </svg>
+                        </div>
+                    )}
+                </div>
+            </div>
+
             <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
                 {/* Vertical Tabs */}
                 <div className="node-palette-tabs">
-                    {categories.map(cat => (
+                    {categories.map((cat: string) => (
                         <div
                             key={cat}
                             className={`node-palette-tab unselectable ${activeTab === cat ? 'active' : ''}`}
@@ -101,7 +200,7 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
                 {/* Node List */}
                 <div className="node-palette-list">
                     <div className="node-palette-grid">
-                        {filteredNodes.length > 0 ? filteredNodes.map((nodeDef, idx) => (
+                        {filteredNodes.length > 0 ? filteredNodes.map((nodeDef: any, idx: number) => (
                             <div
                                 key={`${nodeDef.type}-${idx}`}
                                 className="node-palette-card"
