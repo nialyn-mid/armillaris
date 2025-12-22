@@ -14,6 +14,7 @@ interface RecursivePropertiesProps {
     availableAttributes?: string[];
     connectedPorts?: string[];
     disableInputs?: boolean;
+    hideTypeSelector?: boolean;
 }
 
 const RecursiveProperties = ({
@@ -26,7 +27,8 @@ const RecursiveProperties = ({
     level = 0,
     availableAttributes,
     connectedPorts,
-    disableInputs
+    disableInputs,
+    hideTypeSelector
 }: RecursivePropertiesProps) => {
 
     // Resolve definitions (handle $for)
@@ -38,12 +40,25 @@ const RecursiveProperties = ({
 
     // Determine Label logic
     const getAddLabel = () => {
-        if (!expandKey) return '+ Add Item';
         if (expandKey === 'inputs') return '+ Add Input';
         if (expandKey.includes('mapping')) return '+ Add Mapping';
-        if (expandKey === 'node.mappings') return '+ Add Mapping';
+        if (expandKey.includes('value')) return '+ Add Value';
+        if (expandKey.includes('trait')) return '+ Add Trait';
         return '+ Add Item';
     };
+
+    // Check if any definition in THIS block is a type hint provider
+    const hasInternalTypeHint = useMemo(() => {
+        if (!definitions) return false;
+        const defsArr = Array.isArray(definitions) ? definitions : Object.values(definitions);
+        // Look for properties that typically provide types for Values
+        return defsArr.some((d: any) =>
+            d && typeof d === 'object' &&
+            (d.name === 'value_type' || d.name === 'attribute_type' || (d.type === 'select' && d.name === 'type'))
+        );
+    }, [definitions]);
+
+    const activeHideTypeSelector = hideTypeSelector || hasInternalTypeHint;
 
     // Derived handler for removing
     const handleRemove = (item: any) => {
@@ -56,14 +71,16 @@ const RecursiveProperties = ({
     const outputProps = resolvedDefs.filter(d => d.name.startsWith('output_'));
     const inputProps = resolvedDefs.filter(d => !d.name.startsWith('output_'));
     const isSplitLayout = outputProps.length > 0;
-
     const renderProp = (prop: PropertyDef, idx: number, disabled = false) => {
         const isDynamic = (prop as any)._sourceId !== undefined;
+        // Compact numeric label for dynamic items (e.g. "Value 1" -> "1")
+        const displayProp = isDynamic ? { ...prop, label: String((prop as any)._sourceId + 1) } : prop;
+
         return (
             <div key={`${prop.name}-${idx}`} style={{ display: 'flex', gap: '4px', alignItems: 'flex-start', opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? 'none' : 'auto' }}>
                 <div style={{ flex: 1 }}>
                     <PropertyField
-                        def={prop}
+                        def={displayProp}
                         values={values}
                         rootValues={rootValues}
                         onChange={onChange}
@@ -73,6 +90,8 @@ const RecursiveProperties = ({
                         level={level}
                         availableAttributes={availableAttributes}
                         connectedPorts={connectedPorts}
+                        hideTypeSelector={activeHideTypeSelector || isDynamic}
+                        isCompact={isDynamic}
                     />
                 </div>
             </div>
@@ -96,7 +115,7 @@ const RecursiveProperties = ({
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {resolvedDefs.map((prop: PropertyDef, idx: number) => renderProp(prop, idx))}
 
             {isExpandable && !disableInputs && (
@@ -109,6 +128,17 @@ const RecursiveProperties = ({
                         if (listKey && onAddExpandable) {
                             onAddExpandable(listKey);
                         }
+                    }}
+                    style={{
+                        marginTop: '8px',
+                        padding: '6px',
+                        borderStyle: 'dashed',
+                        borderColor: '#444',
+                        color: '#888',
+                        fontWeight: 'normal',
+                        fontSize: '11px',
+                        textAlign: 'center',
+                        cursor: 'pointer'
                     }}
                 >
                     {getAddLabel()}

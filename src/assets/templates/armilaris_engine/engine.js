@@ -42,6 +42,7 @@ function getProps(nodeIdx) {
             key === "attribute_name" || key === "regex" ||
             key === "operator" || key === "sort_by" ||
             key === "attribute_type" || key === "value_type" ||
+            key === "value" || key === "values" ||
             key.indexOf("value_") === 0 ||
             key.indexOf("attribute_") === 0 ||
             key.indexOf("mapping_") === 0 ||
@@ -55,7 +56,12 @@ function getProps(nodeIdx) {
             var sub = {};
             for (var sk in val) {
                 var sval = val[sk];
-                var isSubStringKey = (sk.indexOf("input_") === 0 || sk.indexOf("output_") === 0 || sk.indexOf("value_") === 0);
+                var isSubStringKey = (
+                    sk.indexOf("input_") === 0 ||
+                    sk.indexOf("output_") === 0 ||
+                    sk.indexOf("value_") === 0 ||
+                    sk === "type" || sk === "value" || sk === "val"
+                );
                 if (typeof sval === 'number' && sval >= 0 && sval < behaviorStrings.length && isSubStringKey) {
                     sub[sk] = getBStr(sval);
                 } else {
@@ -63,6 +69,18 @@ function getProps(nodeIdx) {
                 }
             }
             p[key] = sub;
+        } else if (Array.isArray(val)) {
+            // Resolve strings inside arrays (e.g. Value List properties)
+            var list = [];
+            for (var j = 0; j < val.length; j++) {
+                var v = val[j];
+                if (typeof v === 'number' && v >= 0 && v < behaviorStrings.length && isStringKey) {
+                    list.push(getBStr(v));
+                } else {
+                    list.push(v);
+                }
+            }
+            p[key] = list;
         } else {
             p[key] = val;
         }
@@ -91,15 +109,46 @@ function getEntryProps(entry) {
 
 
 function compareValues(a, b, op) {
+    // Handle List Attributes (e.g. Keywords or tagged traits)
+    if (Array.isArray(a)) {
+        if (op === "==" || op === "contains") {
+            for (var i = 0; i < a.length; i++) {
+                var itemA = a[i];
+                var valB = b;
+                if (typeof itemA === 'string') itemA = itemA.trim();
+                if (typeof valB === 'string') valB = valB.trim();
+                if (itemA == valB) return true;
+            }
+            return false;
+        }
+        if (op === "!=" || op === "not contains") {
+            for (var i = 0; i < a.length; i++) {
+                var itemA = a[i];
+                var valB = b;
+                if (typeof itemA === 'string') itemA = itemA.trim();
+                if (typeof valB === 'string') valB = valB.trim();
+                if (itemA == valB) return false;
+            }
+            return true;
+        }
+        // For other ops, fall back to first element or string representation
+        a = a.length > 0 ? a[0] : "";
+    }
+
+    var valA = a;
+    var valB = b;
+    if (typeof valA === 'string') valA = valA.trim();
+    if (typeof valB === 'string') valB = valB.trim();
+
     switch (op) {
-        case "==": return a == b;
-        case "!=": return a != b;
-        case ">": return a > b;
-        case "<": return a < b;
-        case ">=": return a >= b;
-        case "<=": return a <= b;
-        case "contains": return String(a).toLowerCase().indexOf(String(b).toLowerCase()) !== -1;
-        case "not contains": return String(a).toLowerCase().indexOf(String(b).toLowerCase()) === -1;
+        case "==": return valA == valB;
+        case "!=": return valA != valB;
+        case ">": return valA > valB;
+        case "<": return valA < valB;
+        case ">=": return valA >= valB;
+        case "<=": return valA <= valB;
+        case "contains": return String(valA || "").toLowerCase().indexOf(String(valB || "").toLowerCase()) !== -1;
+        case "not contains": return String(valA || "").toLowerCase().indexOf(String(valB || "").toLowerCase()) === -1;
         default: return false;
     }
 }
@@ -260,7 +309,7 @@ function executeNode(nodeIdx, portIdx) {
         case "MessageFilter":
         case "ListFilter":
             if (label.indexOf("keyword") !== -1 || type === "KeywordFilter") {
-                var sourceEntries = resolveInput(nodeIdx, "entries") || dataEntries || [];
+                var sourceEntries = resolveInput(nodeIdx, "entries") || [];
                 var messages = resolveInput(nodeIdx, "messages") || [];
 
                 // Properties
@@ -377,27 +426,54 @@ function executeNode(nodeIdx, portIdx) {
                 else if (portName === "unmatched_conditions") result = unmatchedConds;
                 else result = matchedMsgs;
             } else if (label.indexOf("entry filter") !== -1 || type === "EntryFilter") {
-                var sourceEntries = resolveInput(nodeIdx, "entries") || dataEntries || [];
-                var attrName = resolveInput(nodeIdx, "attribute_name") || props.attribute_name || "Meta";
+                var sourceEntries = resolveInput(nodeIdx, "input_entries") || resolveInput(nodeIdx, "entries") || [];
+                var attrName = resolveInput(nodeIdx, "attribute_name_input") || resolveInput(nodeIdx, "attribute_name") || props.attribute_name || "Meta";
                 var op = props.operator || "==";
-                var valList = resolveInput(nodeIdx, "values") || props.values || [];
+
+                // Collect values from port or expandable properties
+                var valList = resolveInput(nodeIdx, "values_input") || resolveInput(nodeIdx, "values") || props.values || [];
                 if (!Array.isArray(valList)) valList = [valList];
 
+                // Also add value_0, value_1 etc if they exist
+                for (var key in props) {
+                    if (key.indexOf("value_") === 0) {
+                        valList.push(props[key]);
+                    }
+                }
+
+                // Clean list: filter out nulls/undefineds/empty-strings and unwrap {type, value} objects if they exist
+                var cleanList = [];
+                for (var v = 0; v < valList.length; v++) {
+                    var vitem = valList[v];
+                    if (vitem === null || vitem === undefined || vitem === "") continue;
+                    if (typeof vitem === 'object' && vitem.hasOwnProperty('value')) {
+                        vitem = vitem.value;
+                    }
+                    if (vitem !== null && vitem !== undefined && vitem !== "") {
+                        cleanList.push(vitem);
+                    }
+                }
+                valList = cleanList;
+
+                var combine = props.combine || "or";
                 result = [];
                 for (var i = 0; i < sourceEntries.length; i++) {
                     var entry = sourceEntries[i];
                     var ep = getEntryProps(entry);
                     var entryVal = ep[attrName];
 
-                    var match = false;
+                    var matchedCount = 0;
                     for (var v = 0; v < valList.length; v++) {
                         if (compareValues(entryVal, valList[v], op)) {
-                            match = true;
-                            break;
+                            matchedCount++;
+                            if (combine === "or") break;
                         }
                     }
-                    if (match) result.push(entry);
+
+                    var isMatched = (combine === "or") ? (matchedCount > 0) : (matchedCount === valList.length && valList.length > 0);
+                    if (isMatched) result.push(entry);
                 }
+                if (!portName) portName = "filtered_entries";
             } else if (label.indexOf("list filter") !== -1 || type === "ListFilter") {
                 var sourceList = resolveInput(nodeIdx, "list_input") || [];
                 var trimStart = Number(props.trim_start) || 0;

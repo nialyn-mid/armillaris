@@ -264,31 +264,30 @@
             "description": "Filter entries based on attribute values.",
             "inputs": [
                 {
-                    "id": "entries",
-                    "label": "Entries",
+                    "id": "input_entries",
+                    "label": "Input Entry List",
                     "type": "Entry List"
                 },
                 {
-                    "id": "attribute_name",
-                    "label": "Attribute",
+                    "id": "attribute_name_input",
+                    "label": "Attribute Name",
                     "type": "String"
                 },
                 {
-                    "id": "values",
-                    "label": "Values",
+                    "id": "values_input",
+                    "label": "Compare Values",
                     "type": "Value List"
                 }
             ],
             "outputs": [
                 {
-                    "id": "entries",
-                    "label": "Entries",
+                    "id": "filtered_entries",
+                    "label": "Filtered Entry List",
                     "type": "Entry List"
                 }
             ],
-            "properties": [
-                {
-                    "name": "combine",
+            "properties": {
+                "combine": {
                     "label": "Combine",
                     "type": "select",
                     "options": [
@@ -303,15 +302,13 @@
                     ],
                     "default": "or"
                 },
-                {
-                    "name": "attribute_name",
-                    "label": "Attribute",
+                "attribute_name": {
+                    "label": "Attribute Name",
                     "type": "String",
-                    "default": ""
+                    "default": "Meta"
                 },
-                {
-                    "name": "operator",
-                    "label": "Operator",
+                "operator": {
+                    "label": "Operator Is",
                     "type": "select",
                     "options": [
                         {
@@ -349,12 +346,36 @@
                     ],
                     "default": "=="
                 },
-                {
-                    "name": "values",
-                    "label": "Values",
-                    "type": "Value List"
+                "value_type": {
+                    "label": "Value Type",
+                    "type": "select",
+                    "options": [
+                        {
+                            "value": "String",
+                            "label": "String"
+                        },
+                        {
+                            "value": "Number",
+                            "label": "Number"
+                        },
+                        {
+                            "value": "Boolean",
+                            "label": "Boolean"
+                        },
+                        {
+                            "value": "Date",
+                            "label": "Date"
+                        }
+                    ],
+                    "default": "String"
+                },
+                "$for": "node.values_list",
+                "$item": {
+                    "name": "value_{{_value}}",
+                    "label": "Value {{_value}}",
+                    "type": "Value"
                 }
-            ]
+            }
         },
         {
             "type": "Filter",

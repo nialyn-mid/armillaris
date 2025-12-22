@@ -13,6 +13,8 @@ interface PropertyFieldProps {
     level?: number;
     availableAttributes?: string[];
     connectedPorts?: string[];
+    hideTypeSelector?: boolean;
+    isCompact?: boolean;
 }
 
 const PropertyField = ({
@@ -23,7 +25,9 @@ const PropertyField = ({
     availableAttributes,
     connectedPorts,
     onRemoveSelf,
-    level = 0
+    level = 0,
+    hideTypeSelector,
+    isCompact
 }: PropertyFieldProps) => {
 
     // 0. Global Control Check
@@ -97,6 +101,7 @@ const PropertyField = ({
                         connectedPorts={connectedPorts}
                         // If controlled mapping, we disable inputs
                         disableInputs={isControlled && isMappingBlock}
+                        hideTypeSelector={hideTypeSelector}
                     />
                 )}
                 {shouldCollapse && (
@@ -111,6 +116,132 @@ const PropertyField = ({
     // 2. Standard Fields
     const val = values[def.name];
 
+    // 3. Value & Value List Handling
+    if (def.type === 'Value' || def.type === 'Value List') {
+        const typeHint = values.value_type || values.attribute_type || values.type;
+        const isSelfContained = (def.type === 'Value' && !typeHint && !hideTypeSelector);
+
+        const currentType = isSelfContained ? (val?.type || 'String') : (typeHint || 'String');
+        const currentVal = isSelfContained ? (val?.value) : val;
+
+        const handleValChange = (v: any) => {
+            if (isSelfContained) {
+                onChange(def.name, { type: currentType, value: v });
+            } else {
+                onChange(def.name, v);
+            }
+        };
+
+        const handleTypeChange = (t: string) => {
+            if (isSelfContained) {
+                onChange(def.name, { type: t, value: currentVal });
+            }
+        };
+
+        const renderValueInput = (v: any, t: string, onValChange: (v: any) => void) => {
+            switch (t) {
+                case 'Boolean':
+                case 'boolean':
+                    return (
+                        <input
+                            type="checkbox"
+                            className="nodrag"
+                            style={{ margin: '4px' }}
+                            checked={!!v}
+                            onChange={(e) => onValChange(e.target.checked)}
+                            disabled={isControlled}
+                        />
+                    );
+                case 'Number':
+                case 'number':
+                    return (
+                        <input
+                            type="number"
+                            className="nodrag property-input"
+                            value={v ?? ''}
+                            onChange={(e) => onValChange(e.target.value === '' ? null : Number(e.target.value))}
+                            style={{ flex: 1 }}
+                            disabled={isControlled}
+                        />
+                    );
+                case 'Date':
+                case 'date':
+                    return (
+                        <input
+                            type="date"
+                            className="nodrag property-input"
+                            value={v ?? ''}
+                            onChange={(e) => onValChange(e.target.value)}
+                            style={{ flex: 1 }}
+                            disabled={isControlled}
+                        />
+                    );
+                default:
+                    return (
+                        <input
+                            type="text"
+                            className="nodrag property-input"
+                            value={v ?? ''}
+                            onChange={(e) => onValChange(e.target.value)}
+                            style={{ flex: 1 }}
+                            disabled={isControlled}
+                        />
+                    );
+            }
+        };
+
+        return (
+            <div
+                className="property-row"
+                style={{
+                    opacity: isControlled ? 0.6 : 1,
+                    flexDirection: isCompact ? 'row' : 'column',
+                    alignItems: isCompact ? 'center' : 'stretch',
+                    gap: isCompact ? '8px' : '2px'
+                }}
+            >
+                <label className="property-label" style={{ minWidth: isCompact ? '16px' : undefined, textAlign: isCompact ? 'right' : 'left' }}>
+                    {def.label}
+                    {isControlled && <span style={{ fontSize: '9px', marginLeft: '6px', color: '#4ec9b0' }}>{isCompact ? '🔗' : '(Linked)'}</span>}
+                </label>
+                <div style={{ display: 'flex', gap: '4px', flex: 1, alignItems: 'center' }}>
+                    {isSelfContained && (
+                        <select
+                            className="nodrag property-input"
+                            style={{ width: 'auto', minWidth: '80px', fontSize: '11px', padding: '2px 4px' }}
+                            value={currentType}
+                            onChange={(e) => handleTypeChange(e.target.value)}
+                        >
+                            <option value="String">String</option>
+                            <option value="Number">Number</option>
+                            <option value="Boolean">Boolean</option>
+                            <option value="Date">Date</option>
+                        </select>
+                    )}
+                    {renderValueInput(currentVal, currentType, handleValChange)}
+
+                    {onRemoveSelf && !isControlled && (
+                        <button
+                            className="btn-remove"
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#888',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                padding: '0 4px',
+                            }}
+                            onClick={onRemoveSelf}
+                            title="Remove Item"
+                        >
+                            ×
+                        </button>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     // Handles 'Attribute List' or explicit 'select'
     // If type is 'Attribute List', populate options from availableAttributes
     if (def.type === 'Attribute List' || def.type === 'Attribute') {
@@ -118,10 +249,18 @@ const PropertyField = ({
         const options = (availableAttributes || []).map(attr => ({ value: attr, label: attr }));
 
         return (
-            <div className="property-row" style={{ opacity: isControlled ? 0.6 : 1 }}>
-                <label className="property-label">
+            <div
+                className="property-row"
+                style={{
+                    opacity: isControlled ? 0.6 : 1,
+                    flexDirection: isCompact ? 'row' : 'column',
+                    alignItems: isCompact ? 'center' : 'stretch',
+                    gap: isCompact ? '8px' : '2px'
+                }}
+            >
+                <label className="property-label" style={{ minWidth: isCompact ? '16px' : undefined, textAlign: isCompact ? 'right' : 'left' }}>
                     {def.label}
-                    {isControlled && <span style={{ fontSize: '9px', marginLeft: '6px', color: '#4ec9b0' }}>(Linked)</span>}
+                    {isControlled && <span style={{ fontSize: '9px', marginLeft: '6px', color: '#4ec9b0' }}>{isCompact ? '🔗' : '(Linked)'}</span>}
                 </label>
                 <select
                     className="nodrag property-input"
@@ -142,10 +281,18 @@ const PropertyField = ({
 
     if (def.type === 'select') {
         return (
-            <div className="property-row" style={{ opacity: isControlled ? 0.6 : 1 }}>
-                <label className="property-label">
+            <div
+                className="property-row"
+                style={{
+                    opacity: isControlled ? 0.6 : 1,
+                    flexDirection: isCompact ? 'row' : 'column',
+                    alignItems: isCompact ? 'center' : 'stretch',
+                    gap: isCompact ? '8px' : '2px'
+                }}
+            >
+                <label className="property-label" style={{ minWidth: isCompact ? '16px' : undefined, textAlign: isCompact ? 'right' : 'left' }}>
                     {def.label}
-                    {isControlled && <span style={{ fontSize: '9px', marginLeft: '6px', color: '#4ec9b0' }}>(Linked)</span>}
+                    {isControlled && <span style={{ fontSize: '9px', marginLeft: '6px', color: '#4ec9b0' }}>{isCompact ? '🔗' : '(Linked)'}</span>}
                 </label>
                 <select
                     className="nodrag property-input"
@@ -199,10 +346,19 @@ const PropertyField = ({
 
     // Default String/Number
     return (
-        <div className="property-row" style={{ position: 'relative', opacity: isControlled ? 0.6 : 1 }}>
-            <label className="property-label">
+        <div
+            className="property-row"
+            style={{
+                position: 'relative',
+                opacity: isControlled ? 0.6 : 1,
+                flexDirection: isCompact ? 'row' : 'column',
+                alignItems: isCompact ? 'center' : 'stretch',
+                gap: isCompact ? '8px' : '2px'
+            }}
+        >
+            <label className="property-label" style={{ minWidth: isCompact ? '16px' : undefined, textAlign: isCompact ? 'right' : 'left' }}>
                 {def.label}
-                {isControlled && <span style={{ fontSize: '9px', marginLeft: '6px', color: '#4ec9b0' }}>(Linked)</span>}
+                {isControlled && <span style={{ fontSize: '9px', marginLeft: '6px', color: '#4ec9b0' }}>{isCompact ? '🔗' : '(Linked)'}</span>}
             </label>
             <div style={{ display: 'flex', gap: '4px', flex: 1 }}>
                 <input

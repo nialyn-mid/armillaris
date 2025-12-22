@@ -39,7 +39,21 @@ export const resolveExpansion = <T extends { id?: string; name?: string; label?:
     defaultValueList = [0]
 ): T[] => {
     if (!def) return [];
-    if (Array.isArray(def)) return def;
+
+    // Case 1: Array of definitions. May contain expansion objects!
+    if (Array.isArray(def)) {
+        const results: T[] = [];
+        def.forEach(item => {
+            if (typeof item === 'object' && item !== null && '$for' in item) {
+                // Recurse into expansion object
+                const expanded = resolveExpansion<T>(item as any, localValues, rootValues, defaultValueList);
+                results.push(...expanded);
+            } else {
+                results.push(item as T);
+            }
+        });
+        return results;
+    }
 
     const results: T[] = [];
 
