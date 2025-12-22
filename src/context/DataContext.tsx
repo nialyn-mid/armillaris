@@ -51,6 +51,8 @@ interface DataContextType {
   setHasDevEngine: (has: boolean) => void;
   engineErrors: any[];
   setEngineErrors: (errors: any[]) => void;
+  engineWarnings: any[];
+  setEngineWarnings: (warnings: any[]) => void;
   reloadEngine: () => Promise<void>;
   debugNodes: string[];
   setDebugNodes: (nodes: string[]) => void;

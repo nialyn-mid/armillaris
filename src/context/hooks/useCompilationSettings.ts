@@ -9,6 +9,7 @@ export const useCompilationSettings = () => {
 
     const [hasDevEngine, setHasDevEngine] = useState(false);
     const [engineErrors, setEngineErrors] = useState<any[]>([]);
+    const [engineWarnings, setEngineWarnings] = useState<any[]>([]);
 
     useEffect(() => localStorage.setItem('minify_enabled', String(minifyEnabled)), [minifyEnabled]);
     useEffect(() => localStorage.setItem('compress_enabled', String(compressEnabled)), [compressEnabled]);
@@ -23,6 +24,7 @@ export const useCompilationSettings = () => {
         includeComments, setIncludeComments,
         simulateUsingDevEngine, setSimulateUsingDevEngine,
         hasDevEngine, setHasDevEngine,
-        engineErrors, setEngineErrors
+        engineErrors, setEngineErrors,
+        engineWarnings, setEngineWarnings
     };
 };

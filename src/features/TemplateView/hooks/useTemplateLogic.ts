@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useData } from '../../../context/DataContext';
 import { useEngineFiles } from './useEngineFiles';
 import { useBehaviorFiles, type CompilationError } from './useBehaviorFiles';
+import { checkCompatibility } from '../../../utils/compatibilityChecker';
 
 export type TemplateTabLeft = 'script' | 'dev_script' | 'spec' | 'adapter';
 export type TemplateTabRight = 'behavior' | 'adapter_out' | 'data_out';
@@ -12,13 +13,22 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
     const {
         showNotification, activeEngine, activeSpec, entries,
         minifyEnabled, compressEnabled, mangleEnabled, includeComments,
-        simulateUsingDevEngine, setEngineErrors
+        simulateUsingDevEngine, setEngineErrors, engineWarnings, setEngineWarnings
     } = useData();
     const ipc = (window as any).ipcRenderer;
 
     // Compose Hooks
     const engine = useEngineFiles(ipc, activeEngine, showNotification);
     const behavior = useBehaviorFiles(ipc, activeEngine, activeSpec, entries, showNotification);
+
+    // Compatibility check for engine/adapter files
+    useEffect(() => {
+        const warnings = [
+            ...checkCompatibility(engine.engineCode, 'Engine Script'),
+            // devEngineCode and adapterCode excluded as they are not the primary export target
+        ];
+        setEngineWarnings(warnings);
+    }, [engine.engineCode, setEngineWarnings]);
 
     // Common State
     const isAnyDirty = engine.isEngineDirty || engine.isDevEngineDirty || engine.isEngineSpecDirty || engine.isAdapterDirty || behavior.isSpecDirty;
@@ -136,6 +146,7 @@ export function useTemplateLogic(onDirtyChange?: (isDirty: boolean) => void) {
         isAdapterDirty: engine.isAdapterDirty,
         isSpecDirty: behavior.isSpecDirty,
         isAnyDirty,
+        engineWarnings,
 
         // Actions
         compileBehavior: behavior.compileBehavior,

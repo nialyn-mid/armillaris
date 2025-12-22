@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useData } from '../../../context/DataContext';
+import { checkCompatibility } from '../../../utils/compatibilityChecker';
 
 export function useCodeViewLogic() {
     const {
@@ -10,6 +11,11 @@ export function useCodeViewLogic() {
     const [isCompiling, setIsCompiling] = useState(false);
     const [errors, setErrors] = useState<any[]>([]);
     const [sizeBreakdown, setSizeBreakdown] = useState<any | null>(null);
+
+    const warnings = useMemo(() => {
+        if (!code || code === '// Loading...' || code === '// Compiling...') return [];
+        return checkCompatibility(code, 'Export Build');
+    }, [code]);
 
     // Toggles
     const [wordWrap, setWordWrap] = useState<boolean>(() => localStorage.getItem('codeview_wordwrap') === 'true');
@@ -130,6 +136,7 @@ export function useCodeViewLogic() {
         code,
         isCompiling,
         errors,
+        warnings,
         wordWrap, setWordWrap,
         pretty, setPretty,
         sizeBreakdown,

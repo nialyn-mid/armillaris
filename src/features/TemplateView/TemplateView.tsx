@@ -130,7 +130,7 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
 
     // Trigger Compilation on tab switches
     useEffect(() => {
-        if (rightTab === 'adapter_out') logic.handleSaveAdapter();
+        if (rightTab === 'adapter_out') logic.compileBehavior();
         if (rightTab === 'data_out') logic.compileData();
     }, [rightTab, logic.specCode, logic.activeEngine, logic.compileBehavior, logic.compileData]);
 
@@ -157,6 +157,7 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
                         isDevEngineDirty={logic.isDevEngineDirty}
                         isEngineSpecDirty={logic.isEngineSpecDirty}
                         isAdapterDirty={logic.isAdapterDirty}
+                        engineWarnings={logic.engineWarnings}
                         onSave={() => {
                             if (leftTab === 'script') logic.handleSaveEngineScript();
                             else if (leftTab === 'dev_script') logic.handleSaveDevEngineScript();
@@ -197,6 +198,7 @@ const TemplateView = forwardRef<TemplateViewHandle, TemplateViewProps>(({ onDirt
             {/* SHARED DEBUG TOOLBAR */}
             <DebugToolbar
                 errors={logic.errors}
+                warnings={logic.engineWarnings}
                 activeEngine={logic.activeEngine}
                 activeSpec={logic.activeSpec}
                 onSaveAll={logic.handleSaveAll}

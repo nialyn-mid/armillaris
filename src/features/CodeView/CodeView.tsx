@@ -4,13 +4,14 @@ import SizeVisualizationPane from './components/SizeVisualizationPane';
 import { useData } from '../../context/DataContext';
 import { MdMonitorWeight } from 'react-icons/md';
 import { useMemo, useRef, useEffect } from 'react';
-import Editor from '@monaco-editor/react';
+import { MonacoEditor } from '../../shared/ui/MonacoEditor';
 
 export default function CodeView() {
     const {
         code,
         isCompiling,
         errors,
+        warnings,
         wordWrap, setWordWrap,
         pretty, setPretty,
         handleCopy,
@@ -59,6 +60,15 @@ export default function CodeView() {
         }
     }, [pretty, code]);
 
+    const markers = useMemo(() => (warnings || []).map(w => ({
+        severity: 4, // Warning
+        message: w.message,
+        startLineNumber: w.line,
+        startColumn: w.column,
+        endLineNumber: w.endLine,
+        endColumn: w.endColumn,
+    })), [warnings]);
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#1e1e1e', flex: 1, minWidth: 0 }}>
             {/* Toolbar */}
@@ -104,11 +114,12 @@ export default function CodeView() {
             <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                     {/* Monaco Editor */}
-                    <Editor
+                    <MonacoEditor
                         height="100%"
-                        defaultLanguage="javascript"
+                        language="javascript"
                         theme="vs-dark"
                         value={code}
+                        markers={markers}
                         onMount={handleEditorMount}
                         options={{
                             readOnly: true,
@@ -131,6 +142,7 @@ export default function CodeView() {
             {/* SHARED DEBUG TOOLBAR */}
             <DebugToolbar
                 errors={errors}
+                warnings={warnings}
                 activeEngine={activeEngine}
                 activeSpec={activeSpec}
             />

@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { type OnMount } from '@monaco-editor/react';
 import { PaneHeader } from './PaneHeader';
 import { MonacoEditor } from '../../../shared/ui/MonacoEditor';
@@ -21,6 +22,7 @@ interface LeftEditorPaneProps {
     onSave: () => void;
     onDiscard: () => void;
     onMount?: OnMount;
+    engineWarnings?: any[];
 }
 
 export const LeftEditorPane: React.FC<LeftEditorPaneProps> = ({
@@ -40,7 +42,8 @@ export const LeftEditorPane: React.FC<LeftEditorPaneProps> = ({
     isAdapterDirty,
     onSave,
     onDiscard,
-    onMount
+    onMount,
+    engineWarnings
 }) => {
     const tabs = [
         { id: 'script', label: 'Engine Script (JS)', isDirty: isEngineDirty },
@@ -54,6 +57,15 @@ export const LeftEditorPane: React.FC<LeftEditorPaneProps> = ({
             activeTab === 'dev_script' ? isDevEngineDirty :
                 activeTab === 'spec' ? isEngineSpecDirty :
                     isAdapterDirty;
+
+    const engineMarkers = useMemo(() => (engineWarnings || []).map((w: any) => ({
+        severity: 4, // Warning
+        message: w.message,
+        startLineNumber: w.line,
+        startColumn: w.column,
+        endLineNumber: w.endLine,
+        endColumn: w.endColumn,
+    })), [engineWarnings]);
 
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -75,6 +87,7 @@ export const LeftEditorPane: React.FC<LeftEditorPaneProps> = ({
                         language="javascript"
                         theme="vs-dark"
                         value={engineCode}
+                        markers={engineMarkers}
                         onSave={onSave}
                         onMount={onMount}
                         onChange={(val) => onEngineCodeChange(val || '')}
