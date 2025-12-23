@@ -17,5 +17,9 @@ export const api = {
 
   openExternal: async (url: string): Promise<void> => {
     return window.ipcRenderer.invoke('open-external', url);
+  },
+
+  readFileText: async (filePath: string): Promise<string> => {
+    return window.ipcRenderer.invoke('data:read-file-text', filePath);
   }
 };

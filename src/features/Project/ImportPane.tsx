@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../../api';
 import { useData } from '../../context/DataContext';
 import { NotionSource } from '../../lib/data-sources/NotionSource';
+import { V12Source } from '../../lib/data-sources/V12Source';
 import SidePane from '../../shared/ui/SidePane';
 import { MdLibraryBooks, MdSettingsSuggest, MdSync, MdFileUpload, MdInfoOutline, MdOpenInNew } from 'react-icons/md';
 import ConfirmModal from '../../shared/ui/ConfirmModal';
@@ -74,12 +75,41 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
         }
     };
 
+    const handleImportV12 = async () => {
+        const result = await api.invoke('dialog:open', {
+            properties: ['openFile'],
+            filters: [{ name: 'V12 Lorebook', extensions: ['js', 'txt'] }]
+        });
+
+        if (result.canceled || result.filePaths.length === 0) return;
+
+        setIsLoading(true);
+        try {
+            const filePath = result.filePaths[0];
+            const source = new V12Source(filePath);
+            const entries = await source.fetchEntries();
+
+            if (entries.length === 0) {
+                showNotification('No entries found or parse failed.');
+                return;
+            }
+
+            setEntries(entries);
+            showNotification(`Imported ${entries.length} entries from V12 lorebook.`);
+        } catch (e: any) {
+            console.error(e);
+            alert('V12 Import failed: ' + e.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleImportAsset = async (type: 'behavior' | 'module' | 'engine') => {
         const filters = type === 'behavior'
             ? [{ name: 'Behavior File', extensions: ['behavior'] }]
             : [{ name: 'Zip Archive', extensions: ['zip'] }];
 
-        const result = await (window as any).electron.invoke('dialog:open', {
+        const result = await api.invoke('dialog:open', {
             properties: ['openFile'],
             filters
         });
@@ -92,11 +122,11 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
         try {
             let response;
             if (type === 'behavior') {
-                response = await (window as any).electron.invoke('import-behavior', filePath);
+                response = await api.invoke('import-behavior', filePath);
             } else if (type === 'module') {
-                response = await (window as any).electron.invoke('import-module-zip', filePath);
+                response = await api.invoke('import-module-zip', filePath);
             } else if (type === 'engine') {
-                response = await (window as any).electron.invoke('import-engine-zip', filePath);
+                response = await api.invoke('import-engine-zip', filePath);
             }
 
             if (response?.success) {
@@ -200,6 +230,21 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
                         >
                             <MdSync className={isLoading ? 'spin' : ''} />
                             {isLoading ? 'Syncing...' : 'Fetch Notion Content'}
+                        </button>
+                    </div>
+
+                    {/* V12 Import */}
+                    <div className="asset-import-card" style={{ marginTop: '12px' }}>
+                        <div className="asset-info">
+                            <span className="asset-name">Icehellionx v12</span>
+                            <span className="asset-desc">Import entries from a v12 format lorebook.</span>
+                        </div>
+                        <button
+                            className="btn-action"
+                            onClick={handleImportV12}
+                            disabled={isLoading}
+                        >
+                            <MdFileUpload /> {isLoading ? 'Importing...' : 'Select File'}
                         </button>
                     </div>
                 </div>

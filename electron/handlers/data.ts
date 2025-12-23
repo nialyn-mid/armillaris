@@ -129,6 +129,10 @@ export function registerDataHandlers() {
         return true;
     });
 
+    ipcMain.handle('data:read-file-text', async (_, filePath: string) => {
+        return await fs.readFile(filePath, 'utf-8');
+    });
+
     // Version Management
     ipcMain.handle('data:get-versions', async (_, projectId: string) => {
         const versionsDir = path.join(DATA_DIR, projectId, 'versions');
