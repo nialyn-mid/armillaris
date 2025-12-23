@@ -199,8 +199,9 @@ export const decomposeBehavior = (spec: any) => {
         }
     }
 
-    return {
+    // 4. IPC-safe return (strip any non-serializable ReactFlow noise)
+    return JSON.parse(JSON.stringify({
         nodes: functionalNodes,
         edges: functionalEdges
-    };
+    }));
 };

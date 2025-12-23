@@ -40,13 +40,23 @@ export const resolveExpansion = <T extends { id?: string; name?: string; label?:
 ): T[] => {
     if (!def) return [];
 
+    // Auto-detect if this is a meta-track expansion.
+    // If so, we should default to an empty list instead of [0] to avoid dummy ports.
+    let effectiveDefaultList = defaultValueList;
+    if (typeof def === 'object' && '$for' in def) {
+        const expandKey = (def as any).$for;
+        if (expandKey.includes('meta.')) {
+            effectiveDefaultList = [];
+        }
+    }
+
     // Case 1: Array of definitions. May contain expansion objects!
     if (Array.isArray(def)) {
         const results: T[] = [];
         def.forEach(item => {
             if (typeof item === 'object' && item !== null && '$for' in item) {
                 // Recurse into expansion object
-                const expanded = resolveExpansion<T>(item as any, localValues, rootValues, defaultValueList);
+                const expanded = resolveExpansion<T>(item as any, localValues, rootValues, effectiveDefaultList);
                 results.push(...expanded);
             } else {
                 results.push(item as T);
@@ -77,11 +87,11 @@ export const resolveExpansion = <T extends { id?: string; name?: string; label?:
                 const hasPrefixed = Array.isArray(rootValues['_' + baseKey]) && rootValues['_' + baseKey].length > 0;
 
                 valuesKey = (hasBase || !hasPrefixed) ? baseKey : `_${baseKey}`;
-                ids = Array.isArray(rootValues[valuesKey]) ? rootValues[valuesKey] : defaultValueList;
+                ids = Array.isArray(rootValues[valuesKey]) ? rootValues[valuesKey] : effectiveDefaultList;
             } else {
                 // Local Scope
                 valuesKey = expandKey;
-                ids = Array.isArray(localValues[valuesKey]) ? localValues[valuesKey] : defaultValueList;
+                ids = Array.isArray(localValues[valuesKey]) ? localValues[valuesKey] : effectiveDefaultList;
             }
 
             ids.forEach((id: string | number) => {

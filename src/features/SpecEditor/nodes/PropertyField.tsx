@@ -69,6 +69,7 @@ const PropertyField = ({
         // Parent dependency check (e.g. 'attributes' input controls 'attr_0' property)
         if (def.name.startsWith('attr_') && connectedPorts?.includes('attributes')) return true;
         if (def.name.startsWith('kw_') && connectedPorts?.includes('keywords')) return true;
+        if (def.name.startsWith('value_') && connectedPorts?.includes('values')) return true;
         return false;
     }, [def.name, connectedPorts]);
 

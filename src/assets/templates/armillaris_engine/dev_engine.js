@@ -57,12 +57,17 @@ function getProps(nodeIdx) {
             }
         }
 
+        // 2. Handle escaped numbers {n: val}
+        if (val && typeof val === 'object' && val.n !== undefined) {
+            return val.n;
+        }
+
         var isStr = (
             key === "label" || key === "type" || key === "attribute" ||
             key === "message_user_type" || key === "deduplicate" ||
             key === "attribute_name" || key === "operator" || key === "sort_by" ||
             key === "operation" || key === "target_type" || key === "separator" ||
-            key === "name" || key === "attribute_type" || key === "value_type"
+            key === "name" || key === "attribute_type" || key === "value_type" || key === "func"
         );
 
         if (typeof val === 'number' && val >= 0 && val < behaviorStrings.length && isStr) {
@@ -96,19 +101,33 @@ function getProps(nodeIdx) {
 }
 
 function getEntryProps(entry) {
+    if (!entry) return {};
+    if (entry.properties) return entry.properties;
     var arr = entry.p || [];
     var p = {};
     for (var i = 0; i < arr.length; i += 2) {
         var key = (typeof arr[i] === 'number') ? getDStr(arr[i]) : arr[i];
         var val = arr[i + 1];
+
+        // Resolve string indices only if the value is a number (and not escaped)
+        var resolveVal = function (v) {
+            if (v && typeof v === 'object' && v.n !== undefined) {
+                return v.n;
+            }
+            if (typeof v === 'number') {
+                return getDStr(v);
+            }
+            return v;
+        };
+
         if (Array.isArray(val)) {
             var list = [];
             for (var j = 0; j < val.length; j++) {
-                list.push((typeof val[j] === 'number') ? getDStr(val[j]) : val[j]);
+                list.push(resolveVal(val[j]));
             }
             p[key] = list;
         } else {
-            p[key] = (typeof val === 'number') ? getDStr(val) : val;
+            p[key] = resolveVal(val);
         }
     }
     return p;
@@ -461,6 +480,112 @@ function executeNode(nodeIdx, portIdx) {
                 if (!portName) portName = "messages";
             }
             break;
+
+        case "Math":
+            if (label.indexOf("list math matrix") !== -1 || type === "ListMathMatrix") {
+                var a = resolveInput(nodeIdx, "list_a") || [];
+                var b = resolveInput(nodeIdx, "list_b") || [];
+                var op = props.operation || "Add";
+                var len = Math.max(a.length, b.length);
+                result = [];
+
+                var unwrap = function (v) {
+                    if (v && typeof v === 'object' && v.value !== undefined && v.type) return v.value;
+                    return v;
+                };
+
+                for (var i = 0; i < len; i++) {
+                    var va = Number(unwrap(a[i]) || 0);
+                    var vb = Number(unwrap(b[i]) || 0);
+                    if (op === "Add") result.push(va + vb);
+                    else if (op === "Subtract") result.push(va - vb);
+                    else if (op === "Multiply") result.push(va * vb);
+                    else if (op === "Divide") result.push(vb !== 0 ? va / vb : 0);
+                }
+                if (!portName) portName = "output";
+            } else if (label.indexOf("scalar math") !== -1 || type === "ListScalarMath") {
+                var listIn = resolveInput(nodeIdx, "list_in") || [];
+                var scalar = Number(resolveInput(nodeIdx, "scalar") || 0);
+                var op = props.operation || "Add";
+                result = [];
+
+                var unwrap = function (v) {
+                    if (v && typeof v === 'object' && v.value !== undefined && v.type) return v.value;
+                    return v;
+                };
+
+                for (var i = 0; i < listIn.length; i++) {
+                    var val = Number(unwrap(listIn[i]) || 0);
+                    if (op === "Add") result.push(val + scalar);
+                    else if (op === "Subtract") result.push(val - scalar);
+                    else if (op === "Multiply") result.push(val * scalar);
+                    else if (op === "Divide") result.push(scalar !== 0 ? val / scalar : 0);
+                }
+                if (!portName) portName = "output";
+            } else if (label.indexOf("list math function") !== -1 || label.indexOf("list math func") !== -1 || type === "ListMathFunc") {
+                var listIn = resolveInput(nodeIdx, "list_in") || [];
+                var func = props.func || props["function"] || "Floor";
+                result = [];
+
+                var unwrap = function (v) {
+                    if (v && typeof v === 'object' && v.value !== undefined && v.type) return v.value;
+                    return v;
+                };
+
+                for (var i = 0; i < listIn.length; i++) {
+                    var val = Number(unwrap(listIn[i]) || 0);
+                    if (func === "Floor") result.push(Math.floor(val));
+                    else if (func === "Ceil") result.push(Math.ceil(val));
+                    else if (func === "Round") result.push(Math.round(val));
+                    else if (func === "Abs") result.push(Math.abs(val));
+                    else if (func === "Sqrt") result.push(Math.sqrt(val));
+                    else if (func === "Log") result.push(Math.log(val));
+                }
+                if (!portName) portName = "output";
+            } else if (label.indexOf("number math function") !== -1 || label.indexOf("number math func") !== -1 || type === "NumberMathFunc") {
+                var inp = resolveInput(nodeIdx, "input");
+                var func = props.func || props["function"] || "Floor";
+
+                var unwrap = function (v) {
+                    if (v && typeof v === 'object' && v.value !== undefined && v.type) return v.value;
+                    return v;
+                };
+
+                var val = Number(unwrap(inp) || 0);
+                if (func === "Floor") result = Math.floor(val);
+                else if (func === "Ceil") result = Math.ceil(val);
+                else if (func === "Round") result = Math.round(val);
+                else if (func === "Abs") result = Math.abs(val);
+                else if (func === "Sqrt") result = Math.sqrt(val);
+                else if (func === "Log") result = Math.log(val);
+
+                if (!portName) portName = "output";
+            } else if (label.indexOf("value coalesce") !== -1) {
+                var listIn = resolveInput(nodeIdx, "list_in") || [];
+                var replacement = resolveInput(nodeIdx, "replacement");
+                if (replacement === undefined || replacement === null) replacement = props.replacement;
+
+                result = [];
+
+                var unwrap = function (v) {
+                    if (v && typeof v === 'object' && v.value !== undefined && v.type) return v.value;
+                    return v;
+                };
+
+                for (var i = 0; i < listIn.length; i++) {
+                    var v = unwrap(listIn[i]);
+                    var isTarget = false;
+                    if (v === null || v === undefined) isTarget = true;
+                    else if (typeof v === 'number' && isNaN(v)) isTarget = true;
+                    else if (v === "") isTarget = true;
+                    else if (Array.isArray(v) && v.length === 0) isTarget = true;
+
+                    result.push(isTarget ? replacement : v);
+                }
+                if (!portName) portName = "output";
+            }
+            break;
+
         case "Operation":
             var values = resolveInput(nodeIdx, "values") || [];
             if (!Array.isArray(values)) values = [values];
@@ -487,20 +612,162 @@ function executeNode(nodeIdx, portIdx) {
             break;
 
         case "Logic":
-            if (label.indexOf("condition") !== -1) {
+        case "ListLogic":
+            if (label.indexOf("list subset") !== -1 || type === "ListSubsetLogic") {
+                var subject = resolveInput(nodeIdx, "subject") || [];
+                var reference = resolveInput(nodeIdx, "reference") || [];
+                var op = props.operator || "Any (Intersects)";
+
+                var unwrap = function (v) {
+                    if (v && typeof v === 'object' && v.value !== undefined && v.type) return v.value;
+                    return v;
+                };
+
+                // Unwrap reference list if it contains attribute structs
+                var cleanRef = reference.map(unwrap);
+
+                // Helper to check relationship between two simple lists
+                var check = function (sub, ref) {
+                    if (!Array.isArray(sub)) sub = [sub];
+                    if (!Array.isArray(ref)) ref = [ref];
+
+                    if (op.indexOf("Any") !== -1) {
+                        for (var k = 0; k < sub.length; k++) {
+                            // Skip null/undefined/empty string items in subject
+                            if (sub[k] === null || sub[k] === undefined || sub[k] === "") continue;
+                            if (ref.indexOf(sub[k]) !== -1) return true;
+                        }
+                        return false;
+                    } else if (op.indexOf("All") !== -1) {
+                        var isNotAll = op.indexOf("Not") !== -1;
+
+                        // Vacuous truth: If subject list is effectively empty (only nulls/empty), 
+                        // then ALL (0) requirements are met.
+                        var validItems = 0;
+                        for (var k = 0; k < sub.length; k++) {
+                            if (sub[k] !== null && sub[k] !== undefined && sub[k] !== "") validItems++;
+                        }
+                        if (validItems === 0) return isNotAll ? false : true;
+
+                        var allMatch = true;
+                        for (var k = 0; k < sub.length; k++) {
+                            if (sub[k] === null || sub[k] === undefined || sub[k] === "") continue;
+                            if (ref.indexOf(sub[k]) === -1) {
+                                allMatch = false;
+                                break;
+                            }
+                        }
+                        return isNotAll ? !allMatch : allMatch;
+                    } else if (op.indexOf("None") !== -1 || op.indexOf("Disjoint") !== -1) {
+                        for (var k = 0; k < sub.length; k++) {
+                            if (ref.indexOf(sub[k]) !== -1) return false;
+                        }
+                        return true;
+                    } else if (op.indexOf("Identical") !== -1) {
+                        if (sub.length !== ref.length) return false;
+                        var s1 = sub.slice().sort();
+                        var s2 = ref.slice().sort();
+                        for (var k = 0; k < s1.length; k++) {
+                            if (s1[k] !== s2[k]) return false;
+                        }
+                        return true;
+                    }
+                    return false;
+                };
+
+                // Apply helper over the subject list (which might be a list of lists)
+                var results = [];
+                for (var i = 0; i < subject.length; i++) {
+                    var sVal = unwrap(subject[i]);
+                    results.push(check(sVal, cleanRef));
+                }
+                result = results;
+                if (!portName) portName = "output";
+            } else if (label.indexOf("condition") !== -1) {
                 var valA = resolveInput(nodeIdx, "input_a");
                 var valB = resolveInput(nodeIdx, "input_b");
                 var op = props.operator || "==";
                 result = compareValues(valA, valB, op);
+                if (portName === "inverse_result") result = !result;
             } else if (label.indexOf("switch") !== -1) {
                 var cond = resolveInput(nodeIdx, "condition");
-                var val = resolveInput(nodeIdx, "input_value");
-                if (cond) {
-                    result = val;
+                var valA = resolveInput(nodeIdx, "input_a"); // True case
+                var valB = resolveInput(nodeIdx, "input_b"); // False case
+                // Legacy fallback support? 
+                if (valA === undefined && valB === undefined) {
+                    valA = resolveInput(nodeIdx, "input_value");
+                }
+
+                result = cond ? valA : valB;
+
+                // Fallback for types if valB is missing/null? 
+                // The new spec requires B, but existing graphs might not have it.
+                // Assuming "any" type inputs can be null.
+            } else if (label.indexOf("probability") !== -1) {
+                var chance = resolveInput(nodeIdx, "chance");
+                if (chance === null || chance === undefined) chance = props.chance;
+                result = Math.random() < Number(chance);
+            }
+            break;
+
+        case "AttributeExtractor":
+            // Enhanced detection: check specifically for list-oriented ports or the node label
+            var isList = (portName === "attribute_list" || portName === "value_list" || (portName && portName.indexOf("_list") !== -1)) || (label.indexOf("list") !== -1);
+            var attrName = resolveInput(nodeIdx, "attribute_name") || props.attribute_name;
+            if (!attrName && portName) {
+                // Determine attribute from dynamic port name if not provided
+                if (portName !== "attribute_value" && portName !== "attribute_list" && portName !== "value_list" && portName !== "attribute_struct") {
+                    attrName = portName.replace("_list", "");
+                }
+            }
+
+            // Dual output logic: Generic Value/Value List vs Attribute/Attribute List (Struct)
+            // Struct ports are anything EXCEPT explicit value ports
+            var returnStruct = (portName && portName !== "value_list" && portName !== "attribute_value");
+
+            if (isList) {
+                var entries = resolveInput(nodeIdx, "entries") || [];
+                var listResult = [];
+                var hasNumber = false;
+                for (var i = 0; i < entries.length; i++) {
+                    var ep = getEntryProps(entries[i]);
+                    var val = (attrName && ep[attrName] !== undefined) ? ep[attrName] : null;
+                    if (typeof val === 'number') hasNumber = true;
+                    listResult.push(val);
+                }
+
+                // Typed falsy fallback: if the list contains numbers, use NaN for missing items.
+                if (hasNumber || attrName === "probability" || attrName === "priority") {
+                    for (var i = 0; i < listResult.length; i++) {
+                        if (listResult[i] === null) listResult[i] = NaN;
+                    }
+                }
+
+                if (returnStruct) {
+                    result = listResult.map(function (v) {
+                        return {
+                            name: attrName || "unknown",
+                            type: Array.isArray(v) ? "List" : typeof v,
+                            value: v
+                        };
+                    });
                 } else {
-                    // Return falsy of the same type if possible
-                    if (Array.isArray(val)) result = [];
-                    else result = null;
+                    result = listResult;
+                }
+            } else {
+                var entry = resolveInput(nodeIdx, "entry") || resolveInput(nodeIdx, "entries");
+                var ep = getEntryProps(entry);
+                var val = (attrName && ep[attrName] !== undefined) ? ep[attrName] : null;
+                if (val === null && (attrName === "probability" || attrName === "priority")) val = NaN;
+
+                if (returnStruct) {
+                    result = {
+                        name: attrName || "unknown",
+                        type: Array.isArray(val) ? "List" : typeof val,
+                        value: val
+                    };
+                } else {
+                    result = val;
                 }
             }
             break;
@@ -567,7 +834,22 @@ function executeNode(nodeIdx, portIdx) {
                 if (!portName) portName = "entries";
             } else if (label.indexOf("message filter") !== -1 || type === "MessageFilter") {
                 var messages = resolveInput(nodeIdx, "messages") || [];
-                var conditions = resolveInput(nodeIdx, "conditions") || [];
+                var rawConditions = resolveInput(nodeIdx, "conditions") || [];
+
+                // Flatten and clean conditions
+                var conditions = [];
+                var flatten = function (arr) {
+                    if (!Array.isArray(arr)) {
+                        var v = (arr && typeof arr === 'object' && arr.value !== undefined && arr.type) ? arr.value : arr;
+                        if (Array.isArray(v)) flatten(v);
+                        else if (v !== null && v !== undefined) conditions.push(v);
+                    } else {
+                        for (var i = 0; i < arr.length; i++) {
+                            flatten(arr[i]);
+                        }
+                    }
+                };
+                flatten(rawConditions);
 
                 var isRegex = props.is_regex || false;
                 var caseSensitive = props.case_sensitive || false;
@@ -679,6 +961,31 @@ function executeNode(nodeIdx, portIdx) {
                     if (isMatched) result.push(entry);
                 }
                 if (!portName) portName = "filtered_entries";
+            } else if (label.indexOf("probability filter") !== -1) {
+                var entries = resolveInput(nodeIdx, "entries") || [];
+                var chances = resolveInput(nodeIdx, "chances") || [];
+                var defIn = resolveInput(nodeIdx, "default_chance");
+                var defaultChance = Number(defIn !== null && defIn !== undefined ? defIn : (props.default_chance !== undefined ? props.default_chance : 1.0));
+
+                result = [];
+                for (var i = 0; i < entries.length; i++) {
+                    var chance = (chances[i] !== undefined) ? Number(chances[i]) : defaultChance;
+                    if (isNaN(chance)) chance = defaultChance;
+                    if (Math.random() < chance) {
+                        result.push(entries[i]);
+                    }
+                }
+                if (!portName) portName = "filtered_entries";
+            } else if (label.indexOf("mask filter") !== -1 || type === "ListMaskFilter") {
+                var listIn = resolveInput(nodeIdx, "list_input") || [];
+                var mask = resolveInput(nodeIdx, "mask") || [];
+                result = [];
+                for (var i = 0; i < listIn.length; i++) {
+                    if (mask[i] === true || mask[i] === 1 || String(mask[i]).toLowerCase() === "true") {
+                        result.push(listIn[i]);
+                    }
+                }
+                if (!portName) portName = "output";
             } else if (label.indexOf("list filter") !== -1 || type === "ListFilter") {
                 var sourceList = resolveInput(nodeIdx, "list_input") || resolveInput(nodeIdx, "entries") || [];
                 var trimStart = Number(props.trim_start) || 0;
@@ -967,6 +1274,24 @@ function executeNode(nodeIdx, portIdx) {
                 if (portName === "inverse_sorted_entries") result = sortedEntries.slice().reverse();
                 else result = sortedEntries;
                 if (!portName) portName = "sorted_entries";
+            } else if (label.indexOf("value convert") !== -1 || type === "ValueConvert") {
+                var input = resolveInput(nodeIdx, "input") || [];
+                var target = props.target_type || "String";
+                result = [];
+                for (var i = 0; i < input.length; i++) {
+                    var val = input[i];
+                    // Unwrap if struct
+                    if (val && typeof val === 'object' && val.value !== undefined && val.type) val = val.value;
+
+                    if (target === "String") result.push(val === null || val === undefined ? "" : String(val));
+                    else if (target === "Number") {
+                        var n = Number(val);
+                        result.push(isNaN(n) ? 0 : n);
+                    } else if (target === "Boolean") {
+                        result.push(!!val && val !== "false" && val !== "0" && val !== 0);
+                    }
+                }
+                if (!portName) portName = "output";
             } else {
                 result = resolveInput(nodeIdx, "entries") || resolveInput(nodeIdx, "values") || resolveInput(nodeIdx, "list_input") || resolveInput(nodeIdx, "messages") || resolveInput(nodeIdx, "last_messages") || null;
             }

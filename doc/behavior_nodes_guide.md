@@ -11,7 +11,7 @@ A core principle of the Behavior Node System is that the **Node Editor should re
 - **Generalized App-Side Changes**: If a feature requires the editor to react to node state (e.g., changing port types based on properties), it must be implemented as a **generalized mechanism** in the editor that any node can leverage via its specification.
 
 > [!IMPORTANT]
-> Avoid hardcoding node-specific logic in the editor (e.g., checking `if (node.label === 'List Filter')`). Instead, extend the `engine_spec` format to describe the desired behavior and update the editor to interpret that spec generically.
+> Avoid hardcoding node-specific logic in the editor (e.g., checking `if (node.label === 'List Math Function')`). Instead, extend the `engine_spec` format to describe the desired behavior and update the editor to interpret that spec generically.
 
 ---
 
@@ -110,7 +110,7 @@ The `adapt()` function transforms the flattened JSON into **Armillaris Native En
 When `adapt()` converts the graph, it indexes all strings into a table to save space. Inside the engine, the `getProps` function uses a whitelist called `isStringKey` to determine which property values should be resolved from the index back into their original strings.
 
 > [!CAUTION]
-> If you add a new node with a property that stores a string (e.g., `regex`, `operator`, `sort_by`), you **must** add that property name to the `isStringKey` array in both `engine.js` and `dev_engine.js`. Otherwise, the logic will receive a numeric index (like `42`) instead of the actual string value.
+> If you add a new node with a property that stores a string (e.g., `regex`, `operator`, `sort_by`, `func`), you **must** add that property name to the `isStringKey` / `isStr` array in both `engine.js` and `dev_engine.js`. Otherwise, the logic will receive a numeric index (like `42`) instead of the actual string value.
 
 ---
 
@@ -262,3 +262,9 @@ The `String Regex` node handles both full matches and capturing groups.
 When using `Property Block` for expandable items (e.g., to add "Name" labels to list items for easier editor organization), it is crucial to **unwrap** the values in the engine.
 - **The rule**: The graph's internal technical representation (JSON state) can include metadata for the UI, but the engine's functional output (port values) should stay as **primitives** or **domain objects** (Entry, Message).
 - **The Lesson**: If a list item is a block containing `{name, value}`, the engine must loop through and `result.push(block.value)` so that downstream nodes (like `Concatenate List`) receive the expected primitive array, not a list of metadata objects.
+
+### Reserved Keyword Collisions
+The engine uses the `props` object to access node properties. Some properties (like `function`) can collide with JavaScript reserved keywords or have special meaning in some environments.
+- **The symptom**: A node showing "Data not available" even when logic seems correct, or tooltips failing to render.
+- **The fix**: Use `func` instead of `function` in `engine_spec.json`.
+- **The rule**: Always prefer short, non-reserved identifiers for property `name` fields.

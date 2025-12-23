@@ -99,7 +99,17 @@ export const usePortHoverDebug = (nodeId: string, pathPrefix?: string) => {
                     return resolveSource(incomingEdge.source, incomingEdge.sourceHandle || 'default', false, currentPrefix);
                 }
 
-                // 4. Functional Node (Default): This IS the source.
+                // 4. Group Input (Inside): Trace OUTSIDE to the parent group's corresponding input port.
+                if (node.type === 'GroupInput') {
+                    if (path.length === 0) return { id: fullId, port: pid, isConnected: false };
+                    const parentPath = path.slice(0, -1);
+                    const parentGroupId = path[path.length - 1].id;
+                    const parentPrefix = parentPath.map(p => p.id).join('.');
+                    // Jump to parent group's input handle
+                    return resolveSource(parentGroupId, pid, true, parentPrefix);
+                }
+
+                // 5. Functional Node (Default): This IS the source.
                 return { id: fullId, port: pid, isConnected: true };
             }
         };

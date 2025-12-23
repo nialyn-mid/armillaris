@@ -272,12 +272,12 @@
                     "type": "Entry List"
                 },
                 {
-                    "id": "attribute_name_input",
+                    "id": "attribute_name",
                     "label": "Attribute Name",
                     "type": "String"
                 },
                 {
-                    "id": "values_input",
+                    "id": "values",
                     "label": "Compare Values",
                     "type": "Value List"
                 }
@@ -388,6 +388,44 @@
         },
         {
             "type": "Filter",
+            "label": "Probability Filter",
+            "category": "Filter",
+            "description": "Filter an entry list based on a corresponding list of chances.",
+            "inputs": [
+                {
+                    "id": "entries",
+                    "label": "Entries",
+                    "type": "Entry List"
+                },
+                {
+                    "id": "chances",
+                    "label": "Chances",
+                    "type": "Number List"
+                },
+                {
+                    "id": "default_chance",
+                    "label": "Default Chance",
+                    "type": "Number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "filtered_entries",
+                    "label": "Filtered Entries",
+                    "type": "Entry List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "default_chance",
+                    "label": "Default Chance",
+                    "type": "Number",
+                    "default": 1.0
+                }
+            ]
+        },
+        {
+            "type": "Filter",
             "label": "Keyword Filter",
             "category": "Filter",
             "description": "Filter entries based on their associated keywords' presence in the input messages.",
@@ -415,16 +453,6 @@
                 {
                     "id": "match_limit",
                     "label": "Match Limit",
-                    "type": "Number"
-                },
-                {
-                    "id": "message_range_start",
-                    "label": "Message Range Start",
-                    "type": "Number"
-                },
-                {
-                    "id": "message_range_end",
-                    "label": "Message Range End",
                     "type": "Number"
                 }
             ],
@@ -630,6 +658,16 @@
             ],
             "outputs": [
                 {
+                    "id": "attribute_struct",
+                    "label": "Attribute",
+                    "type": "Attribute"
+                },
+                {
+                    "id": "attribute_value",
+                    "label": "Value",
+                    "type": "Value"
+                },
+                {
                     "$for": "entry.meta.attributes",
                     "$item": {
                         "id": "{{_value}}",
@@ -638,7 +676,13 @@
                     }
                 }
             ],
-            "properties": []
+            "properties": [
+                {
+                    "name": "attribute_name",
+                    "label": "Attribute Name",
+                    "type": "String"
+                }
+            ]
         },
         {
             "type": "AttributeExtractor",
@@ -654,6 +698,16 @@
             ],
             "outputs": [
                 {
+                    "id": "attribute_list",
+                    "label": "Attribute List",
+                    "type": "Attribute List"
+                },
+                {
+                    "id": "value_list",
+                    "label": "Value List",
+                    "type": "Value List"
+                },
+                {
                     "$for": "entries.meta.attributes",
                     "$item": {
                         "id": "{{_value}}_list",
@@ -662,7 +716,13 @@
                     }
                 }
             ],
-            "properties": []
+            "properties": [
+                {
+                    "name": "attribute_name",
+                    "label": "Attribute Name",
+                    "type": "String"
+                }
+            ]
         },
         {
             "type": "DataUtility",
@@ -1144,6 +1204,11 @@
                     "id": "result",
                     "label": "Result",
                     "type": "Boolean"
+                },
+                {
+                    "id": "inverse_result",
+                    "label": "Inverse Result",
+                    "type": "Boolean"
                 }
             ],
             "typeConstraints": [
@@ -1178,7 +1243,7 @@
             "type": "Logic",
             "label": "Switch",
             "category": "Logic",
-            "description": "Pass through a value if condition is true, else returns empty.",
+            "description": "Output Input A if true, else Input B.",
             "inputs": [
                 {
                     "id": "condition",
@@ -1186,8 +1251,13 @@
                     "type": "Boolean"
                 },
                 {
-                    "id": "input_value",
-                    "label": "Input Value",
+                    "id": "input_a",
+                    "label": "Input A (True)",
+                    "type": "Value"
+                },
+                {
+                    "id": "input_b",
+                    "label": "Input B (False)",
                     "type": "Value"
                 }
             ],
@@ -1203,12 +1273,41 @@
                     "id": "switch_flow",
                     "subtype_of": "Value",
                     "ports": [
-                        "input_value",
+                        "input_a",
+                        "input_b",
                         "output"
                     ]
                 }
             ],
             "properties": []
+        },
+        {
+            "type": "Logic",
+            "label": "Probability",
+            "category": "Logic",
+            "description": "Output true based on a random chance (0-1).",
+            "inputs": [
+                {
+                    "id": "chance",
+                    "label": "Chance",
+                    "type": "Number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "result",
+                    "label": "Result",
+                    "type": "Boolean"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "chance",
+                    "label": "Chance (0-1)",
+                    "type": "Number",
+                    "default": 0.5
+                }
+            ]
         },
         {
             "type": "StringUtility",
@@ -1352,6 +1451,264 @@
                     "default": "String"
                 }
             ]
+        },
+        {
+            "type": "Logic",
+            "label": "List Subset Logic",
+            "category": "Logic",
+            "description": "Check if a list (or list of lists) satisfies a conditional relationship with a reference list.",
+            "inputs": [
+                {
+                    "id": "subject",
+                    "label": "Subject",
+                    "type": "List"
+                },
+                {
+                    "id": "reference",
+                    "label": "Reference List",
+                    "type": "List"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "output",
+                    "label": "Output",
+                    "type": "Value List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "operator",
+                    "label": "Operator",
+                    "type": "select",
+                    "options": [
+                        "Any (Intersects)",
+                        "All (Contains)",
+                        "None (Disjoint)",
+                        "Not All",
+                        "Exactly Identical"
+                    ],
+                    "default": "Any (Intersects)"
+                }
+            ]
+        },
+        {
+            "type": "Math",
+            "label": "List Math Matrix",
+            "category": "Math",
+            "description": "Perform element-wise math operations between two lists.",
+            "inputs": [
+                {
+                    "id": "list_a",
+                    "label": "List A",
+                    "type": "Number List"
+                },
+                {
+                    "id": "list_b",
+                    "label": "List B",
+                    "type": "Number List"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "output",
+                    "label": "Result List",
+                    "type": "Number List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "operation",
+                    "label": "Operation",
+                    "type": "select",
+                    "options": [
+                        "Add",
+                        "Subtract",
+                        "Multiply",
+                        "Divide"
+                    ],
+                    "default": "Add"
+                }
+            ]
+        },
+        {
+            "type": "Math",
+            "label": "List Scalar Math",
+            "category": "Math",
+            "description": "Perform math operation between a list and a number.",
+            "inputs": [
+                {
+                    "id": "list_in",
+                    "label": "List",
+                    "type": "Number List"
+                },
+                {
+                    "id": "scalar",
+                    "label": "Number",
+                    "type": "Number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "output",
+                    "label": "Result List",
+                    "type": "Number List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "operation",
+                    "label": "Operation",
+                    "type": "select",
+                    "options": [
+                        "Add",
+                        "Subtract",
+                        "Multiply",
+                        "Divide"
+                    ],
+                    "default": "Add"
+                }
+            ]
+        },
+        {
+            "type": "Math",
+            "label": "List Math Function",
+            "category": "Math",
+            "description": "Apply a math function (Floor, Abs, etc) to a list.",
+            "inputs": [
+                {
+                    "id": "list_in",
+                    "label": "List",
+                    "type": "Number List"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "output",
+                    "label": "Result List",
+                    "type": "Number List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "func",
+                    "label": "Function",
+                    "type": "select",
+                    "options": [
+                        "Floor",
+                        "Ceil",
+                        "Round",
+                        "Abs",
+                        "Sqrt",
+                        "Log"
+                    ],
+                    "default": "Floor"
+                }
+            ]
+        },
+        {
+            "type": "Math",
+            "label": "Number Math Func",
+            "category": "Math",
+            "description": "Apply a math function (Floor, Abs, etc) to a number.",
+            "inputs": [
+                {
+                    "id": "input",
+                    "label": "Input",
+                    "type": "Number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "output",
+                    "label": "Result",
+                    "type": "Number"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "func",
+                    "label": "Function",
+                    "type": "select",
+                    "options": [
+                        "Floor",
+                        "Ceil",
+                        "Round",
+                        "Abs",
+                        "Sqrt",
+                        "Log"
+                    ],
+                    "default": "Floor"
+                }
+            ]
+        },
+        {
+            "type": "Math",
+            "label": "Value Coalesce",
+            "category": "Math",
+            "description": "Replace non-zero falsy values (null, NaN, [], \"\") with a specified replacement value.",
+            "inputs": [
+                {
+                    "id": "list_in",
+                    "label": "List",
+                    "type": "List"
+                },
+                {
+                    "id": "replacement",
+                    "label": "Replacement",
+                    "type": "Value"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "output",
+                    "label": "Output List",
+                    "type": "List"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "replacement",
+                    "label": "Replacement",
+                    "type": "Value"
+                }
+            ],
+            "typeConstraints": [
+                {
+                    "id": "list_type",
+                    "subtype_of": "List",
+                    "ports": [
+                        "list_in",
+                        "output"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Filter",
+            "label": "List Mask Filter",
+            "category": "Filter",
+            "description": "Filter a list using a corresponding list of booleans.",
+            "inputs": [
+                {
+                    "id": "list_input",
+                    "label": "Input List",
+                    "type": "List"
+                },
+                {
+                    "id": "mask",
+                    "label": "Boolean Mask",
+                    "type": "Boolean List"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "output",
+                    "label": "Filtered List",
+                    "type": "List"
+                }
+            ],
+            "properties": []
         },
         {
             "type": "OutputRoot",

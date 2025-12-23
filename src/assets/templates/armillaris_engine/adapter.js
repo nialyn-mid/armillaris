@@ -66,10 +66,12 @@ function adapt(behaviorData) {
                     key === "attribute_name" || key === "operator" || key === "sort_by" ||
                     key === "operation" || key === "target_type" || key === "separator" ||
                     key === "name" || key === "attribute_type" || key === "value_type" ||
-                    key === "message_user_type" || key === "deduplicate"
+                    key === "message_user_type" || key === "deduplicate" || key === "func"
                 );
 
-                if (typeof val === 'string') {
+                if (typeof val === 'number') {
+                    finalVal = { n: val };
+                } else if (typeof val === 'string') {
                     if (isCategorical) {
                         finalVal = getStringIndex(val);
                     } else {
@@ -77,9 +79,19 @@ function adapt(behaviorData) {
                         finalVal = val;
                     }
                 } else if (Array.isArray(val)) {
-                    // For arrays (like keywords), only index if we decide it's categorical 
-                    // (usually keywords are NOT interned to avoid collision with numbers)
-                    finalVal = val;
+                    // For arrays, we now need to handle potential numbers inside too
+                    var compactArray = [];
+                    for (var j = 0; j < val.length; j++) {
+                        var item = val[j];
+                        if (typeof item === 'number') {
+                            compactArray.push({ n: item });
+                        } else if (typeof item === 'string' && isCategorical) {
+                            compactArray.push(getStringIndex(item));
+                        } else {
+                            compactArray.push(item);
+                        }
+                    }
+                    finalVal = compactArray;
                 }
 
                 propsArray.push(getStringIndex(key));
@@ -148,13 +160,17 @@ function adaptData(entries) {
                 var val = properties[key];
                 var finalVal = val;
 
-                if (typeof val === 'string') {
+                if (typeof val === 'number') {
+                    finalVal = { n: val };
+                } else if (typeof val === 'string') {
                     finalVal = getStringIndex(val);
                 } else if (Array.isArray(val)) {
                     // Index strings within arrays (e.g., Keywords)
                     var compactArray = [];
                     for (var j = 0; j < val.length; j++) {
-                        if (typeof val[j] === 'string') {
+                        if (typeof val[j] === 'number') {
+                            compactArray.push({ n: val[j] });
+                        } else if (typeof val[j] === 'string') {
                             compactArray.push(getStringIndex(val[j]));
                         } else {
                             compactArray.push(val[j]);
