@@ -13,6 +13,7 @@ import { LabeledEdge } from './graph/LabeledEdge';
 import SpecNodeEditor, { type SpecNodeEditorHandle } from '../SpecEditor/SpecNodeEditor';
 import { ResizeHandle } from '../../shared/ui/ResizeHandle';
 import { useData } from '../../context/DataContext';
+import { performEngineCompilation } from '../../utils/compilationUtils';
 import './GraphEditor.css';
 
 const edgeTypes = {
@@ -113,32 +114,25 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
     useEffect(() => { refreshMeta(); }, [refreshMeta]);
 
     const triggerCompile = useCallback(async () => {
-        const ipc = (window as any).ipcRenderer;
-        if (!ipc || !activeEngine || !activeSpec) return;
+        if (!activeEngine || !activeSpec) return;
 
         setIsCompiling(true);
-        const specContent = await ipc.invoke('read-spec', activeEngine, activeSpec);
-        if (!specContent) {
-            setIsCompiling(false);
-            return;
-        }
-
         try {
-            const rawSpec = JSON.parse(specContent);
-            const { decomposeBehavior } = await import('../SpecEditor/utils/specTraversals');
-            const decomposed = decomposeBehavior(rawSpec);
-
-            await ipc.invoke('compile-engine', activeEngine, activeSpec, entries, {
-                minify: minifyEnabled,
-                compress: compressEnabled,
-                mangle: mangleEnabled,
-                comments: includeComments,
-                useDevEngine: simulateUsingDevEngine,
-                graphData: decomposed
+            await performEngineCompilation({
+                activeEngine,
+                activeSpec,
+                entries,
+                settings: {
+                    minify: minifyEnabled,
+                    compress: compressEnabled,
+                    mangle: mangleEnabled,
+                    comments: includeComments
+                },
+                useDevEngine: simulateUsingDevEngine
             });
             await refreshMeta();
         } catch (e) {
-            console.error("Failed to decompose or compile behavior", e);
+            console.error("Failed to compile behavior in GraphView", e);
         } finally {
             setIsCompiling(false);
         }

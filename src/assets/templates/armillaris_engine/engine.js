@@ -952,7 +952,7 @@ for (var i = 0; i < roots.length; i++) {
     }
 }
 
-context.character.personality = personalities.join("\n\n");
-context.character.scenario = scenarios.join("\n\n");
-context.character.example_dialogs = exampleDialogsArr.join("\n\n");
+context.character.personality += "\n\n" + personalities.join("\n\n");
+context.character.scenario += "\n\n" + scenarios.join("\n\n");
+context.character.example_dialogs += "\n\n" + exampleDialogsArr.join("\n\n");
 if (typeof context.activated_ids !== 'undefined') context.activated_ids = activatedEntryIds;

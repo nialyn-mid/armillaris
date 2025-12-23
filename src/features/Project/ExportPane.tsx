@@ -13,6 +13,7 @@ import {
     MdDescription,
     MdFactCheck
 } from 'react-icons/md';
+import { performEngineCompilation } from '../../utils/compilationUtils';
 import './ExportPane.css';
 
 interface ExportPaneProps {
@@ -26,7 +27,8 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
         compressEnabled, setCompressEnabled,
         mangleEnabled, setMangleEnabled,
         includeComments, setIncludeComments,
-        setActiveTab, toggleTool, isSpecDirty, setPendingTab
+        setActiveTab, toggleTool, isSpecDirty, setPendingTab,
+        behaviorGraph
     } = useData();
     const { issues } = useValidation();
 
@@ -36,23 +38,28 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
     const runCompilation = useCallback(async () => {
         if (!activeEngine || !activeSpec) return;
         setIsCompiling(true);
-        const ipc = (window as any).ipcRenderer;
         try {
-            const res = await ipc.invoke('compile-engine', activeEngine, activeSpec, entries || [], {
-                minify: minifyEnabled,
-                compress: compressEnabled,
-                mangle: mangleEnabled,
-                comments: includeComments
+            const res = await performEngineCompilation({
+                activeEngine,
+                activeSpec,
+                entries: entries || [],
+                settings: {
+                    minify: minifyEnabled,
+                    compress: compressEnabled,
+                    mangle: mangleEnabled,
+                    comments: includeComments
+                },
+                graphOverride: behaviorGraph
             });
             if (res.success) {
                 setBreakdown(res.sizeBreakdown);
             }
         } catch (e) {
-            console.error(e);
+            console.error("Failed to run compilation in ExportPane", e);
         } finally {
             setIsCompiling(false);
         }
-    }, [activeEngine, activeSpec, entries, minifyEnabled, compressEnabled, mangleEnabled, includeComments]);
+    }, [activeEngine, activeSpec, entries, minifyEnabled, compressEnabled, mangleEnabled, includeComments, behaviorGraph]);
 
     useEffect(() => {
         runCompilation();
@@ -69,11 +76,17 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
 
         setIsCompiling(true);
         try {
-            const generated = await ipc.invoke('compile-engine', activeEngine, activeSpec, entries || [], {
-                minify: minifyEnabled,
-                compress: compressEnabled,
-                mangle: mangleEnabled,
-                comments: includeComments
+            const generated = await performEngineCompilation({
+                activeEngine,
+                activeSpec,
+                entries: entries || [],
+                settings: {
+                    minify: minifyEnabled,
+                    compress: compressEnabled,
+                    mangle: mangleEnabled,
+                    comments: includeComments
+                },
+                graphOverride: behaviorGraph
             });
 
             if (generated.success === false) {
@@ -94,7 +107,7 @@ export default function ExportPane({ onClose }: ExportPaneProps) {
             showNotification('Exported successfully!', 'success');
 
         } catch (e) {
-            console.error(e);
+            console.error("Failed to export in ExportPane", e);
             showNotification('Export failed.', 'error');
         } finally {
             setIsCompiling(false);

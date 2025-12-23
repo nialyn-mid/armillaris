@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useData } from '../../../context/DataContext';
 import { checkCompatibility } from '../../../utils/compatibilityChecker';
+import { performEngineCompilation } from '../../../utils/compilationUtils';
 
 export function useCodeViewLogic() {
     const {
         activeEngine, activeSpec, entries, showNotification,
-        minifyEnabled, compressEnabled, mangleEnabled, includeComments
+        minifyEnabled, compressEnabled, mangleEnabled, includeComments,
+        behaviorGraph
     } = useData();
     const [code, setCode] = useState<string>('// Loading...');
     const [isCompiling, setIsCompiling] = useState(false);
@@ -31,30 +33,17 @@ export function useCodeViewLogic() {
         setCode('// Compiling...');
 
         try {
-            const ipc = (window as any).ipcRenderer;
-
-            if (!ipc) {
-                setCode('// Error: IPC not available (Are you running in Electron?)');
-                return;
-            }
-
-            if (!activeEngine || !activeSpec) {
-                setCode('// Error: No active engine or spec selected in Template View.');
-                return;
-            }
-
-            if (!entries) {
-                setCode('// Error: No data entries found.');
-                return;
-            }
-
-            // Call Backend Handler
-            const generated = await ipc.invoke('compile-engine', activeEngine, activeSpec, entries || [], {
-                minify: minifyEnabled,
-                compress: compressEnabled,
-                mangle: mangleEnabled,
-                comments: includeComments,
-                useDevEngine: false // Always production-ready in CodeView/Output
+            const generated = await performEngineCompilation({
+                activeEngine,
+                activeSpec,
+                entries: entries || [],
+                settings: {
+                    minify: minifyEnabled,
+                    compress: compressEnabled,
+                    mangle: mangleEnabled,
+                    comments: includeComments
+                },
+                graphOverride: behaviorGraph
             });
 
             if (generated && typeof generated === 'object') {
@@ -79,7 +68,7 @@ export function useCodeViewLogic() {
         } finally {
             setIsCompiling(false);
         }
-    }, [entries, activeEngine, activeSpec, minifyEnabled, compressEnabled, mangleEnabled, includeComments]);
+    }, [entries, activeEngine, activeSpec, minifyEnabled, compressEnabled, mangleEnabled, includeComments, behaviorGraph]);
 
     // Format Logic
     // Since output is minified, "Pretty" might just mean formatting the minified string JSON/JS?

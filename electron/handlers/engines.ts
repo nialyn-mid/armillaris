@@ -269,9 +269,19 @@ export function registerEngineHandlers() {
 
             fs.writeFileSync(compiledOutputPath, code);
 
+            const totalUnminified = (breakdown.engine + breakdown.behavior + breakdown.data + breakdown.modules) || 1;
+            const minifiedTotal = Buffer.byteLength(code, 'utf-8');
+            const ratio = minifiedTotal / totalUnminified;
+
             const minifiedBreakdown = {
-                ...breakdown,
-                total: Buffer.byteLength(code, 'utf-8')
+                engine: Math.round(breakdown.engine * ratio),
+                behavior: Math.round(breakdown.behavior * ratio),
+                data: Math.round(breakdown.data * ratio),
+                modules: Math.round(breakdown.modules * ratio),
+                moduleDetails: Object.fromEntries(
+                    Object.entries(moduleSizes).map(([id, size]) => [id, Math.round(size * ratio)])
+                ),
+                total: minifiedTotal
             };
 
             const metaPath = path.join(enginePath, 'engine.compiled.json');
