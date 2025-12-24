@@ -15,6 +15,7 @@ export interface IElectronAPI {
   loadVersion: (projectId: string, versionId: string) => Promise<any>;
   compressVersions: (projectId: string, cutoffDate: number) => Promise<number>;
   pruneVersions: (projectId: string, options: any) => Promise<number>;
+  setLastActiveProject: (projectId: string | null) => Promise<boolean>;
 }
 
 declare global {

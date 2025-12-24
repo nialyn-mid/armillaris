@@ -36,7 +36,9 @@
           ]
         },
         "categoryColor": "#d83b01",
-        "values": {},
+        "values": {
+          "order": "20"
+        },
         "pathPrefix": ""
       },
       "width": 220,
@@ -8687,7 +8689,7 @@
       },
       "width": 220,
       "height": 239,
-      "selected": true,
+      "selected": false,
       "positionAbsolute": {
         "x": 2593.521831335163,
         "y": 94.56213740186672
@@ -8731,6 +8733,240 @@
         "y": 103.19076960180541
       },
       "dragging": false
+    },
+    {
+      "id": "f0f5ecaf-83de-4470-8d86-ce0e532d3cda",
+      "type": "custom",
+      "position": {
+        "x": 3345.8908058862708,
+        "y": -417.5622612038445
+      },
+      "data": {
+        "label": "Activation Output",
+        "def": {
+          "type": "OutputRoot",
+          "label": "Activation Output",
+          "category": "Output",
+          "inputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            },
+            {
+              "id": "order",
+              "label": "Order",
+              "type": "Number"
+            }
+          ],
+          "outputs": [],
+          "properties": [
+            {
+              "name": "order",
+              "label": "Order",
+              "type": "Number",
+              "default": 0
+            }
+          ]
+        },
+        "categoryColor": "#d83b01",
+        "values": {
+          "order": "10"
+        }
+      },
+      "width": 220,
+      "height": 166,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3345.8908058862708,
+        "y": -417.5622612038445
+      },
+      "dragging": false
+    },
+    {
+      "id": "cec38aff-c1f4-4807-821a-f126b14353c1",
+      "type": "custom",
+      "position": {
+        "x": 2840.028846941204,
+        "y": -418.95980413568975
+      },
+      "data": {
+        "label": "Input Entry List",
+        "def": {
+          "type": "InputSource",
+          "label": "Input Entry List",
+          "category": "Input",
+          "description": "The full list of entries from Data.",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            }
+          ],
+          "properties": []
+        },
+        "categoryColor": "#0078d4",
+        "values": {}
+      },
+      "width": 220,
+      "height": 84,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 2840.028846941204,
+        "y": -418.95980413568975
+      },
+      "dragging": false
+    },
+    {
+      "id": "7c1414af-27d8-4afb-9177-9485826f0a39",
+      "type": "custom",
+      "position": {
+        "x": 3091.4117154569844,
+        "y": -419.4775076322784
+      },
+      "data": {
+        "label": "Entry Filter",
+        "def": {
+          "type": "Filter",
+          "label": "Entry Filter",
+          "category": "Filter",
+          "description": "Filter entries based on attribute values.",
+          "inputs": [
+            {
+              "id": "input_entries",
+              "label": "Input Entry List",
+              "type": "Entry List"
+            },
+            {
+              "id": "attribute_name",
+              "label": "Attribute Name",
+              "type": "String"
+            },
+            {
+              "id": "values",
+              "label": "Compare Values",
+              "type": "Value List"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "filtered_entries",
+              "label": "Filtered Entry List",
+              "type": "Entry List"
+            }
+          ],
+          "properties": [
+            {
+              "name": "combine",
+              "label": "Combine",
+              "type": "select",
+              "options": [
+                {
+                  "value": "or",
+                  "label": "Any"
+                },
+                {
+                  "value": "and",
+                  "label": "All"
+                }
+              ],
+              "default": "or"
+            },
+            {
+              "name": "attribute_name",
+              "label": "Attribute Name",
+              "type": "String",
+              "default": "Meta"
+            },
+            {
+              "name": "operator",
+              "label": "Operator Is",
+              "type": "select",
+              "options": [
+                {
+                  "value": "contains",
+                  "label": "Contains"
+                },
+                {
+                  "value": "not contains",
+                  "label": "Does Not Contain"
+                },
+                {
+                  "value": "==",
+                  "label": "Is"
+                },
+                {
+                  "value": "!=",
+                  "label": "Is Not"
+                },
+                {
+                  "value": ">=",
+                  "label": "Greater Than Or Equal To"
+                },
+                {
+                  "value": "<=",
+                  "label": "Less Than Or Equal To"
+                },
+                {
+                  "value": ">",
+                  "label": "Greater Than"
+                },
+                {
+                  "value": "<",
+                  "label": "Less Than"
+                }
+              ],
+              "default": "=="
+            },
+            {
+              "name": "value_type",
+              "label": "Value Type",
+              "type": "select",
+              "options": [
+                {
+                  "value": "String",
+                  "label": "String"
+                },
+                {
+                  "value": "Number",
+                  "label": "Number"
+                },
+                {
+                  "value": "Boolean",
+                  "label": "Boolean"
+                },
+                {
+                  "value": "Date",
+                  "label": "Date"
+                }
+              ],
+              "default": "String"
+            },
+            {
+              "$for": "node.values_list",
+              "$item": {
+                "name": "value_{{_value}}",
+                "label": "Value {{_value}}",
+                "type": "Value"
+              }
+            }
+          ]
+        },
+        "categoryColor": "#892eb3",
+        "values": {
+          "value_0": "entry"
+        }
+      },
+      "width": 220,
+      "height": 439,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 3091.4117154569844,
+        "y": -419.4775076322784
+      }
     }
   ],
   "edges": [
@@ -8853,6 +9089,20 @@
       "sourceHandle": "entries",
       "target": "7de12036-ff7f-4e59-af37-1661a793c345",
       "targetHandle": "9dcdafbe-cc9c-4045-b32e-33135664b231"
+    },
+    {
+      "source": "cec38aff-c1f4-4807-821a-f126b14353c1",
+      "sourceHandle": "entries",
+      "target": "7c1414af-27d8-4afb-9177-9485826f0a39",
+      "targetHandle": "input_entries",
+      "id": "reactflow__edge-cec38aff-c1f4-4807-821a-f126b14353c1entries-7c1414af-27d8-4afb-9177-9485826f0a39input_entries"
+    },
+    {
+      "source": "7c1414af-27d8-4afb-9177-9485826f0a39",
+      "sourceHandle": "filtered_entries",
+      "target": "f0f5ecaf-83de-4470-8d86-ce0e532d3cda",
+      "targetHandle": "entries",
+      "id": "reactflow__edge-7c1414af-27d8-4afb-9177-9485826f0a39filtered_entries-f0f5ecaf-83de-4470-8d86-ce0e532d3cdaentries"
     }
   ]
 }

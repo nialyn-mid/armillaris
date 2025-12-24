@@ -29,4 +29,5 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   loadVersion: (projectId: string, versionId: string) => ipcRenderer.invoke('data:load-version', projectId, versionId),
   compressVersions: (projectId: string, cutoffDate: number) => ipcRenderer.invoke('data:compress-versions', projectId, cutoffDate),
   pruneVersions: (projectId: string, options: any) => ipcRenderer.invoke('data:prune-versions', projectId, options),
+  setLastActiveProject: (projectId: string | null) => ipcRenderer.invoke('data:set-last-active-project', projectId),
 });

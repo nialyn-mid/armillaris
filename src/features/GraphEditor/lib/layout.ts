@@ -98,9 +98,8 @@ export const getForceDirectedLayout = (nodes: Node[], edges: Edge[]) => {
         }
     });
 
-    // 2. Phase 1: Force Collapse (Linked Only)
     // Establish the macro-structure of the connected components
-    const radius = Math.sqrt(linkedNodes.length) * 600; // Tripled from 300
+    const radius = Math.sqrt(linkedNodes.length || 1) * 390 + 3500;
     const simNodes = linkedNodes.map((n, i) => {
         const angle = (i / (linkedNodes.length || 1)) * 2 * Math.PI;
         return {
@@ -169,53 +168,56 @@ export const getForceDirectedLayout = (nodes: Node[], edges: Edge[]) => {
         temperature *= 0.96;
     }
 
-    // 3. Hexagonal Snapping & Spacing
+    // 3. Square Snapping & Spacing
     const spacingX = 220; // 172 width + margin
-    const spacingY = 120; // Staggered height
-    const grid = new Map<string, string>(); // "q,r" -> nodeId
+    const spacingY = 160; // Increased for top/bottom ports
+    const grid = new Map<string, string>(); // "x,y" -> nodeId
 
-    const cartesianToHex = (x: number, y: number) => {
-        const r = Math.round(y / spacingY);
-        const q = Math.round((x - (r % 2 !== 0 ? spacingX / 2 : 0)) / spacingX);
-        return { q, r };
+    const cartesianToSquare = (x: number, y: number) => {
+        return {
+            qx: Math.round(x / spacingX),
+            qy: Math.round(y / spacingY)
+        };
     };
 
-    const hexToCartesian = (q: number, r: number) => {
-        const x = q * spacingX + (r % 2 !== 0 ? spacingX / 2 : 0);
-        const y = r * spacingY;
-        return { x, y };
+    const squareToCartesian = (qx: number, qy: number) => {
+        return {
+            x: qx * spacingX,
+            y: qy * spacingY
+        };
     };
 
-    const findNearestFree = (targetQ: number, targetR: number) => {
+    const findNearestFree = (targetQX: number, targetQY: number) => {
         let radius = 0;
         while (radius < 100) {
-            for (let dq = -radius; dq <= radius; dq++) {
-                for (let dr = Math.max(-radius, -dq - radius); dr <= Math.min(radius, -dq + radius); dr++) {
-                    const q = targetQ + dq;
-                    const r = targetR + dr;
-                    if (!grid.has(`${q},${r}`)) return { q, r };
+            for (let dx = -radius; dx <= radius; dx++) {
+                for (let dy = -radius; dy <= radius; dy++) {
+                    if (Math.abs(dx) !== radius && Math.abs(dy) !== radius) continue;
+                    const qx = targetQX + dx;
+                    const qy = targetQY + dy;
+                    if (!grid.has(`${qx},${qy}`)) return { qx, qy };
                 }
             }
             radius++;
         }
-        return { q: targetQ, r: targetR };
+        return { qx: targetQX, qy: targetQY };
     };
 
     const finalPositions = new Map<string, { x: number, y: number }>();
 
     // Snap Linked Nodes
     simNodes.sort((a, b) => (a.x * a.x + a.y * a.y) - (b.x * b.x + b.y * b.y)).forEach(sn => {
-        const { q: tQ, r: tR } = cartesianToHex(sn.x, sn.y);
-        const { q, r } = findNearestFree(tQ, tR);
-        grid.set(`${q},${r}`, sn.id);
-        finalPositions.set(sn.id, hexToCartesian(q, r));
+        const { qx: tQX, qy: tQY } = cartesianToSquare(sn.x, sn.y);
+        const { qx, qy } = findNearestFree(tQX, tQY);
+        grid.set(`${qx},${qy}`, sn.id);
+        finalPositions.set(sn.id, squareToCartesian(qx, qy));
     });
 
     // 4. Gap Filling (Unlinked Nodes)
     unlinkedNodes.forEach(un => {
-        const { q, r } = findNearestFree(0, 0); // Start spiral from center
-        grid.set(`${q},${r}`, un.id);
-        finalPositions.set(un.id, hexToCartesian(q, r));
+        const { qx, qy } = findNearestFree(0, 0); // Start spiral from center
+        grid.set(`${qx},${qy}`, un.id);
+        finalPositions.set(un.id, squareToCartesian(qx, qy));
     });
 
     // 5. Apply Results
@@ -224,8 +226,8 @@ export const getForceDirectedLayout = (nodes: Node[], edges: Edge[]) => {
         return {
             ...node,
             position: pos,
-            targetPosition: 'left' as any,
-            sourcePosition: 'right' as any,
+            targetPosition: 'top' as any,
+            sourcePosition: 'bottom' as any,
         };
     });
 };

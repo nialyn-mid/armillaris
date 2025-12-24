@@ -69,6 +69,8 @@ export function useGraphData() {
                         position: n.position || localNode?.position,
                         data: { label: n.label, ...n.data },
                         zIndex: 10,
+                        targetPosition: 'top' as any,
+                        sourcePosition: 'bottom' as any,
                         style: {
                             background: '#161b22',
                             color: '#f0f6fc',

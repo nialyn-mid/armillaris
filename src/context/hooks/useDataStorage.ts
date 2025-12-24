@@ -57,6 +57,11 @@ export const useDataStorage = (
         loadActiveProject();
     }, [activeProjectId, setEntries, refreshVersions]);
 
+    // Sync active project ID to disk
+    useEffect(() => {
+        window.ipcRenderer.setLastActiveProject(activeProjectId);
+    }, [activeProjectId]);
+
     // Autosave Logic
     useEffect(() => {
         if (!activeProjectId) return;

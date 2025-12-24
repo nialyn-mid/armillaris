@@ -83,6 +83,13 @@ export function registerDataHandlers() {
         return newProject;
     });
 
+    ipcMain.handle('data:set-last-active-project', async (_, projectId: string | null) => {
+        const index = await readIndex();
+        index.lastActiveProjectId = projectId || undefined;
+        await writeIndex(index);
+        return true;
+    });
+
     ipcMain.handle('data:rename-project', async (_, projectId: string, newName: string) => {
         const index = await readIndex();
         const proj = index.projects.find(p => p.id === projectId);
