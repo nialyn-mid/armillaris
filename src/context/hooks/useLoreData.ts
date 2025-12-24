@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { LoreEntry, GraphData, MetaDefinition } from '../../lib/types';
+import type { LoreEntry, GraphData, MetaDefinition, MetaPropertyType } from '../../lib/types';
 import { GraphBuilder } from '../../lib/graph-builder';
 
 export const useLoreData = (showNotification: (msg: string, type?: 'success' | 'error' | 'info') => void) => {
@@ -10,7 +10,7 @@ export const useLoreData = (showNotification: (msg: string, type?: 'success' | '
 
     // Helper to infer schema from data
     const inferMetaDefinitions = useCallback((data: LoreEntry[]): MetaDefinition[] => {
-        const map = new Map<string, Map<string, 'string' | 'list' | 'relation'>>();
+        const map = new Map<string, Map<string, MetaPropertyType>>();
         // ... (rest same)
         data.forEach(entry => {
             const meta = String(entry.properties.Meta || 'Undefined');
@@ -23,8 +23,12 @@ export const useLoreData = (showNotification: (msg: string, type?: 'success' | '
 
                 const currentType = props.get(key);
 
-                let newType: 'string' | 'list' | 'relation' = 'string';
-                if (Array.isArray(value)) {
+                let newType: MetaPropertyType = 'string';
+                if (typeof value === 'boolean') {
+                    newType = 'boolean';
+                } else if (typeof value === 'number') {
+                    newType = 'number';
+                } else if (Array.isArray(value)) {
                     const allIds = new Set(data.map(e => e.id));
                     const isRelation = value.length > 0 && value.every(v => typeof v === 'string' && allIds.has(v));
                     newType = isRelation ? 'relation' : 'list';
@@ -63,6 +67,10 @@ export const useLoreData = (showNotification: (msg: string, type?: 'success' | '
 
     const updateMetaDefinitions = useCallback((defs: MetaDefinition[]) => {
         setMetaDefinitions(defs);
+    }, []);
+
+    const updateEntryPosition = useCallback((id: string, position: { x: number; y: number }) => {
+        setEditableEntries(prev => prev.map(e => e.id === id ? { ...e, position } : e));
     }, []);
 
     const updateEntry = useCallback((updatedEntry: LoreEntry) => {
@@ -113,6 +121,7 @@ export const useLoreData = (showNotification: (msg: string, type?: 'success' | '
         addEntry,
         deleteEntry,
         metaDefinitions,
-        updateMetaDefinitions
+        updateMetaDefinitions,
+        updateEntryPosition
     };
 };

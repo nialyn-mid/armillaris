@@ -146,7 +146,7 @@ export class GroupMoveService {
                 nextInternalNodes.push({
                     id: groupOutputId,
                     type: 'GroupOutput',
-                    position: { x: 300, y: 0 },
+                    position: { x: 600, y: 0 },
                     data: { ports: [{ id: portId, label: 'Out', type: typeToUse }] }
                 });
             }

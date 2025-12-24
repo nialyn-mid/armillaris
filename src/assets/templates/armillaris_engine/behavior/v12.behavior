@@ -4973,7 +4973,7 @@
                 },
                 "categoryColor": "#8e44ad",
                 "values": {
-                  "trim_end": "-60"
+                  "trim_end": "-6"
                 },
                 "inputs": [
                   {
@@ -4998,7 +4998,7 @@
               },
               "width": 220,
               "height": 278,
-              "selected": true,
+              "selected": false,
               "positionAbsolute": {
                 "x": 48.275681595374635,
                 "y": 30.166677544682443
@@ -8597,8 +8597,8 @@
       "id": "cb8c228d-8e17-48b6-b98d-e1b3753ace0d",
       "type": "custom",
       "position": {
-        "x": 2563.521831335163,
-        "y": 106.56213740186672
+        "x": 2593.521831335163,
+        "y": 94.56213740186672
       },
       "data": {
         "label": "Join List",
@@ -8687,10 +8687,10 @@
       },
       "width": 220,
       "height": 239,
-      "selected": false,
+      "selected": true,
       "positionAbsolute": {
-        "x": 2563.521831335163,
-        "y": 106.56213740186672
+        "x": 2593.521831335163,
+        "y": 94.56213740186672
       },
       "dragging": false
     },
@@ -8725,7 +8725,7 @@
       },
       "width": 220,
       "height": 84,
-      "selected": true,
+      "selected": false,
       "positionAbsolute": {
         "x": 564.2829336288291,
         "y": 103.19076960180541

@@ -6,7 +6,8 @@ import {
     MdAssignment,  // Context Inputs
     MdInfoOutline, // Tutorial
     MdStorage,     // Data Management
-    MdMonitorWeight // Size Viz
+    MdMonitorWeight, // Size Viz
+    MdMap          // Minimap
 } from 'react-icons/md';
 
 interface RightActivityBarProps {
@@ -24,7 +25,8 @@ export default function RightActivityBar({ activeTab, activeTools, onToggleTool 
                 return [
                     { id: 'engine_context', icon: <MdAssignment />, title: 'Engine Context Inputs' },
                     { id: 'output', icon: <MdDataObject />, title: 'Activation Outputs' },
-                    { id: 'spec_editor', icon: <MdSchema />, title: 'Spec Node Editor' }
+                    { id: 'spec_editor', icon: <MdSchema />, title: 'Spec Node Editor' },
+                    { id: 'minimap', icon: <MdMap />, title: 'Toggle Minimap' }
                 ];
             case 'data':
                 return [

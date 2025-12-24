@@ -4,6 +4,7 @@ export interface LoreEntry {
   sourceId?: string; // e.g. Notion Page ID
   label: string;
   properties: Record<string, any>;
+  position?: { x: number; y: number };
 }
 
 export interface DataSource {
@@ -15,6 +16,7 @@ export interface GraphNode {
   label: string;
   data: Record<string, any>;
   description?: string;
+  position?: { x: number; y: number };
 }
 
 export interface GraphEdge {
@@ -29,7 +31,7 @@ export interface GraphData {
   edges: GraphEdge[];
 }
 
-export type MetaPropertyType = 'string' | 'list' | 'relation';
+export type MetaPropertyType = 'string' | 'list' | 'relation' | 'boolean' | 'number';
 
 export interface MetaPropertyDefinition {
   name: string;

@@ -3,6 +3,9 @@ import ReactFlow, {
     Background,
     Controls,
     Panel,
+    MiniMap,
+    ReactFlowProvider,
+    useReactFlow,
 } from 'reactflow';
 import { MdHub } from 'react-icons/md';
 import { EmptyState } from '../../shared/ui/EmptyState';
@@ -10,6 +13,7 @@ import { useChatSession } from './hooks/useChatSession';
 import { ChatOverlay } from './components/ChatOverlay';
 import { useGraphData } from './hooks/useGraphData';
 import { LabeledEdge } from './graph/LabeledEdge';
+import { GraphControlPanel } from './components/GraphControlPanel';
 import SpecNodeEditor, { type SpecNodeEditorHandle } from '../SpecEditor/SpecNodeEditor';
 import { ResizeHandle } from '../../shared/ui/ResizeHandle';
 import { useData } from '../../context/DataContext';
@@ -27,16 +31,81 @@ interface GraphViewProps {
     specRef?: React.RefObject<SpecNodeEditorHandle | null>;
 }
 
-export default function GraphView({ showOutput, showSpecEditor, showInputPanel, specRef }: GraphViewProps) {
+function GraphFlowContent({ showOutput, showSpecEditor, showInputPanel, specRef }: GraphViewProps) {
     const {
         activeEngine, activeSpec, entries,
         minifyEnabled, compressEnabled, mangleEnabled, includeComments,
         simulateUsingDevEngine, setDebugNodes, setDebugPorts,
         setSelectedEntryId, setActiveTab,
-        isSpecDirty, setPendingTab, setPendingEntryId
+        isSpecDirty, setPendingTab, setPendingEntryId,
+        activeTools
     } = useData();
-    const { nodes, edges, onNodesChange, onEdgesChange, updateHighlights } = useGraphData();
+
+    const {
+        nodes, edges, onNodesChange, onEdgesChange,
+        updateHighlights, arrangeNodes, isArranging,
+        layoutNonce,
+        isArrangeLocked, setIsArrangeLocked
+    } = useGraphData();
+
     const session = useChatSession();
+    const { fitView } = useReactFlow();
+    const showMinimap = activeTools.includes('minimap');
+    const [hiddenLabels, setHiddenLabels] = useState<Set<string>>(() => {
+        const saved = localStorage.getItem('graph_hidden_labels');
+        return saved ? new Set(JSON.parse(saved)) : new Set();
+    });
+
+    useEffect(() => {
+        localStorage.setItem('graph_hidden_labels', JSON.stringify(Array.from(hiddenLabels)));
+    }, [hiddenLabels]);
+
+    const uniqueLabels = useMemo(() => {
+        const s = new Set<string>();
+        edges.forEach((e: any) => {
+            if (e.data?.targetLabel) s.add(e.data.targetLabel);
+            if (e.data?.sourceLabel) s.add(e.data.sourceLabel);
+        });
+        return Array.from(s).sort();
+    }, [edges]);
+
+    // We don't filter nodes or edges themselves anymore, just hide the labels within the edges.
+    const displayEdges = useMemo(() => {
+        return edges.map((e: any) => {
+            const tHidden = e.data?.targetLabel && hiddenLabels.has(e.data.targetLabel);
+            const sHidden = e.data?.sourceLabel && hiddenLabels.has(e.data.sourceLabel);
+
+            if (!tHidden && !sHidden) return e;
+
+            return {
+                ...e,
+                data: {
+                    ...e.data,
+                    targetLabel: tHidden ? null : e.data.targetLabel,
+                    sourceLabel: sHidden ? null : e.data.sourceLabel,
+                }
+            };
+        });
+    }, [edges, hiddenLabels]);
+
+    const onToggleLabel = useCallback((label: string) => {
+        setHiddenLabels(prev => {
+            const next = new Set(prev);
+            if (next.has(label)) next.delete(label);
+            else next.add(label);
+            return next;
+        });
+    }, []);
+
+    // Trigger fitView centering when arrangement finishes or initial nodes load
+    useEffect(() => {
+        if (nodes.length > 0) {
+            const timer = setTimeout(() => {
+                fitView({ duration: 400, padding: 0.2 });
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [layoutNonce, fitView, nodes.length === 0]);
 
     const [character, setCharacter] = useState(() => {
         const saved = localStorage.getItem('graphview_character');
@@ -147,7 +216,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
         const ipc = (window as any).ipcRenderer;
         if (!ipc || !activeEngine) return;
 
-        const historyWindow = session.chatHistory.slice(-9).map(m => ({
+        const historyWindow = session.chatHistory.slice(-9).map((m: any) => ({
             is_bot: m.role === 'system',
             date: m.date,
             message: m.content,
@@ -179,12 +248,6 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
 
             if (!response.success && response.error?.includes('not found')) {
                 await triggerCompile();
-                // Recursion here might be blocked by isCompiling check if we are not careful
-                // But triggerCompile inside will await. RunEngine is async.
-                // However, triggerCompile sets isCompiling=true.
-                // IF we await it, isCompiling becomes false at end.
-                // We shouldn't recurse runEngine here if we have dependencies.
-                // Instead, just invoke invoke execute again.
                 response = await ipc.invoke('engine:execute', {
                     engineName: activeEngine,
                     context,
@@ -202,7 +265,6 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
                 setChatHighlights(response.chatHighlights);
                 setDebugNodes(response.debugNodes || []);
                 setDebugPorts(response.debugPorts || {});
-                console.log("Engine Execution Debug Ports:", response.debugPorts);
                 setExecutionError(null);
             } else {
                 setExecutionError(response.error);
@@ -210,7 +272,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
         } catch (e) {
             console.error("Failed to execute engine sandbox", e);
         }
-    }, [activeEngine, activeSpec, entries, session.chatHistory, character, chatMeta, updateHighlights, refreshMeta, simulateUsingDevEngine, minifyEnabled, compressEnabled, mangleEnabled, includeComments, isCompiling]);
+    }, [activeEngine, activeSpec, entries, session.chatHistory, character, chatMeta, updateHighlights, triggerCompile, simulateUsingDevEngine, minifyEnabled, compressEnabled, mangleEnabled, includeComments, isCompiling]);
 
     const onChatInputChange = (val: string) => {
         runEngine(val);
@@ -228,6 +290,11 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
     }, [session.chatHistory.length, character, chatMeta, runEngine]);
 
     const startStateRef = useRef({ p: 0, s: 0, e: 0, left: 0, right: 0, bottom: 0, pHeight: 0, eHeight: 0 });
+
+    const miniMapNodeColor = useCallback((n: any) => {
+        if (n.style?.background === '#1f6feb') return '#58a6ff';
+        return '#8b949e';
+    }, []);
 
     return (
         <div className="graph-view-root">
@@ -254,7 +321,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
                                 className="handle-left-panel"
                                 style={{ right: -4, width: 8, zIndex: 110 }}
                                 onDragStart={() => startStateRef.current.left = leftPanelWidth}
-                                onResize={(delta) => {
+                                onResize={(delta: number) => {
                                     setLeftPanelWidth(Math.max(200, Math.min(600, startStateRef.current.left + delta)));
                                 }}
                             />
@@ -265,13 +332,13 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
                         <ReactFlow
                             id="main-graph-view"
                             nodes={nodes}
-                            edges={edges}
+                            edges={displayEdges}
                             edgeTypes={edgeTypes}
                             onNodesChange={onNodesChange}
                             onEdgesChange={onEdgesChange}
                             defaultViewport={defaultViewport}
                             onMoveEnd={onMoveEnd}
-                            onNodeDoubleClick={(_, node) => {
+                            onNodeDoubleClick={(_: any, node: any) => {
                                 if (entries.some(e => e.id === node.id)) {
                                     if (isSpecDirty) {
                                         setPendingTab('data');
@@ -283,9 +350,40 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
                                 }
                             }}
                             className="dark-theme"
+                            fitView
                         >
                             <Background color="#30363d" gap={16} />
-                            <Controls />
+                            <Controls position="bottom-left" />
+                            <GraphControlPanel
+                                showMinimap={showMinimap}
+                                onArrange={arrangeNodes}
+                                isArranging={isArranging}
+                                isArrangeLocked={isArrangeLocked}
+                                setIsArrangeLocked={setIsArrangeLocked}
+                                uniqueLabels={uniqueLabels}
+                                hiddenLabels={hiddenLabels}
+                                onToggleLabel={onToggleLabel}
+                            />
+                            {showMinimap && (
+                                <MiniMap
+                                    key={`minimap-${nodes.length}`}
+                                    className="graph-minimap"
+                                    position="top-left"
+                                    nodeColor={miniMapNodeColor}
+                                    nodeStrokeColor="transparent"
+                                    maskColor="rgba(0,0,0,0.4)"
+                                    nodeBorderRadius={50}
+                                    pannable
+                                    style={{
+                                        background: '#0d1117',
+                                        border: '1px solid #30363d',
+                                        borderRadius: '6px',
+                                        width: 300,
+                                        height: 300,
+                                        zIndex: 1000,
+                                    }}
+                                />
+                            )}
                             {nodes.length === 0 && (
                                 <div className="graph-empty-overlay">
                                     <EmptyState
@@ -327,7 +425,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
                             className="handle-top"
                             style={{ top: -4, height: 8 }}
                             onDragStart={() => startStateRef.current.bottom = bottomPanelHeight}
-                            onResize={(delta) => {
+                            onResize={(delta: number) => {
                                 setBottomPanelHeight(Math.max(300, Math.min(1200, startStateRef.current.bottom - delta)));
                             }}
                         />
@@ -342,14 +440,16 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
                         orientation="horizontal"
                         style={{ left: -4, width: 8 }}
                         onDragStart={() => startStateRef.current.right = rightPanelWidth}
-                        onResize={(delta) => {
+                        onResize={(delta: number) => {
                             setRightPanelWidth(Math.max(200, Math.min(1200, startStateRef.current.right - delta)));
                         }}
                     />
 
                     <div className="output-panel-header unselectable">
-                        <span>Activation Outputs</span>
-                        {executionError && <span className="execution-error-status">Execution Error!</span>}
+                        <div className="flex-1 flex items-center gap-2">
+                            <span>Activation Outputs</span>
+                            {executionError && <span className="execution-error-status">Execution Error!</span>}
+                        </div>
                     </div>
 
                     {executionError && (
@@ -368,7 +468,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
                             orientation="vertical"
                             style={{ top: -2, height: 8 }}
                             onDragStart={() => { startStateRef.current.pHeight = personalityHeight; }}
-                            onResize={(delta) => {
+                            onResize={(delta: number) => {
                                 setPersonalityHeight(Math.max(50, Math.min(1200, startStateRef.current.pHeight + delta)));
                             }}
                         />
@@ -384,7 +484,7 @@ export default function GraphView({ showOutput, showSpecEditor, showInputPanel, 
                             orientation="vertical"
                             style={{ top: -2, height: 8 }}
                             onDragStart={() => { startStateRef.current.eHeight = exampleHeight; }}
-                            onResize={(delta) => {
+                            onResize={(delta: number) => {
                                 setExampleHeight(Math.max(50, Math.min(1200, startStateRef.current.eHeight - delta)));
                             }}
                         />
@@ -490,5 +590,13 @@ function CharacterChatInputs({ character, setCharacter, chatMeta, setChatMeta }:
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function GraphView(props: GraphViewProps) {
+    return (
+        <ReactFlowProvider>
+            <GraphFlowContent {...props} />
+        </ReactFlowProvider>
     );
 }

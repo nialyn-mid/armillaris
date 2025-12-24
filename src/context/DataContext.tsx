@@ -24,6 +24,7 @@ interface DataContextType {
   showNotification: (msg: string, type?: 'success' | 'error' | 'info') => void;
   metaDefinitions: MetaDefinition[];
   updateMetaDefinitions: (defs: MetaDefinition[]) => void;
+  updateEntryPosition: (id: string, position: { x: number; y: number }) => void;
 
   // Engine & Spec State
   activeEngine: string;

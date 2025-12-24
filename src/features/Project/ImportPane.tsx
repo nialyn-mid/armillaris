@@ -3,6 +3,7 @@ import { api } from '../../api';
 import { useData } from '../../context/DataContext';
 import { NotionSource } from '../../lib/data-sources/NotionSource';
 import { V12Source } from '../../lib/data-sources/V12Source';
+import { LoreBarySource } from '../../lib/data-sources/LoreBarySource';
 import SidePane from '../../shared/ui/SidePane';
 import { MdLibraryBooks, MdSettingsSuggest, MdSync, MdFileUpload, MdInfoOutline, MdOpenInNew } from 'react-icons/md';
 import ConfirmModal from '../../shared/ui/ConfirmModal';
@@ -99,6 +100,35 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
         } catch (e: any) {
             console.error(e);
             alert('V12 Import failed: ' + e.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleImportLoreBary = async () => {
+        const result = await api.invoke('dialog:open', {
+            properties: ['openFile'],
+            filters: [{ name: 'LoreBary Lorebook', extensions: ['json'] }]
+        });
+
+        if (result.canceled || result.filePaths.length === 0) return;
+
+        setIsLoading(true);
+        try {
+            const filePath = result.filePaths[0];
+            const source = new LoreBarySource(filePath);
+            const entries = await source.fetchEntries();
+
+            if (entries.length === 0) {
+                showNotification('No entries found or parse failed.');
+                return;
+            }
+
+            setEntries(entries);
+            showNotification(`Imported ${entries.length} entries from LoreBary lorebook.`);
+        } catch (e: any) {
+            console.error(e);
+            alert('LoreBary Import failed: ' + e.message);
         } finally {
             setIsLoading(false);
         }
@@ -242,6 +272,21 @@ export default function ImportPane({ onClose }: ImportPaneProps) {
                         <button
                             className="btn-action"
                             onClick={handleImportV12}
+                            disabled={isLoading}
+                        >
+                            <MdFileUpload /> {isLoading ? 'Importing...' : 'Select File'}
+                        </button>
+                    </div>
+
+                    {/* LoreBary Import */}
+                    <div className="asset-import-card" style={{ marginTop: '12px' }}>
+                        <div className="asset-info">
+                            <span className="asset-name">Sophias LoreBary</span>
+                            <span className="asset-desc">Import entries from a LoreBary .json lorebook.</span>
+                        </div>
+                        <button
+                            className="btn-action"
+                            onClick={handleImportLoreBary}
                             disabled={isLoading}
                         >
                             <MdFileUpload /> {isLoading ? 'Importing...' : 'Select File'}

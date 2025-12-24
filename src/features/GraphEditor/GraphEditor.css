@@ -41,7 +41,7 @@
 
 .output-panel-header {
     padding: 8px;
-    background: #252526;
+    background: var(--bg-tertiary);
     color: #fff;
     font-size: 0.8rem;
     font-weight: 600;
@@ -381,4 +381,267 @@
 .chat-input-clear-btn:hover {
     opacity: 1;
     color: var(--accent-hover);
+}
+
+/* Auto-layout & Graph Controls */
+.graph-controls-panel-bottom {
+    margin-bottom: 24px !important;
+    margin-left: 60px !important;
+    /* Push it to the right of standard Controls */
+}
+
+.arrange-control-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.btn-auto-layout {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+}
+
+.btn-auto-layout:hover:not(:disabled) {
+    background: var(--accent-color);
+    border-color: var(--accent-hover);
+    color: white;
+}
+
+.btn-auto-layout:disabled {
+    cursor: wait;
+    opacity: 0.7;
+    background: var(--bg-secondary);
+}
+
+.btn-auto-layout.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(1);
+}
+
+.lock-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    border-left: 1px solid var(--border-color);
+    padding-left: 12px;
+}
+
+/* Minimap Toggle */
+.btn-minimap-toggle {
+    background: transparent;
+    border: 1px solid #30363d;
+    color: var(--text-secondary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.btn-minimap-toggle:hover {
+    background: #21262d;
+    color: var(--text-primary);
+    border-color: #8b949e;
+}
+
+.btn-minimap-toggle.active {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-hover);
+}
+
+.spin {
+    animation: spin-anim 1s linear infinite;
+}
+
+@keyframes spin-anim {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.graph-minimap {
+    top: 10px;
+    left: 10px;
+    z-index: 1000 !important;
+}
+
+.graph-minimap .react-flow__minimap-mask {
+    fill: rgba(0, 0, 0, 0.6);
+}
+
+.graph-minimap svg {
+    border-radius: 6px;
+}
+
+/* Graph Control Panel (Floating) */
+.graph-control-panel {
+    position: absolute;
+    width: 300px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    z-index: 1100;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+}
+
+.graph-control-panel.expanded {
+    max-height: calc(100% - 40px);
+}
+
+.control-panel-header {
+    padding: 10px 12px;
+    background: var(--bg-tertiary);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid transparent;
+}
+
+.graph-control-panel.expanded .control-panel-header {
+    border-bottom-color: var(--border-color);
+}
+
+.control-panel-header:hover {
+    background: #2d333b;
+}
+
+.control-panel-body {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+}
+
+.arrange-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.btn-arrange-top {
+    flex: 1;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-arrange-top:hover:not(:disabled) {
+    background: var(--accent-color);
+    border-color: var(--accent-hover);
+    color: white;
+}
+
+.btn-arrange-top:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.lock-toggle-inline {
+    flex-shrink: 0;
+}
+
+.labels-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+}
+
+.section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.labels-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+    max-height: 400px;
+}
+
+.label-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    background: var(--bg-primary);
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.label-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-primary);
+}
+
+.btn-visibility {
+    background: transparent;
+    border: none;
+    color: var(--accent-color);
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.btn-visibility:hover {
+    background: var(--bg-tertiary);
+}
+
+.btn-visibility.hidden {
+    color: var(--text-secondary);
+    opacity: 0.5;
 }

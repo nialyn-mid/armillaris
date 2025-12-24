@@ -176,11 +176,15 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
         const isMultiline = ['Personality', 'Scenario', 'Example Dialogs'].includes(key);
         let isRelation = forcedType === 'relation';
         let isArray = forcedType === 'list';
+        let isBoolean = forcedType === 'boolean';
+        let isNumber = forcedType === 'number';
         let isString = forcedType === 'string';
 
         if (!forcedType) {
             isArray = Array.isArray(value);
-            isString = !isArray;
+            isBoolean = typeof value === 'boolean';
+            isNumber = typeof value === 'number';
+            isString = !isArray && !isBoolean && !isNumber;
         }
 
         return (
@@ -238,6 +242,21 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
                             )
                         )}
                     </div>
+                ) : isBoolean ? (
+                    <div className="flex-row items-center gap-sm">
+                        <div
+                            className={`toggle ${value ? 'active' : ''}`}
+                            onClick={() => handleChange(key, !value)}
+                        ></div>
+                        <span style={{ fontSize: '0.9rem', opacity: 0.8 }}>{value ? 'True' : 'False'}</span>
+                    </div>
+                ) : isNumber ? (
+                    <input
+                        type="number"
+                        value={value ?? 0}
+                        onChange={(e) => handleChange(key, e.target.value === '' ? 0 : Number(e.target.value))}
+                        className="form-control"
+                    />
                 ) : isString ? (
                     <input
                         type="text"

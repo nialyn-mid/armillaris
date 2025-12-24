@@ -194,11 +194,13 @@ export default function MetaSchemaEditor() {
                                 <select
                                     value={prop.type}
                                     onChange={(e) => handleTypeChange(prop.name, e.target.value as MetaPropertyType)}
-                                    style={{ width: '70px', padding: '2px', fontSize: '0.8rem', borderRadius: '2px', marginRight: '5px' }}
+                                    style={{ width: '100px', padding: '2px', fontSize: '0.8rem', borderRadius: '2px', marginRight: '5px' }}
                                 >
-                                    <option value="string">Str</option>
+                                    <option value="string">String</option>
+                                    <option value="number">Number</option>
+                                    <option value="boolean">Boolean</option>
                                     <option value="list">List</option>
-                                    <option value="relation">Rel</option>
+                                    <option value="relation">Relation</option>
                                 </select>
                                 <span
                                     onClick={() => handleDeleteProp(prop.name)}
@@ -219,11 +221,13 @@ export default function MetaSchemaEditor() {
                         <select
                             value={newPropType}
                             onChange={(e) => setNewPropType(e.target.value as MetaPropertyType)}
-                            style={{ width: '60px', padding: '2px', fontSize: '0.8rem', borderRadius: '4px' }}
+                            style={{ width: '80px', padding: '2px', fontSize: '0.8rem', borderRadius: '4px' }}
                         >
-                            <option value="string">Str</option>
+                            <option value="string">String</option>
+                            <option value="number">Number</option>
+                            <option value="boolean">Boolean</option>
                             <option value="list">List</option>
-                            <option value="relation">Rel</option>
+                            <option value="relation">Relation</option>
                         </select>
                         <button onClick={handleAddProp} style={{ margin: 0, padding: '4px 8px', fontSize: '0.8rem' }}>Add</button>
                     </div>

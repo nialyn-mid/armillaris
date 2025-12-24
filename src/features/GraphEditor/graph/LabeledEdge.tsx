@@ -31,7 +31,7 @@ export const LabeledEdge = ({
     const isActive = data?.isActive;
     const labelColor = isActive ? '#58a6ff' : '#8b949e';
     const borderColor = isActive ? '#58a6ff' : '#30363d';
-    const zIndex = isActive ? 20 : 10;
+    const zIndex = isActive ? 20 : 5;
 
     return (
         <>

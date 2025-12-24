@@ -18,6 +18,7 @@ export class GraphBuilder {
         id: entry.id,
         label: entry.label,
         data: entry.properties,
+        position: entry.position,
       };
       nodes.push(node);
       nodeIdSet.add(entry.id);

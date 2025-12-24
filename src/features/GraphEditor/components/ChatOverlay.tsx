@@ -208,7 +208,7 @@ export function ChatOverlay({ session, matches, onInputChange, highlights, id }:
                 fontSize: '0.75rem',
                 color: 'var(--text-secondary)',
                 padding: '6px 12px',
-                background: 'rgba(37, 37, 38, 0.4)',
+                background: 'var(--bg-tertiary)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
