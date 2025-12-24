@@ -51,15 +51,14 @@ export class LoreBarySource implements DataSource {
         // Pass 1: Create initial LoreEntry objects and map keywords
         const keywordToIds = new Map<string, string[]>();
         const temporaryEntries: LoreEntry[] = Object.entries(data.entries).map(([, entry]) => {
-            const keywords = Array.from(new Set([
-                ...(entry.key || []),
-                ...(entry.keysecondary || [])
-            ])).filter(Boolean);
+            const primaryKeys = entry.key || [];
+            const secondaryKeys = entry.keysecondary || [];
+            const allKeys = Array.from(new Set([...primaryKeys, ...secondaryKeys])).filter(Boolean);
 
             const id = crypto.randomUUID();
-            const label = entry.key?.[0] || `LoreBary Entry ${entry.uid}`;
+            const label = primaryKeys[0] || `LoreBary Entry ${entry.uid}`;
 
-            keywords.forEach(kw => {
+            allKeys.forEach(kw => {
                 const list = keywordToIds.get(kw) || [];
                 list.push(id);
                 keywordToIds.set(kw, list);
@@ -72,7 +71,8 @@ export class LoreBarySource implements DataSource {
                 label,
                 properties: {
                     Meta: entry.category || 'other',
-                    Keywords: keywords,
+                    Keywords: primaryKeys,
+                    'Secondary Keys': secondaryKeys,
                     Personality: entry.content || '',
                     Comment: entry.comment || '',
                     Order: entry.order,
@@ -86,10 +86,13 @@ export class LoreBarySource implements DataSource {
 
         // Pass 2: Calculate Related Keyword relations
         temporaryEntries.forEach(entry => {
-            const keywords = entry.properties.Keywords as string[];
+            const pKeys = entry.properties.Keywords as string[] || [];
+            const sKeys = entry.properties['Secondary Keys'] as string[] || [];
+            const allMatchKeys = Array.from(new Set([...pKeys, ...sKeys]));
+
             const relatedIds = new Set<string>();
 
-            keywords.forEach(kw => {
+            allMatchKeys.forEach(kw => {
                 const sharingIds = keywordToIds.get(kw) || [];
                 sharingIds.forEach(otherId => {
                     if (otherId !== entry.id) {

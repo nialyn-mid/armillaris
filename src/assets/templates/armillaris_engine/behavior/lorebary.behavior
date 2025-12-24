@@ -1,0 +1,2481 @@
+{
+  "nodes": [
+    {
+      "id": "a4d01937-b8a1-49f3-a8e2-30ad095757bc",
+      "type": "Group",
+      "position": {
+        "x": 2096.11128387153,
+        "y": -433.56473590548813
+      },
+      "data": {
+        "label": "Bookends",
+        "def": {
+          "type": "Group",
+          "label": "Group",
+          "category": "System",
+          "inputs": [],
+          "outputs": [],
+          "properties": []
+        },
+        "values": {},
+        "inputs": [],
+        "outputs": [],
+        "graph": {
+          "nodes": [
+            {
+              "id": "4cac96ac-0594-44df-b832-668a8d36663e",
+              "type": "GroupInput",
+              "position": {
+                "x": 50,
+                "y": 150
+              },
+              "data": {
+                "label": "Input",
+                "ports": []
+              },
+              "selected": false
+            },
+            {
+              "id": "d84362c6-a1b8-4a40-b98a-549b639fa7be",
+              "type": "GroupOutput",
+              "position": {
+                "x": 450,
+                "y": 150
+              },
+              "data": {
+                "label": "Output",
+                "ports": []
+              },
+              "selected": false
+            },
+            {
+              "id": "7b56976e-4ea7-4945-a90e-397d72b850d4",
+              "type": "custom",
+              "position": {
+                "x": 237.4968893760656,
+                "y": 390.97827531901254
+              },
+              "data": {
+                "label": "Context Output",
+                "def": {
+                  "type": "ContextRoot",
+                  "label": "Context Output",
+                  "category": "Output",
+                  "inputs": [
+                    {
+                      "id": "personality",
+                      "label": "Personality",
+                      "type": "String"
+                    },
+                    {
+                      "id": "scenario",
+                      "label": "Scenario",
+                      "type": "String"
+                    },
+                    {
+                      "id": "example_dialogs",
+                      "label": "Example Dialogs",
+                      "type": "String"
+                    },
+                    {
+                      "id": "order",
+                      "label": "Order",
+                      "type": "Number"
+                    }
+                  ],
+                  "outputs": [],
+                  "properties": [
+                    {
+                      "name": "order",
+                      "label": "Order",
+                      "type": "Number",
+                      "default": 0
+                    },
+                    {
+                      "name": "personality",
+                      "label": "Personality",
+                      "type": "String",
+                      "default": ""
+                    },
+                    {
+                      "name": "scenario",
+                      "label": "Scenario",
+                      "type": "String",
+                      "default": ""
+                    },
+                    {
+                      "name": "example_dialogs",
+                      "label": "Example Dialogs",
+                      "type": "String",
+                      "default": ""
+                    }
+                  ]
+                },
+                "categoryColor": "#d83b01",
+                "values": {
+                  "order": "1000"
+                },
+                "pathPrefix": "",
+                "isDragTarget": false
+              },
+              "width": 220,
+              "height": 353,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 2158.44229619357,
+                "y": 344.20809610889773
+              },
+              "dragging": true
+            },
+            {
+              "id": "261b26cb-cac7-40aa-9a7f-4cfbfe85c6ec",
+              "type": "custom",
+              "position": {
+                "x": 233.49688937606606,
+                "y": 10.978275319012539
+              },
+              "data": {
+                "label": "Context Output",
+                "def": {
+                  "type": "ContextRoot",
+                  "label": "Context Output",
+                  "category": "Output",
+                  "inputs": [
+                    {
+                      "id": "personality",
+                      "label": "Personality",
+                      "type": "String"
+                    },
+                    {
+                      "id": "scenario",
+                      "label": "Scenario",
+                      "type": "String"
+                    },
+                    {
+                      "id": "example_dialogs",
+                      "label": "Example Dialogs",
+                      "type": "String"
+                    },
+                    {
+                      "id": "order",
+                      "label": "Order",
+                      "type": "Number"
+                    }
+                  ],
+                  "outputs": [],
+                  "properties": [
+                    {
+                      "name": "order",
+                      "label": "Order",
+                      "type": "Number",
+                      "default": 0
+                    },
+                    {
+                      "name": "personality",
+                      "label": "Personality",
+                      "type": "String",
+                      "default": ""
+                    },
+                    {
+                      "name": "scenario",
+                      "label": "Scenario",
+                      "type": "String",
+                      "default": ""
+                    },
+                    {
+                      "name": "example_dialogs",
+                      "label": "Example Dialogs",
+                      "type": "String",
+                      "default": ""
+                    }
+                  ]
+                },
+                "categoryColor": "#d83b01",
+                "values": {},
+                "pathPrefix": "",
+                "isDragTarget": false
+              },
+              "width": 220,
+              "height": 353,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 2154.4422961935707,
+                "y": -35.791903891102265
+              },
+              "dragging": true
+            },
+            {
+              "id": "370e006c-3be8-472f-bba8-0e03ae3203e9",
+              "type": "custom",
+              "position": {
+                "x": -27.778733377747812,
+                "y": 8.110340111347512
+              },
+              "data": {
+                "label": "Custom Value Input",
+                "def": {
+                  "type": "InputSource",
+                  "label": "Custom Value Input",
+                  "category": "Input",
+                  "description": "Provide a single value of a selected type.",
+                  "outputs": [
+                    {
+                      "id": "value",
+                      "label": "Value",
+                      "type": "Value",
+                      "typeTransformation": {
+                        "type": "replace_from_property",
+                        "property_id": "value_type"
+                      }
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "value_type",
+                      "label": "Type",
+                      "type": "select",
+                      "options": [
+                        "String",
+                        "Number",
+                        "Boolean",
+                        "Date"
+                      ],
+                      "default": "String"
+                    },
+                    {
+                      "name": "value",
+                      "label": "Value",
+                      "type": "Value"
+                    }
+                  ]
+                },
+                "categoryColor": "#0078d4",
+                "values": {
+                  "value_type": "String",
+                  "value": "BEGIN LOREBOOK"
+                },
+                "pathPrefix": "",
+                "isDragTarget": false
+              },
+              "width": 220,
+              "height": 177,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1893.1666734397568,
+                "y": -38.65983909876729
+              },
+              "dragging": true
+            },
+            {
+              "id": "ab22db73-70c6-4fc6-88c1-c1d0d5f712db",
+              "type": "custom",
+              "position": {
+                "x": -29.60400212269178,
+                "y": 391.00655915992564
+              },
+              "data": {
+                "label": "Custom Value Input",
+                "def": {
+                  "type": "InputSource",
+                  "label": "Custom Value Input",
+                  "category": "Input",
+                  "description": "Provide a single value of a selected type.",
+                  "outputs": [
+                    {
+                      "id": "value",
+                      "label": "Value",
+                      "type": "Value",
+                      "typeTransformation": {
+                        "type": "replace_from_property",
+                        "property_id": "value_type"
+                      }
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "value_type",
+                      "label": "Type",
+                      "type": "select",
+                      "options": [
+                        "String",
+                        "Number",
+                        "Boolean",
+                        "Date"
+                      ],
+                      "default": "String"
+                    },
+                    {
+                      "name": "value",
+                      "label": "Value",
+                      "type": "Value"
+                    }
+                  ]
+                },
+                "categoryColor": "#0078d4",
+                "values": {
+                  "value_type": "String",
+                  "value": "END LOREBOOK"
+                },
+                "pathPrefix": "",
+                "isDragTarget": false
+              },
+              "width": 220,
+              "height": 177,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1891.3414046948128,
+                "y": 344.23637994981084
+              },
+              "dragging": true
+            }
+          ],
+          "edges": [
+            {
+              "source": "370e006c-3be8-472f-bba8-0e03ae3203e9",
+              "sourceHandle": "value",
+              "target": "261b26cb-cac7-40aa-9a7f-4cfbfe85c6ec",
+              "targetHandle": "personality",
+              "id": "3ede163c-c1db-4ea5-920d-d19f227968bf",
+              "selected": true
+            },
+            {
+              "source": "ab22db73-70c6-4fc6-88c1-c1d0d5f712db",
+              "sourceHandle": "value",
+              "target": "7b56976e-4ea7-4945-a90e-397d72b850d4",
+              "targetHandle": "personality",
+              "id": "adfb310d-215a-408f-9b6b-58220852c349",
+              "selected": true
+            }
+          ]
+        },
+        "color": "#d83b01",
+        "pathPrefix": "",
+        "isDragTarget": false
+      },
+      "width": 220,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2096.11128387153,
+        "y": -433.56473590548813
+      },
+      "dragging": false
+    },
+    {
+      "id": "1d987717-0dcf-466c-b89b-51c3bb1aad9e",
+      "type": "custom",
+      "position": {
+        "x": 2092.1112838715303,
+        "y": -266.0647359054882
+      },
+      "data": {
+        "label": "Activation Output",
+        "def": {
+          "type": "OutputRoot",
+          "label": "Activation Output",
+          "category": "Output",
+          "inputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            },
+            {
+              "id": "order",
+              "label": "Order",
+              "type": "Number"
+            }
+          ],
+          "outputs": [],
+          "properties": [
+            {
+              "name": "order",
+              "label": "Order",
+              "type": "Number",
+              "default": 0
+            }
+          ]
+        },
+        "categoryColor": "#d83b01",
+        "values": {
+          "order": "100"
+        },
+        "pathPrefix": ""
+      },
+      "width": 220,
+      "height": 166,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2092.1112838715303,
+        "y": -266.0647359054882
+      },
+      "dragging": false
+    },
+    {
+      "id": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0",
+      "type": "Group",
+      "position": {
+        "x": 463.13950072234434,
+        "y": -142.63356975939348
+      },
+      "style": {
+        "width": 220,
+        "height": 100
+      },
+      "data": {
+        "label": "Last Message Keyword",
+        "def": {
+          "type": "Group",
+          "label": "Group",
+          "category": "System",
+          "inputs": [],
+          "outputs": [],
+          "properties": []
+        },
+        "values": {},
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "41b58ad1-7c95-42bc-8f1e-7b01e6777594",
+            "label": "Out",
+            "type": "Entry List"
+          }
+        ],
+        "graph": {
+          "nodes": [
+            {
+              "id": "start",
+              "type": "GroupInput",
+              "position": {
+                "x": -684.5953855398095,
+                "y": -271.48809062599344
+              },
+              "data": {
+                "label": "Input",
+                "ports": [],
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0"
+              },
+              "width": 150,
+              "height": 79,
+              "selected": false,
+              "positionAbsolute": {
+                "x": -684.5953855398095,
+                "y": -271.48809062599344
+              },
+              "dragging": false
+            },
+            {
+              "id": "end",
+              "type": "GroupOutput",
+              "position": {
+                "x": 1616.141244288455,
+                "y": -8.120102347504599
+              },
+              "data": {
+                "label": "Output",
+                "ports": [
+                  {
+                    "id": "41b58ad1-7c95-42bc-8f1e-7b01e6777594",
+                    "label": "Out",
+                    "type": "Entry List"
+                  }
+                ],
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0"
+              },
+              "width": 199,
+              "height": 109,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1616.141244288455,
+                "y": -8.120102347504599
+              },
+              "dragging": false
+            },
+            {
+              "id": "d62cf6c4-1f4c-4e60-a96c-ab5538f58e31",
+              "type": "custom",
+              "position": {
+                "x": -586.8179693225127,
+                "y": -145.0973518353328
+              },
+              "data": {
+                "label": "Input Entry List",
+                "def": {
+                  "type": "InputSource",
+                  "label": "Input Entry List",
+                  "category": "Input",
+                  "description": "The full list of entries from Data.",
+                  "inputs": [],
+                  "outputs": [
+                    {
+                      "id": "entries",
+                      "label": "Entries",
+                      "type": "Entry List"
+                    }
+                  ],
+                  "properties": []
+                },
+                "categoryColor": "#0078d4",
+                "values": {},
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0",
+                "isDragTarget": false
+              },
+              "width": 220,
+              "height": 84,
+              "selected": false,
+              "positionAbsolute": {
+                "x": -586.8179693225127,
+                "y": -145.0973518353328
+              },
+              "dragging": false
+            },
+            {
+              "id": "9c3e7977-d3bd-4b43-9289-00eccefa7653",
+              "type": "custom",
+              "position": {
+                "x": -583.9034961331944,
+                "y": 168.95913213420818
+              },
+              "data": {
+                "label": "Input Chat",
+                "def": {
+                  "type": "InputSource",
+                  "label": "Input Chat",
+                  "category": "Input",
+                  "description": "All chat fields provided by the system.",
+                  "inputs": [],
+                  "outputs": [
+                    {
+                      "id": "last_message",
+                      "label": "Last Message",
+                      "type": "String"
+                    },
+                    {
+                      "id": "last_messages",
+                      "label": "Message History",
+                      "type": "Message List"
+                    },
+                    {
+                      "id": "first_message_date",
+                      "label": "First Message Date",
+                      "type": "Date"
+                    },
+                    {
+                      "id": "last_bot_message_date",
+                      "label": "Last Bot Message Date",
+                      "type": "Date"
+                    },
+                    {
+                      "id": "message_count",
+                      "label": "Message Count",
+                      "type": "Number"
+                    },
+                    {
+                      "id": "contextLength",
+                      "label": "Context Length",
+                      "type": "Number"
+                    },
+                    {
+                      "id": "user_name",
+                      "label": "User Name",
+                      "type": "String"
+                    },
+                    {
+                      "id": "persona_name",
+                      "label": "Persona Name",
+                      "type": "String"
+                    }
+                  ],
+                  "properties": []
+                },
+                "categoryColor": "#0078d4",
+                "values": {},
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0",
+                "isDragTarget": false
+              },
+              "width": 220,
+              "height": 308,
+              "selected": false,
+              "positionAbsolute": {
+                "x": -583.9034961331944,
+                "y": 168.95913213420818
+              },
+              "dragging": false
+            },
+            {
+              "id": "4d064f60-674a-4ebc-a663-f4086b47a35f",
+              "type": "custom",
+              "position": {
+                "x": -315.0321235273192,
+                "y": 198.02047194679312
+              },
+              "data": {
+                "label": "List Filter",
+                "def": {
+                  "type": "Filter",
+                  "label": "List Filter",
+                  "category": "List",
+                  "description": "Filter a list based on numeric patterns.",
+                  "inputs": [
+                    {
+                      "id": "list_input",
+                      "label": "Input List",
+                      "type": "List"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "list_output",
+                      "label": "Output List",
+                      "type": "List",
+                      "typeTransformation": {
+                        "type": "de-list",
+                        "property_trigger": "return_single"
+                      }
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "trim_start",
+                      "label": "Trim Start",
+                      "type": "Number",
+                      "default": 0
+                    },
+                    {
+                      "name": "trim_end",
+                      "label": "Trim End",
+                      "type": "Number",
+                      "default": 0
+                    },
+                    {
+                      "name": "frequency",
+                      "label": "Include Every Nth",
+                      "type": "Number",
+                      "default": 1
+                    },
+                    {
+                      "name": "return_single",
+                      "label": "Output First as Single",
+                      "type": "Boolean",
+                      "default": false
+                    }
+                  ],
+                  "typeConstraints": [
+                    {
+                      "id": "list_type",
+                      "subtype_of": "List",
+                      "ports": [
+                        "list_input",
+                        "list_output"
+                      ]
+                    }
+                  ]
+                },
+                "categoryColor": "#8e44ad",
+                "values": {
+                  "trim_start": "-1"
+                },
+                "inputs": [
+                  {
+                    "id": "list_input",
+                    "label": "Input List",
+                    "type": "Message List"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "id": "list_output",
+                    "label": "Output List",
+                    "type": "Message List",
+                    "typeTransformation": {
+                      "type": "de-list",
+                      "property_trigger": "return_single"
+                    }
+                  }
+                ],
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0",
+                "isDragTarget": false
+              },
+              "width": 220,
+              "height": 278,
+              "selected": false,
+              "positionAbsolute": {
+                "x": -315.0321235273192,
+                "y": 198.02047194679312
+              },
+              "dragging": false
+            },
+            {
+              "id": "ed88960b-4356-4006-9ce7-67f0155e416d",
+              "type": "custom",
+              "position": {
+                "x": 502.8352728424618,
+                "y": -99.78527916467556
+              },
+              "data": {
+                "label": "List Subset Logic",
+                "def": {
+                  "type": "Logic",
+                  "label": "List Subset Logic",
+                  "category": "Logic",
+                  "description": "Check if a list (or list of lists) satisfies a conditional relationship with a reference list.",
+                  "inputs": [
+                    {
+                      "id": "subject",
+                      "label": "Subject",
+                      "type": "List"
+                    },
+                    {
+                      "id": "reference",
+                      "label": "Reference List",
+                      "type": "List"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "output",
+                      "label": "Output",
+                      "type": "Value List"
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "operator",
+                      "label": "Operator",
+                      "type": "select",
+                      "options": [
+                        "Any (Intersects)",
+                        "All (Contains)",
+                        "None (Disjoint)",
+                        "Not All",
+                        "Exactly Identical"
+                      ],
+                      "default": "Any (Intersects)"
+                    }
+                  ]
+                },
+                "categoryColor": "#e0115f",
+                "values": {},
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0"
+              },
+              "width": 220,
+              "height": 207,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 502.8352728424618,
+                "y": -99.78527916467556
+              },
+              "dragging": false
+            },
+            {
+              "id": "b36423f9-f685-4d01-b3d3-f33b0abd32fd",
+              "type": "custom",
+              "position": {
+                "x": -313.9369184099529,
+                "y": -62.64403032607197
+              },
+              "data": {
+                "label": "Attribute List",
+                "def": {
+                  "type": "AttributeExtractor",
+                  "label": "Attribute List",
+                  "category": "Utility",
+                  "description": "Extract attributes from a list of entries.",
+                  "inputs": [
+                    {
+                      "id": "entries",
+                      "label": "Entries",
+                      "type": "Entry List"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "attribute_list",
+                      "label": "Attribute List",
+                      "type": "Attribute List"
+                    },
+                    {
+                      "id": "value_list",
+                      "label": "Value List",
+                      "type": "Value List"
+                    },
+                    {
+                      "$for": "entries.meta.attributes",
+                      "$item": {
+                        "id": "{{_value}}_list",
+                        "label": "{{_value}}",
+                        "type": "Attribute List"
+                      }
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "attribute_name",
+                      "label": "Attribute Name",
+                      "type": "String"
+                    }
+                  ]
+                },
+                "categoryColor": "#607d8b",
+                "values": {
+                  "attribute_name": "Keywords"
+                },
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0"
+              },
+              "width": 220,
+              "height": 205,
+              "selected": false,
+              "positionAbsolute": {
+                "x": -313.9369184099529,
+                "y": -62.64403032607197
+              },
+              "dragging": false
+            },
+            {
+              "id": "00a25ffe-92e9-4461-88c9-d80db737c7d3",
+              "type": "custom",
+              "position": {
+                "x": 794.3409564616978,
+                "y": -113.5685319537713
+              },
+              "data": {
+                "label": "List Mask Filter",
+                "def": {
+                  "type": "Filter",
+                  "label": "List Mask Filter",
+                  "category": "Filter",
+                  "description": "Filter a list using a corresponding list of booleans.",
+                  "inputs": [
+                    {
+                      "id": "list_input",
+                      "label": "Input List",
+                      "type": "List"
+                    },
+                    {
+                      "id": "mask",
+                      "label": "Boolean Mask",
+                      "type": "Boolean List"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "output",
+                      "label": "Filtered List",
+                      "type": "List"
+                    }
+                  ],
+                  "properties": []
+                },
+                "categoryColor": "#892eb3",
+                "values": {},
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0"
+              },
+              "width": 220,
+              "height": 155,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 794.3409564616978,
+                "y": -113.5685319537713
+              },
+              "dragging": false
+            },
+            {
+              "id": "846eb973-cede-4ca2-91a9-54f60e80880e",
+              "type": "custom",
+              "position": {
+                "x": -62.27578327302763,
+                "y": 175.1412341093603
+              },
+              "data": {
+                "label": "Message Filter",
+                "def": {
+                  "type": "Filter",
+                  "label": "Message Filter",
+                  "category": "Filter",
+                  "description": "Filter messages based on conditions about message content.",
+                  "inputs": [
+                    {
+                      "id": "messages",
+                      "label": "Messages",
+                      "type": "Message List"
+                    },
+                    {
+                      "id": "conditions",
+                      "label": "Conditions",
+                      "type": "String List"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "matched_messages",
+                      "label": "Matched Messages",
+                      "type": "Message List"
+                    },
+                    {
+                      "id": "matched_conditions",
+                      "label": "Matched Conditions",
+                      "type": "String List"
+                    },
+                    {
+                      "id": "unmatched_messages",
+                      "label": "Unmatched Messages",
+                      "type": "Message List"
+                    },
+                    {
+                      "id": "unmatched_conditions",
+                      "label": "Unmatched Conditions",
+                      "type": "String List"
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "case_sensitive",
+                      "label": "Case Sensitive",
+                      "type": "Boolean",
+                      "default": false
+                    },
+                    {
+                      "name": "wordbreak_sensitive",
+                      "label": "Match Inside Word",
+                      "type": "Boolean",
+                      "default": false
+                    },
+                    {
+                      "name": "message_user_type",
+                      "label": "Sender Type",
+                      "type": "select",
+                      "options": [
+                        {
+                          "value": "user",
+                          "label": "User"
+                        },
+                        {
+                          "value": "bot",
+                          "label": "Bot"
+                        },
+                        {
+                          "value": "all",
+                          "label": "All"
+                        }
+                      ],
+                      "default": "all"
+                    },
+                    {
+                      "name": "is_regex",
+                      "label": "Use As RegEx",
+                      "type": "Boolean",
+                      "default": false
+                    }
+                  ]
+                },
+                "categoryColor": "#892eb3",
+                "values": {},
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0"
+              },
+              "width": 220,
+              "height": 372,
+              "selected": false,
+              "positionAbsolute": {
+                "x": -62.27578327302763,
+                "y": 175.1412341093603
+              },
+              "dragging": false
+            },
+            {
+              "id": "e28824dc-ee8e-418b-9535-05557a61898f",
+              "type": "custom",
+              "position": {
+                "x": 197.16991058298686,
+                "y": 243.4334496802387
+              },
+              "data": {
+                "label": "Join List",
+                "def": {
+                  "type": "DataUtility",
+                  "label": "Join List",
+                  "category": "List",
+                  "description": "Join multiple lists of the same type into a single list.",
+                  "inputs": {
+                    "$for": "node.expandable_inputs",
+                    "$item": {
+                      "id": "list_{{_value}}",
+                      "label": "List {{_value}}",
+                      "type": "List"
+                    }
+                  },
+                  "outputs": [
+                    {
+                      "id": "joined_list",
+                      "label": "Joined List",
+                      "type": "List"
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "deduplicate",
+                      "label": "Deduplicate",
+                      "type": "select",
+                      "options": [
+                        {
+                          "value": "off",
+                          "label": "Off"
+                        },
+                        {
+                          "value": "first",
+                          "label": "Keep first"
+                        },
+                        {
+                          "value": "last",
+                          "label": "Keep last"
+                        }
+                      ],
+                      "default": "first"
+                    }
+                  ],
+                  "typeConstraints": [
+                    {
+                      "id": "list_type",
+                      "subtype_of": "List",
+                      "ports": [
+                        "joined_list",
+                        "list_{{_value}}"
+                      ],
+                      "expansions": [
+                        {
+                          "pattern": "list_{{_value}}",
+                          "for": "expandable_inputs"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "categoryColor": "#8e44ad",
+                "values": {
+                  "expandable_inputs": [
+                    0,
+                    1
+                  ],
+                  "deduplicate": "first"
+                },
+                "inputs": [
+                  {
+                    "id": "list_0",
+                    "label": "List {{_value}}",
+                    "type": "String List"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "id": "joined_list",
+                    "label": "Joined List",
+                    "type": "String List"
+                  }
+                ],
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0"
+              },
+              "width": 220,
+              "height": 207,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 197.16991058298686,
+                "y": 243.4334496802387
+              },
+              "dragging": false
+            },
+            {
+              "id": "a13a75d9-4d57-4079-be98-424a51467319",
+              "type": "custom",
+              "position": {
+                "x": 506.9451766132306,
+                "y": 128.76766824186052
+              },
+              "data": {
+                "label": "List Subset Logic",
+                "def": {
+                  "type": "Logic",
+                  "label": "List Subset Logic",
+                  "category": "Logic",
+                  "description": "Check if a list (or list of lists) satisfies a conditional relationship with a reference list.",
+                  "inputs": [
+                    {
+                      "id": "subject",
+                      "label": "Subject",
+                      "type": "List"
+                    },
+                    {
+                      "id": "reference",
+                      "label": "Reference List",
+                      "type": "List"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "output",
+                      "label": "Output",
+                      "type": "Value List"
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "operator",
+                      "label": "Operator",
+                      "type": "select",
+                      "options": [
+                        "Any (Intersects)",
+                        "All (Contains)",
+                        "None (Disjoint)",
+                        "Not All",
+                        "Exactly Identical"
+                      ],
+                      "default": "Any (Intersects)"
+                    }
+                  ]
+                },
+                "categoryColor": "#e0115f",
+                "values": {
+                  "operator": "All (Contains)"
+                },
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0"
+              },
+              "width": 220,
+              "height": 207,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 506.9451766132306,
+                "y": 128.76766824186052
+              },
+              "dragging": false
+            },
+            {
+              "id": "e10eeaf8-9c8f-4965-9906-56a7488f4eeb",
+              "type": "custom",
+              "position": {
+                "x": 790.119734262226,
+                "y": 80.78117944162318
+              },
+              "data": {
+                "label": "List Mask Filter",
+                "def": {
+                  "type": "Filter",
+                  "label": "List Mask Filter",
+                  "category": "Filter",
+                  "description": "Filter a list using a corresponding list of booleans.",
+                  "inputs": [
+                    {
+                      "id": "list_input",
+                      "label": "Input List",
+                      "type": "List"
+                    },
+                    {
+                      "id": "mask",
+                      "label": "Boolean Mask",
+                      "type": "Boolean List"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "output",
+                      "label": "Filtered List",
+                      "type": "List"
+                    }
+                  ],
+                  "properties": []
+                },
+                "categoryColor": "#892eb3",
+                "values": {},
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0"
+              },
+              "width": 220,
+              "height": 155,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 790.119734262226,
+                "y": 80.78117944162318
+              },
+              "dragging": false
+            },
+            {
+              "id": "60b30428-9cc8-4bb5-b343-8daf52d2ba68",
+              "type": "custom",
+              "position": {
+                "x": 1051.1091209932329,
+                "y": 87.30963097615825
+              },
+              "data": {
+                "label": "Entry Filter",
+                "def": {
+                  "type": "Filter",
+                  "label": "Entry Filter",
+                  "category": "Filter",
+                  "description": "Filter entries based on attribute values.",
+                  "inputs": [
+                    {
+                      "id": "input_entries",
+                      "label": "Input Entry List",
+                      "type": "Entry List"
+                    },
+                    {
+                      "id": "attribute_name",
+                      "label": "Attribute Name",
+                      "type": "String"
+                    },
+                    {
+                      "id": "values",
+                      "label": "Compare Values",
+                      "type": "Value List"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "filtered_entries",
+                      "label": "Filtered Entry List",
+                      "type": "Entry List"
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "combine",
+                      "label": "Combine",
+                      "type": "select",
+                      "options": [
+                        {
+                          "value": "or",
+                          "label": "Any"
+                        },
+                        {
+                          "value": "and",
+                          "label": "All"
+                        }
+                      ],
+                      "default": "or"
+                    },
+                    {
+                      "name": "attribute_name",
+                      "label": "Attribute Name",
+                      "type": "String",
+                      "default": "Meta"
+                    },
+                    {
+                      "name": "operator",
+                      "label": "Operator Is",
+                      "type": "select",
+                      "options": [
+                        {
+                          "value": "contains",
+                          "label": "Contains"
+                        },
+                        {
+                          "value": "not contains",
+                          "label": "Does Not Contain"
+                        },
+                        {
+                          "value": "==",
+                          "label": "Is"
+                        },
+                        {
+                          "value": "!=",
+                          "label": "Is Not"
+                        },
+                        {
+                          "value": ">=",
+                          "label": "Greater Than Or Equal To"
+                        },
+                        {
+                          "value": "<=",
+                          "label": "Less Than Or Equal To"
+                        },
+                        {
+                          "value": ">",
+                          "label": "Greater Than"
+                        },
+                        {
+                          "value": "<",
+                          "label": "Less Than"
+                        }
+                      ],
+                      "default": "=="
+                    },
+                    {
+                      "name": "value_type",
+                      "label": "Value Type",
+                      "type": "select",
+                      "options": [
+                        {
+                          "value": "String",
+                          "label": "String"
+                        },
+                        {
+                          "value": "Number",
+                          "label": "Number"
+                        },
+                        {
+                          "value": "Boolean",
+                          "label": "Boolean"
+                        },
+                        {
+                          "value": "Date",
+                          "label": "Date"
+                        }
+                      ],
+                      "default": "String"
+                    },
+                    {
+                      "$for": "node.values_list",
+                      "$item": {
+                        "name": "value_{{_value}}",
+                        "label": "Value {{_value}}",
+                        "type": "Value"
+                      }
+                    }
+                  ]
+                },
+                "categoryColor": "#892eb3",
+                "values": {
+                  "attribute_name": "Selective",
+                  "value_type": "Boolean",
+                  "value_0": true
+                },
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0"
+              },
+              "width": 220,
+              "height": 439,
+              "selected": false,
+              "dragging": false,
+              "positionAbsolute": {
+                "x": 1051.1091209932329,
+                "y": 87.30963097615825
+              }
+            },
+            {
+              "id": "44816a09-99e0-4a4d-82f6-dba85f5dafab",
+              "type": "custom",
+              "position": {
+                "x": 1323.4473851525222,
+                "y": 1.9781235470161391
+              },
+              "data": {
+                "label": "Join List",
+                "def": {
+                  "type": "DataUtility",
+                  "label": "Join List",
+                  "category": "List",
+                  "description": "Join multiple lists of the same type into a single list.",
+                  "inputs": {
+                    "$for": "node.expandable_inputs",
+                    "$item": {
+                      "id": "list_{{_value}}",
+                      "label": "List {{_value}}",
+                      "type": "List"
+                    }
+                  },
+                  "outputs": [
+                    {
+                      "id": "joined_list",
+                      "label": "Joined List",
+                      "type": "List"
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "deduplicate",
+                      "label": "Deduplicate",
+                      "type": "select",
+                      "options": [
+                        {
+                          "value": "off",
+                          "label": "Off"
+                        },
+                        {
+                          "value": "first",
+                          "label": "Keep first"
+                        },
+                        {
+                          "value": "last",
+                          "label": "Keep last"
+                        }
+                      ],
+                      "default": "first"
+                    }
+                  ],
+                  "typeConstraints": [
+                    {
+                      "id": "list_type",
+                      "subtype_of": "List",
+                      "ports": [
+                        "joined_list",
+                        "list_{{_value}}"
+                      ],
+                      "expansions": [
+                        {
+                          "pattern": "list_{{_value}}",
+                          "for": "expandable_inputs"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "categoryColor": "#8e44ad",
+                "values": {
+                  "expandable_inputs": [
+                    0,
+                    1,
+                    2
+                  ],
+                  "deduplicate": "first"
+                },
+                "inputs": [
+                  {
+                    "id": "list_0",
+                    "label": "List {{_value}}",
+                    "type": "Entry List"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "id": "joined_list",
+                    "label": "Joined List",
+                    "type": "Entry List"
+                  }
+                ],
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0"
+              },
+              "width": 220,
+              "height": 239,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1323.4473851525222,
+                "y": 1.9781235470161391
+              },
+              "dragging": false
+            },
+            {
+              "id": "19e0a2e0-c6be-4438-b94a-bcd7cf90ae31",
+              "type": "custom",
+              "position": {
+                "x": 1055.0273440232745,
+                "y": -397.1986865385393
+              },
+              "data": {
+                "label": "Entry Filter",
+                "def": {
+                  "type": "Filter",
+                  "label": "Entry Filter",
+                  "category": "Filter",
+                  "description": "Filter entries based on attribute values.",
+                  "inputs": [
+                    {
+                      "id": "input_entries",
+                      "label": "Input Entry List",
+                      "type": "Entry List"
+                    },
+                    {
+                      "id": "attribute_name",
+                      "label": "Attribute Name",
+                      "type": "String"
+                    },
+                    {
+                      "id": "values",
+                      "label": "Compare Values",
+                      "type": "Value List"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "filtered_entries",
+                      "label": "Filtered Entry List",
+                      "type": "Entry List"
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "combine",
+                      "label": "Combine",
+                      "type": "select",
+                      "options": [
+                        {
+                          "value": "or",
+                          "label": "Any"
+                        },
+                        {
+                          "value": "and",
+                          "label": "All"
+                        }
+                      ],
+                      "default": "or"
+                    },
+                    {
+                      "name": "attribute_name",
+                      "label": "Attribute Name",
+                      "type": "String",
+                      "default": "Meta"
+                    },
+                    {
+                      "name": "operator",
+                      "label": "Operator Is",
+                      "type": "select",
+                      "options": [
+                        {
+                          "value": "contains",
+                          "label": "Contains"
+                        },
+                        {
+                          "value": "not contains",
+                          "label": "Does Not Contain"
+                        },
+                        {
+                          "value": "==",
+                          "label": "Is"
+                        },
+                        {
+                          "value": "!=",
+                          "label": "Is Not"
+                        },
+                        {
+                          "value": ">=",
+                          "label": "Greater Than Or Equal To"
+                        },
+                        {
+                          "value": "<=",
+                          "label": "Less Than Or Equal To"
+                        },
+                        {
+                          "value": ">",
+                          "label": "Greater Than"
+                        },
+                        {
+                          "value": "<",
+                          "label": "Less Than"
+                        }
+                      ],
+                      "default": "=="
+                    },
+                    {
+                      "name": "value_type",
+                      "label": "Value Type",
+                      "type": "select",
+                      "options": [
+                        {
+                          "value": "String",
+                          "label": "String"
+                        },
+                        {
+                          "value": "Number",
+                          "label": "Number"
+                        },
+                        {
+                          "value": "Boolean",
+                          "label": "Boolean"
+                        },
+                        {
+                          "value": "Date",
+                          "label": "Date"
+                        }
+                      ],
+                      "default": "String"
+                    },
+                    {
+                      "$for": "node.values_list",
+                      "$item": {
+                        "name": "value_{{_value}}",
+                        "label": "Value {{_value}}",
+                        "type": "Value"
+                      }
+                    }
+                  ]
+                },
+                "categoryColor": "#892eb3",
+                "values": {
+                  "attribute_name": "Selective",
+                  "value_type": "Boolean",
+                  "value_0": false
+                },
+                "pathPrefix": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0"
+              },
+              "width": 220,
+              "height": 439,
+              "selected": false,
+              "dragging": false,
+              "positionAbsolute": {
+                "x": 1055.0273440232745,
+                "y": -397.1986865385393
+              }
+            }
+          ],
+          "edges": [
+            {
+              "source": "9c3e7977-d3bd-4b43-9289-00eccefa7653",
+              "sourceHandle": "last_messages",
+              "target": "4d064f60-674a-4ebc-a663-f4086b47a35f",
+              "targetHandle": "list_input",
+              "id": "reactflow__edge-9c3e7977-d3bd-4b43-9289-00eccefa7653last_messages-4d064f60-674a-4ebc-a663-f4086b47a35flist_input",
+              "selected": false
+            },
+            {
+              "source": "d62cf6c4-1f4c-4e60-a96c-ab5538f58e31",
+              "sourceHandle": "entries",
+              "target": "b36423f9-f685-4d01-b3d3-f33b0abd32fd",
+              "targetHandle": "entries",
+              "id": "reactflow__edge-d62cf6c4-1f4c-4e60-a96c-ab5538f58e31entries-b36423f9-f685-4d01-b3d3-f33b0abd32fdentries",
+              "selected": false
+            },
+            {
+              "source": "b36423f9-f685-4d01-b3d3-f33b0abd32fd",
+              "sourceHandle": "value_list",
+              "target": "ed88960b-4356-4006-9ce7-67f0155e416d",
+              "targetHandle": "subject",
+              "id": "reactflow__edge-b36423f9-f685-4d01-b3d3-f33b0abd32fdvalue_list-ed88960b-4356-4006-9ce7-67f0155e416dsubject",
+              "selected": false
+            },
+            {
+              "source": "d62cf6c4-1f4c-4e60-a96c-ab5538f58e31",
+              "sourceHandle": "entries",
+              "target": "00a25ffe-92e9-4461-88c9-d80db737c7d3",
+              "targetHandle": "list_input",
+              "id": "reactflow__edge-d62cf6c4-1f4c-4e60-a96c-ab5538f58e31entries-00a25ffe-92e9-4461-88c9-d80db737c7d3list_input",
+              "selected": false
+            },
+            {
+              "source": "ed88960b-4356-4006-9ce7-67f0155e416d",
+              "sourceHandle": "output",
+              "target": "00a25ffe-92e9-4461-88c9-d80db737c7d3",
+              "targetHandle": "mask",
+              "id": "reactflow__edge-ed88960b-4356-4006-9ce7-67f0155e416doutput-00a25ffe-92e9-4461-88c9-d80db737c7d3mask",
+              "selected": false
+            },
+            {
+              "source": "4d064f60-674a-4ebc-a663-f4086b47a35f",
+              "sourceHandle": "list_output",
+              "target": "846eb973-cede-4ca2-91a9-54f60e80880e",
+              "targetHandle": "messages",
+              "id": "reactflow__edge-4d064f60-674a-4ebc-a663-f4086b47a35flist_output-846eb973-cede-4ca2-91a9-54f60e80880emessages",
+              "selected": false
+            },
+            {
+              "source": "b36423f9-f685-4d01-b3d3-f33b0abd32fd",
+              "sourceHandle": "value_list",
+              "target": "846eb973-cede-4ca2-91a9-54f60e80880e",
+              "targetHandle": "conditions",
+              "id": "reactflow__edge-b36423f9-f685-4d01-b3d3-f33b0abd32fdvalue_list-846eb973-cede-4ca2-91a9-54f60e80880econditions",
+              "selected": false
+            },
+            {
+              "source": "846eb973-cede-4ca2-91a9-54f60e80880e",
+              "sourceHandle": "matched_conditions",
+              "target": "e28824dc-ee8e-418b-9535-05557a61898f",
+              "targetHandle": "list_0",
+              "id": "reactflow__edge-846eb973-cede-4ca2-91a9-54f60e80880ematched_conditions-e28824dc-ee8e-418b-9535-05557a61898flist_0",
+              "selected": false
+            },
+            {
+              "source": "e28824dc-ee8e-418b-9535-05557a61898f",
+              "sourceHandle": "joined_list",
+              "target": "ed88960b-4356-4006-9ce7-67f0155e416d",
+              "targetHandle": "reference",
+              "id": "reactflow__edge-e28824dc-ee8e-418b-9535-05557a61898fjoined_list-ed88960b-4356-4006-9ce7-67f0155e416dreference",
+              "selected": false
+            },
+            {
+              "source": "e28824dc-ee8e-418b-9535-05557a61898f",
+              "sourceHandle": "joined_list",
+              "target": "a13a75d9-4d57-4079-be98-424a51467319",
+              "targetHandle": "reference",
+              "id": "reactflow__edge-e28824dc-ee8e-418b-9535-05557a61898fjoined_list-a13a75d9-4d57-4079-be98-424a51467319reference"
+            },
+            {
+              "source": "b36423f9-f685-4d01-b3d3-f33b0abd32fd",
+              "sourceHandle": "value_list",
+              "target": "a13a75d9-4d57-4079-be98-424a51467319",
+              "targetHandle": "subject",
+              "id": "reactflow__edge-b36423f9-f685-4d01-b3d3-f33b0abd32fdvalue_list-a13a75d9-4d57-4079-be98-424a51467319subject"
+            },
+            {
+              "source": "a13a75d9-4d57-4079-be98-424a51467319",
+              "sourceHandle": "output",
+              "target": "e10eeaf8-9c8f-4965-9906-56a7488f4eeb",
+              "targetHandle": "mask",
+              "id": "reactflow__edge-a13a75d9-4d57-4079-be98-424a51467319output-e10eeaf8-9c8f-4965-9906-56a7488f4eebmask"
+            },
+            {
+              "source": "d62cf6c4-1f4c-4e60-a96c-ab5538f58e31",
+              "sourceHandle": "entries",
+              "target": "e10eeaf8-9c8f-4965-9906-56a7488f4eeb",
+              "targetHandle": "list_input",
+              "id": "reactflow__edge-d62cf6c4-1f4c-4e60-a96c-ab5538f58e31entries-e10eeaf8-9c8f-4965-9906-56a7488f4eeblist_input"
+            },
+            {
+              "source": "e10eeaf8-9c8f-4965-9906-56a7488f4eeb",
+              "sourceHandle": "output",
+              "target": "60b30428-9cc8-4bb5-b343-8daf52d2ba68",
+              "targetHandle": "input_entries",
+              "id": "reactflow__edge-e10eeaf8-9c8f-4965-9906-56a7488f4eeboutput-60b30428-9cc8-4bb5-b343-8daf52d2ba68input_entries"
+            },
+            {
+              "source": "60b30428-9cc8-4bb5-b343-8daf52d2ba68",
+              "sourceHandle": "filtered_entries",
+              "target": "44816a09-99e0-4a4d-82f6-dba85f5dafab",
+              "targetHandle": "list_1",
+              "id": "reactflow__edge-60b30428-9cc8-4bb5-b343-8daf52d2ba68filtered_entries-44816a09-99e0-4a4d-82f6-dba85f5dafablist_1"
+            },
+            {
+              "source": "44816a09-99e0-4a4d-82f6-dba85f5dafab",
+              "sourceHandle": "joined_list",
+              "target": "end",
+              "targetHandle": "41b58ad1-7c95-42bc-8f1e-7b01e6777594",
+              "id": "reactflow__edge-44816a09-99e0-4a4d-82f6-dba85f5dafabjoined_list-end41b58ad1-7c95-42bc-8f1e-7b01e6777594"
+            },
+            {
+              "source": "00a25ffe-92e9-4461-88c9-d80db737c7d3",
+              "sourceHandle": "output",
+              "target": "19e0a2e0-c6be-4438-b94a-bcd7cf90ae31",
+              "targetHandle": "input_entries",
+              "id": "reactflow__edge-00a25ffe-92e9-4461-88c9-d80db737c7d3output-19e0a2e0-c6be-4438-b94a-bcd7cf90ae31input_entries"
+            },
+            {
+              "source": "19e0a2e0-c6be-4438-b94a-bcd7cf90ae31",
+              "sourceHandle": "filtered_entries",
+              "target": "44816a09-99e0-4a4d-82f6-dba85f5dafab",
+              "targetHandle": "list_0",
+              "id": "reactflow__edge-19e0a2e0-c6be-4438-b94a-bcd7cf90ae31filtered_entries-44816a09-99e0-4a4d-82f6-dba85f5dafablist_0"
+            }
+          ]
+        },
+        "color": "#15a9c6",
+        "isDragTarget": false,
+        "pathPrefix": ""
+      },
+      "width": 220,
+      "height": 100,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 463.13950072234434,
+        "y": -142.63356975939348
+      },
+      "dragging": false
+    },
+    {
+      "id": "c58a814d-b0f5-4325-8aad-4f965b0db9d3",
+      "type": "custom",
+      "position": {
+        "x": 1837.3285402853649,
+        "y": -263.0730104064004
+      },
+      "data": {
+        "label": "Sort Entries By Attribute",
+        "def": {
+          "type": "DataUtility",
+          "label": "Sort Entries By Attribute",
+          "category": "Sort",
+          "description": "Sort entries based on an attribute.",
+          "inputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            },
+            {
+              "id": "attribute_name",
+              "label": "Attribute Name",
+              "type": "String"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "sorted_entries",
+              "label": "Sorted Entries",
+              "type": "Entry List"
+            },
+            {
+              "id": "inverse_sorted_entries",
+              "label": "Inverse Sorted Entries",
+              "type": "Entry List"
+            }
+          ],
+          "properties": [
+            {
+              "name": "attribute_name",
+              "label": "Attribute Name",
+              "type": "String"
+            }
+          ]
+        },
+        "categoryColor": "#f1c40f",
+        "values": {
+          "attribute_name": "Position"
+        },
+        "pathPrefix": ""
+      },
+      "width": 220,
+      "height": 237,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1837.3285402853649,
+        "y": -263.0730104064004
+      },
+      "dragging": false
+    },
+    {
+      "id": "83e2fbdd-5e0e-4423-900a-957ccb82da82",
+      "type": "custom",
+      "position": {
+        "x": 1511.8544610586234,
+        "y": -317.27911807132125
+      },
+      "data": {
+        "label": "List Filter",
+        "def": {
+          "type": "Filter",
+          "label": "List Filter",
+          "category": "List",
+          "description": "Filter a list based on numeric patterns.",
+          "inputs": [
+            {
+              "id": "list_input",
+              "label": "Input List",
+              "type": "List"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "list_output",
+              "label": "Output List",
+              "type": "List",
+              "typeTransformation": {
+                "type": "de-list",
+                "property_trigger": "return_single"
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "trim_start",
+              "label": "Trim Start",
+              "type": "Number",
+              "default": 0
+            },
+            {
+              "name": "trim_end",
+              "label": "Trim End",
+              "type": "Number",
+              "default": 0
+            },
+            {
+              "name": "frequency",
+              "label": "Include Every Nth",
+              "type": "Number",
+              "default": 1
+            },
+            {
+              "name": "return_single",
+              "label": "Output First as Single",
+              "type": "Boolean",
+              "default": false
+            }
+          ],
+          "typeConstraints": [
+            {
+              "id": "list_type",
+              "subtype_of": "List",
+              "ports": [
+                "list_input",
+                "list_output"
+              ]
+            }
+          ]
+        },
+        "categoryColor": "#8e44ad",
+        "values": {
+          "trim_end": "-15"
+        },
+        "inputs": [
+          {
+            "id": "list_input",
+            "label": "Input List",
+            "type": "Entry List"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "list_output",
+            "label": "Output List",
+            "type": "Entry List",
+            "typeTransformation": {
+              "type": "de-list",
+              "property_trigger": "return_single"
+            }
+          }
+        ],
+        "pathPrefix": ""
+      },
+      "width": 220,
+      "height": 278,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1511.8544610586234,
+        "y": -317.27911807132125
+      },
+      "dragging": false
+    },
+    {
+      "id": "47c32802-2f66-4bea-9458-cf6a2b6ac106",
+      "type": "custom",
+      "position": {
+        "x": 1261.604674772694,
+        "y": -317.7911368931585
+      },
+      "data": {
+        "label": "Sort Entries By Attribute",
+        "def": {
+          "type": "DataUtility",
+          "label": "Sort Entries By Attribute",
+          "category": "Sort",
+          "description": "Sort entries based on an attribute.",
+          "inputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            },
+            {
+              "id": "attribute_name",
+              "label": "Attribute Name",
+              "type": "String"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "sorted_entries",
+              "label": "Sorted Entries",
+              "type": "Entry List"
+            },
+            {
+              "id": "inverse_sorted_entries",
+              "label": "Inverse Sorted Entries",
+              "type": "Entry List"
+            }
+          ],
+          "properties": [
+            {
+              "name": "attribute_name",
+              "label": "Attribute Name",
+              "type": "String"
+            }
+          ]
+        },
+        "categoryColor": "#f1c40f",
+        "values": {
+          "attribute_name": "Order"
+        },
+        "pathPrefix": ""
+      },
+      "width": 220,
+      "height": 237,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1261.604674772694,
+        "y": -317.7911368931585
+      },
+      "dragging": false
+    },
+    {
+      "id": "412a923d-cecc-4d78-97bb-3be1d2b03920",
+      "type": "custom",
+      "position": {
+        "x": 720.1487280414175,
+        "y": -144.65795690236143
+      },
+      "data": {
+        "label": "Entry Filter",
+        "def": {
+          "type": "Filter",
+          "label": "Entry Filter",
+          "category": "Filter",
+          "description": "Filter entries based on attribute values.",
+          "inputs": [
+            {
+              "id": "input_entries",
+              "label": "Input Entry List",
+              "type": "Entry List"
+            },
+            {
+              "id": "attribute_name",
+              "label": "Attribute Name",
+              "type": "String"
+            },
+            {
+              "id": "values",
+              "label": "Compare Values",
+              "type": "Value List"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "filtered_entries",
+              "label": "Filtered Entry List",
+              "type": "Entry List"
+            }
+          ],
+          "properties": [
+            {
+              "name": "combine",
+              "label": "Combine",
+              "type": "select",
+              "options": [
+                {
+                  "value": "or",
+                  "label": "Any"
+                },
+                {
+                  "value": "and",
+                  "label": "All"
+                }
+              ],
+              "default": "or"
+            },
+            {
+              "name": "attribute_name",
+              "label": "Attribute Name",
+              "type": "String",
+              "default": "Meta"
+            },
+            {
+              "name": "operator",
+              "label": "Operator Is",
+              "type": "select",
+              "options": [
+                {
+                  "value": "contains",
+                  "label": "Contains"
+                },
+                {
+                  "value": "not contains",
+                  "label": "Does Not Contain"
+                },
+                {
+                  "value": "==",
+                  "label": "Is"
+                },
+                {
+                  "value": "!=",
+                  "label": "Is Not"
+                },
+                {
+                  "value": ">=",
+                  "label": "Greater Than Or Equal To"
+                },
+                {
+                  "value": "<=",
+                  "label": "Less Than Or Equal To"
+                },
+                {
+                  "value": ">",
+                  "label": "Greater Than"
+                },
+                {
+                  "value": "<",
+                  "label": "Less Than"
+                }
+              ],
+              "default": "=="
+            },
+            {
+              "name": "value_type",
+              "label": "Value Type",
+              "type": "select",
+              "options": [
+                {
+                  "value": "String",
+                  "label": "String"
+                },
+                {
+                  "value": "Number",
+                  "label": "Number"
+                },
+                {
+                  "value": "Boolean",
+                  "label": "Boolean"
+                },
+                {
+                  "value": "Date",
+                  "label": "Date"
+                }
+              ],
+              "default": "String"
+            },
+            {
+              "$for": "node.values_list",
+              "$item": {
+                "name": "value_{{_value}}",
+                "label": "Value {{_value}}",
+                "type": "Value"
+              }
+            }
+          ]
+        },
+        "categoryColor": "#892eb3",
+        "values": {
+          "attribute_name": "Disable",
+          "value_type": "Boolean",
+          "value_0": false
+        },
+        "pathPrefix": ""
+      },
+      "width": 220,
+      "height": 439,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 720.1487280414175,
+        "y": -144.65795690236143
+      },
+      "dragging": false
+    },
+    {
+      "id": "e036aca4-5cd4-45b2-8b24-ff2603d672e4",
+      "type": "custom",
+      "position": {
+        "x": 1013.3275847987004,
+        "y": -314.4383755897135
+      },
+      "data": {
+        "label": "Join List",
+        "def": {
+          "type": "DataUtility",
+          "label": "Join List",
+          "category": "List",
+          "description": "Join multiple lists of the same type into a single list.",
+          "inputs": {
+            "$for": "node.expandable_inputs",
+            "$item": {
+              "id": "list_{{_value}}",
+              "label": "List {{_value}}",
+              "type": "List"
+            }
+          },
+          "outputs": [
+            {
+              "id": "joined_list",
+              "label": "Joined List",
+              "type": "List"
+            }
+          ],
+          "properties": [
+            {
+              "name": "deduplicate",
+              "label": "Deduplicate",
+              "type": "select",
+              "options": [
+                {
+                  "value": "off",
+                  "label": "Off"
+                },
+                {
+                  "value": "first",
+                  "label": "Keep first"
+                },
+                {
+                  "value": "last",
+                  "label": "Keep last"
+                }
+              ],
+              "default": "first"
+            }
+          ],
+          "typeConstraints": [
+            {
+              "id": "list_type",
+              "subtype_of": "List",
+              "ports": [
+                "joined_list",
+                "list_{{_value}}"
+              ],
+              "expansions": [
+                {
+                  "pattern": "list_{{_value}}",
+                  "for": "expandable_inputs"
+                }
+              ]
+            }
+          ]
+        },
+        "categoryColor": "#8e44ad",
+        "values": {
+          "expandable_inputs": [
+            0,
+            1,
+            2
+          ]
+        },
+        "inputs": [
+          {
+            "id": "list_0",
+            "label": "List {{_value}}",
+            "type": "Entry List"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "joined_list",
+            "label": "Joined List",
+            "type": "Entry List"
+          }
+        ],
+        "pathPrefix": ""
+      },
+      "width": 220,
+      "height": 239,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1013.3275847987004,
+        "y": -314.4383755897135
+      },
+      "dragging": false
+    },
+    {
+      "id": "d97db6ee-7735-4eaf-a4d9-c217359cf859",
+      "type": "custom",
+      "position": {
+        "x": 454.0197539278488,
+        "y": -606.8041954754412
+      },
+      "data": {
+        "label": "Input Entry List",
+        "def": {
+          "type": "InputSource",
+          "label": "Input Entry List",
+          "category": "Input",
+          "description": "The full list of entries from Data.",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            }
+          ],
+          "properties": []
+        },
+        "categoryColor": "#0078d4",
+        "values": {},
+        "pathPrefix": ""
+      },
+      "width": 220,
+      "height": 84,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 454.0197539278488,
+        "y": -606.8041954754412
+      },
+      "dragging": false
+    },
+    {
+      "id": "3bd4da8f-652d-4195-b5f2-29ea4e0e41d8",
+      "type": "custom",
+      "position": {
+        "x": 722.1802188301424,
+        "y": -603.2776586687805
+      },
+      "data": {
+        "label": "Entry Filter",
+        "def": {
+          "type": "Filter",
+          "label": "Entry Filter",
+          "category": "Filter",
+          "description": "Filter entries based on attribute values.",
+          "inputs": [
+            {
+              "id": "input_entries",
+              "label": "Input Entry List",
+              "type": "Entry List"
+            },
+            {
+              "id": "attribute_name",
+              "label": "Attribute Name",
+              "type": "String"
+            },
+            {
+              "id": "values",
+              "label": "Compare Values",
+              "type": "Value List"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "filtered_entries",
+              "label": "Filtered Entry List",
+              "type": "Entry List"
+            }
+          ],
+          "properties": [
+            {
+              "name": "combine",
+              "label": "Combine",
+              "type": "select",
+              "options": [
+                {
+                  "value": "or",
+                  "label": "Any"
+                },
+                {
+                  "value": "and",
+                  "label": "All"
+                }
+              ],
+              "default": "or"
+            },
+            {
+              "name": "attribute_name",
+              "label": "Attribute Name",
+              "type": "String",
+              "default": "Meta"
+            },
+            {
+              "name": "operator",
+              "label": "Operator Is",
+              "type": "select",
+              "options": [
+                {
+                  "value": "contains",
+                  "label": "Contains"
+                },
+                {
+                  "value": "not contains",
+                  "label": "Does Not Contain"
+                },
+                {
+                  "value": "==",
+                  "label": "Is"
+                },
+                {
+                  "value": "!=",
+                  "label": "Is Not"
+                },
+                {
+                  "value": ">=",
+                  "label": "Greater Than Or Equal To"
+                },
+                {
+                  "value": "<=",
+                  "label": "Less Than Or Equal To"
+                },
+                {
+                  "value": ">",
+                  "label": "Greater Than"
+                },
+                {
+                  "value": "<",
+                  "label": "Less Than"
+                }
+              ],
+              "default": "=="
+            },
+            {
+              "name": "value_type",
+              "label": "Value Type",
+              "type": "select",
+              "options": [
+                {
+                  "value": "String",
+                  "label": "String"
+                },
+                {
+                  "value": "Number",
+                  "label": "Number"
+                },
+                {
+                  "value": "Boolean",
+                  "label": "Boolean"
+                },
+                {
+                  "value": "Date",
+                  "label": "Date"
+                }
+              ],
+              "default": "String"
+            },
+            {
+              "$for": "node.values_list",
+              "$item": {
+                "name": "value_{{_value}}",
+                "label": "Value {{_value}}",
+                "type": "Value"
+              }
+            }
+          ]
+        },
+        "categoryColor": "#892eb3",
+        "values": {
+          "attribute_name": "Constant",
+          "value_type": "Boolean",
+          "value_0": true
+        },
+        "pathPrefix": ""
+      },
+      "width": 220,
+      "height": 439,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 722.1802188301424,
+        "y": -603.2776586687805
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "c58a814d-b0f5-4325-8aad-4f965b0db9d3",
+      "sourceHandle": "sorted_entries",
+      "target": "1d987717-0dcf-466c-b89b-51c3bb1aad9e",
+      "targetHandle": "entries",
+      "id": "reactflow__edge-c58a814d-b0f5-4325-8aad-4f965b0db9d3sorted_entries-1d987717-0dcf-466c-b89b-51c3bb1aad9eentries"
+    },
+    {
+      "source": "47c32802-2f66-4bea-9458-cf6a2b6ac106",
+      "sourceHandle": "inverse_sorted_entries",
+      "target": "83e2fbdd-5e0e-4423-900a-957ccb82da82",
+      "targetHandle": "list_input",
+      "id": "reactflow__edge-47c32802-2f66-4bea-9458-cf6a2b6ac106inverse_sorted_entries-83e2fbdd-5e0e-4423-900a-957ccb82da82list_input"
+    },
+    {
+      "source": "83e2fbdd-5e0e-4423-900a-957ccb82da82",
+      "sourceHandle": "list_output",
+      "target": "c58a814d-b0f5-4325-8aad-4f965b0db9d3",
+      "targetHandle": "entries",
+      "id": "reactflow__edge-83e2fbdd-5e0e-4423-900a-957ccb82da82list_output-c58a814d-b0f5-4325-8aad-4f965b0db9d3entries"
+    },
+    {
+      "source": "e39e3773-d307-42f0-bae4-6a5c2adf6eb0",
+      "sourceHandle": "41b58ad1-7c95-42bc-8f1e-7b01e6777594",
+      "target": "412a923d-cecc-4d78-97bb-3be1d2b03920",
+      "targetHandle": "input_entries",
+      "id": "reactflow__edge-e39e3773-d307-42f0-bae4-6a5c2adf6eb041b58ad1-7c95-42bc-8f1e-7b01e6777594-412a923d-cecc-4d78-97bb-3be1d2b03920input_entries",
+      "selected": false
+    },
+    {
+      "source": "e036aca4-5cd4-45b2-8b24-ff2603d672e4",
+      "sourceHandle": "joined_list",
+      "target": "47c32802-2f66-4bea-9458-cf6a2b6ac106",
+      "targetHandle": "entries",
+      "id": "reactflow__edge-e036aca4-5cd4-45b2-8b24-ff2603d672e4joined_list-47c32802-2f66-4bea-9458-cf6a2b6ac106entries"
+    },
+    {
+      "source": "d97db6ee-7735-4eaf-a4d9-c217359cf859",
+      "sourceHandle": "entries",
+      "target": "3bd4da8f-652d-4195-b5f2-29ea4e0e41d8",
+      "targetHandle": "input_entries",
+      "id": "reactflow__edge-d97db6ee-7735-4eaf-a4d9-c217359cf859entries-3bd4da8f-652d-4195-b5f2-29ea4e0e41d8input_entries"
+    },
+    {
+      "source": "3bd4da8f-652d-4195-b5f2-29ea4e0e41d8",
+      "sourceHandle": "filtered_entries",
+      "target": "e036aca4-5cd4-45b2-8b24-ff2603d672e4",
+      "targetHandle": "list_0",
+      "id": "reactflow__edge-3bd4da8f-652d-4195-b5f2-29ea4e0e41d8filtered_entries-e036aca4-5cd4-45b2-8b24-ff2603d672e4list_0"
+    },
+    {
+      "source": "412a923d-cecc-4d78-97bb-3be1d2b03920",
+      "sourceHandle": "filtered_entries",
+      "target": "e036aca4-5cd4-45b2-8b24-ff2603d672e4",
+      "targetHandle": "list_1",
+      "id": "reactflow__edge-412a923d-cecc-4d78-97bb-3be1d2b03920filtered_entries-e036aca4-5cd4-45b2-8b24-ff2603d672e4list_1"
+    }
+  ]
+}
