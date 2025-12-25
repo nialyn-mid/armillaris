@@ -18,6 +18,7 @@ interface SpecManagerPanelProps {
     edgeCount: number;
     isSpecDirty: boolean;
     navigateTo: (path: any[]) => void;
+    id?: string;
 }
 
 export default function SpecManagerPanel({
@@ -35,7 +36,8 @@ export default function SpecManagerPanel({
     nodeCount,
     edgeCount,
     isSpecDirty,
-    navigateTo
+    navigateTo,
+    id
 }: SpecManagerPanelProps) {
     const [specToDelete, setSpecToDelete] = useState<string | null>(null);
     const [specToSwitchTo, setSpecToSwitchTo] = useState<string | null>(null);
@@ -74,7 +76,7 @@ export default function SpecManagerPanel({
     const isValidFilename = /^[a-zA-Z0-9_-]+$/.test(stripExtension(targetSpecName));
 
     return (
-        <div style={{
+        <div id={id} style={{
             width: width,
             background: 'var(--bg-secondary)',
             borderLeft: '1px solid var(--border-color)',

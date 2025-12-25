@@ -204,7 +204,7 @@ export function ChatOverlay({ session, matches, onInputChange, highlights, id }:
             overflow: 'visible'
         }}>
             {/* Chat Header */}
-            <div style={{
+            <div id="chat-sandbox-header" style={{
                 fontSize: '0.75rem',
                 color: 'var(--text-secondary)',
                 padding: '6px 12px',
@@ -221,7 +221,7 @@ export function ChatOverlay({ session, matches, onInputChange, highlights, id }:
                     <span className="unselectable" style={{ fontWeight: 600 }}>Chat Sandbox</span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <GoDotFill className={`chat-status-dot ${chatHistory.length > 0 ? 'active' : 'inactive'}`} />
+                    <GoDotFill id="chat-history-status-dot" className={`chat-status-dot ${chatHistory.length > 0 ? 'active' : 'inactive'}`} />
                     <button
                         className="btn-icon"
                         onClick={() => setIsChatHistoryOpen(!isChatHistoryOpen)}
@@ -249,7 +249,7 @@ export function ChatOverlay({ session, matches, onInputChange, highlights, id }:
 
             {/* Chat History Panel */}
             {isChatHistoryOpen && !isChatCollapsed && (
-                <div style={{
+                <div id="chat-history-list" style={{
                     flex: 1,
                     overflowY: 'auto',
                     padding: '10px',
@@ -413,6 +413,7 @@ export function ChatOverlay({ session, matches, onInputChange, highlights, id }:
                                 )}
 
                                 <button
+                                    id="chat-send-button"
                                     onClick={() => {
                                         submitUserMessage();
                                         onInputChange("");

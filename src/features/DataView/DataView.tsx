@@ -23,7 +23,10 @@ export default function DataView({ showSchema, showDataStorage }: DataViewProps)
         originalEntries,
         metaDefinitions,
         selectedEntryId,
-        setSelectedEntryId
+        setSelectedEntryId,
+        filters, setFilters,
+        sorts, setSorts,
+        filterLogic, setFilterLogic
     } = useData();
 
     // Hooks
@@ -31,12 +34,9 @@ export default function DataView({ showSchema, showDataStorage }: DataViewProps)
     const setSelectedId = setSelectedEntryId;
 
     const {
-        searchTerm, setSearchTerm,
-        sortOrder, setSortOrder,
-        filterMeta, setFilterMeta,
         availableMetas,
         filteredEntries
-    } = useDataViewFiltering(entries);
+    } = useDataViewFiltering(entries, filters, sorts, filterLogic);
 
     const {
         editLabel, setEditLabel,
@@ -67,12 +67,12 @@ export default function DataView({ showSchema, showDataStorage }: DataViewProps)
                 filteredEntries={filteredEntries}
                 selectedId={selectedId}
                 setSelectedId={setSelectedId}
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                filterMeta={filterMeta}
-                setFilterMeta={setFilterMeta}
-                sortOrder={sortOrder}
-                setSortOrder={setSortOrder}
+                filters={filters}
+                setFilters={setFilters}
+                sorts={sorts}
+                setSorts={setSorts}
+                filterLogic={filterLogic}
+                setFilterLogic={setFilterLogic}
                 availableMetas={availableMetas}
                 metaDefinitions={metaDefinitions}
                 addEntry={addEntry}

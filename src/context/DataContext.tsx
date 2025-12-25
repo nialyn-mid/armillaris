@@ -1,11 +1,13 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode, type Dispatch, type SetStateAction } from 'react';
 import type { GraphData, LoreEntry, MetaDefinition } from '../lib/types';
 import { useLoreData } from './hooks/useLoreData';
 import { useEngineState } from './hooks/useEngineState';
 import { useCompilationSettings } from './hooks/useCompilationSettings';
 import { useUIState } from './hooks/useUIState';
 import { useDataStorage } from './hooks/useDataStorage';
+import { useChatSession } from '../features/GraphEditor/hooks/useChatSession';
 import { tutorialEntries } from '../features/Tutorial/tutorialData';
+import type { DataFilter, DataSort } from '../features/DataView/hooks/useDataViewFiltering';
 
 interface DataContextType {
   graphData: GraphData | null;
@@ -62,6 +64,8 @@ interface DataContextType {
   isSpecDirty: boolean;
   setIsSpecDirty: (dirty: boolean) => void;
   reloadNonce: number;
+  fitViewNonce: number;
+  triggerFitView: () => void;
 
   // Sidebar Tools / Panels
   activeTools: string[];
@@ -103,6 +107,41 @@ interface DataContextType {
   compressOldVersions: (cutoffDate: number) => Promise<void>;
   pruneVersions: (options: { cutoff?: number, feather?: boolean }) => Promise<void>;
   refreshProjects: () => Promise<void>;
+
+  // Data View Filtering
+  filters: DataFilter[];
+  setFilters: Dispatch<SetStateAction<DataFilter[]>>;
+  sorts: DataSort[];
+  setSorts: Dispatch<SetStateAction<DataSort[]>>;
+  filterLogic: 'all' | 'any';
+  setFilterLogic: (logic: 'all' | 'any') => void;
+  // Chat Sandbox (Graph View)
+  chatInput: string;
+  setChatInput: Dispatch<SetStateAction<string>>;
+  chatHistory: any[];
+  setChatHistory: Dispatch<SetStateAction<any[]>>;
+  isChatHistoryOpen: boolean;
+  setIsChatHistoryOpen: Dispatch<SetStateAction<boolean>>;
+  isChatCollapsed: boolean;
+  setIsChatCollapsed: Dispatch<SetStateAction<boolean>>;
+  editingMsgId: string | null;
+  editContent: string;
+  setEditContent: Dispatch<SetStateAction<string>>;
+  useCurrentTime: boolean;
+  setUseCurrentTime: Dispatch<SetStateAction<boolean>>;
+  customTime: string;
+  setCustomTime: Dispatch<SetStateAction<string>>;
+  submitUserMessage: () => void;
+  addMessage: (role: 'user' | 'system', content: string, date?: Date | string) => void;
+  startEditing: (msg: any) => void;
+  saveEdit: (id: string) => void;
+  cancelEdit: () => void;
+  deleteMessage: (id: string) => void;
+  setMessageDate: (id: string, date: Date | string) => void;
+  insertBotMessage: (index: number) => void;
+  // Graph View Panels
+  isGraphConfigOpen: boolean;
+  setIsGraphConfigOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -120,6 +159,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [pendingTab, setPendingTab] = useState<string | null>(null);
   const [pendingEntryId, setPendingEntryId] = useState<string | null>(null);
 
+  // Data View Filtering State
+  const [filters, setFilters] = useState<DataFilter[]>([]);
+  const [sorts, setSorts] = useState<DataSort[]>([]);
+  const [filterLogic, setFilterLogic] = useState<'all' | 'any'>('all');
+
   useEffect(() => {
     if (selectedEntryId) {
       localStorage.setItem('dataview_selected_id', selectedEntryId);
@@ -134,14 +178,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const [reloadNonce, setReloadNonce] = useState(0);
+  const [fitViewNonce, setFitViewNonce] = useState(0);
   const loreData = useLoreData(showNotification);
   const storage = useDataStorage(loreData.entries, loreData.setEntries, showNotification);
   const compilation = useCompilationSettings();
   const engine = useEngineState(compilation.setHasDevEngine, compilation.setEngineErrors, reloadNonce);
   const ui = useUIState();
+  const chat = useChatSession();
+  const [isGraphConfigOpen, setIsGraphConfigOpen] = useState(false);
 
   const reloadEngine = async () => {
     setReloadNonce(prev => prev + 1);
+  };
+
+  const triggerFitView = () => {
+    setFitViewNonce(prev => prev + 1);
   };
 
   const loadTutorialData = () => {
@@ -156,12 +207,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ...engine,
       ...compilation,
       ...ui,
+      ...chat,
       isLoading,
       setIsLoading,
       notification,
       showNotification,
       reloadEngine,
       reloadNonce,
+      fitViewNonce,
+      triggerFitView,
       loadTutorialData,
       debugNodes,
       setDebugNodes,
@@ -176,7 +230,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
       pendingTab,
       setPendingTab,
       pendingEntryId,
-      setPendingEntryId
+      setPendingEntryId,
+      filters,
+      setFilters,
+      sorts,
+      setSorts,
+      filterLogic,
+      setFilterLogic,
+      isGraphConfigOpen,
+      setIsGraphConfigOpen
     }}>
       {children}
     </DataContext.Provider>

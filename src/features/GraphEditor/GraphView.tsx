@@ -9,7 +9,6 @@ import ReactFlow, {
 } from 'reactflow';
 import { MdHub } from 'react-icons/md';
 import { EmptyState } from '../../shared/ui/EmptyState';
-import { useChatSession } from './hooks/useChatSession';
 import { ChatOverlay } from './components/ChatOverlay';
 import { useGraphData } from './hooks/useGraphData';
 import { LabeledEdge } from './graph/LabeledEdge';
@@ -38,7 +37,14 @@ function GraphFlowContent({ showOutput, showSpecEditor, showInputPanel, specRef 
         simulateUsingDevEngine, setDebugNodes, setDebugPorts,
         setSelectedEntryId, setActiveTab,
         isSpecDirty, setPendingTab, setPendingEntryId,
-        activeTools, reloadNonce
+        activeTools, reloadNonce, fitViewNonce,
+        // Chat Session from Context
+        chatInput, setChatInput, chatHistory, setChatHistory,
+        isChatHistoryOpen, setIsChatHistoryOpen, isChatCollapsed, setIsChatCollapsed,
+        editingMsgId, editContent, setEditContent,
+        useCurrentTime, setUseCurrentTime, customTime, setCustomTime,
+        submitUserMessage, addMessage, startEditing, saveEdit, cancelEdit,
+        deleteMessage, setMessageDate, insertBotMessage
     } = useData();
 
     const {
@@ -48,8 +54,24 @@ function GraphFlowContent({ showOutput, showSpecEditor, showInputPanel, specRef 
         isArrangeLocked, setIsArrangeLocked
     } = useGraphData();
 
-    const session = useChatSession();
+    const session = {
+        chatInput, setChatInput, chatHistory, setChatHistory,
+        isChatHistoryOpen, setIsChatHistoryOpen, isChatCollapsed, setIsChatCollapsed,
+        editingMsgId, editContent, setEditContent,
+        useCurrentTime, setUseCurrentTime, customTime, setCustomTime,
+        submitUserMessage, addMessage, startEditing, saveEdit, cancelEdit,
+        deleteMessage, setMessageDate, insertBotMessage
+    };
+
     const { fitView } = useReactFlow();
+
+    // Re-center view on demand (e.g. from tutorial)
+    useEffect(() => {
+        if (fitViewNonce > 0) {
+            fitView({ duration: 400, padding: 0.2 });
+        }
+    }, [fitViewNonce, fitView]);
+
     const showMinimap = activeTools.includes('minimap');
     const [hiddenLabels, setHiddenLabels] = useState<Set<string>>(() => {
         const saved = localStorage.getItem('graph_hidden_labels');
@@ -301,7 +323,7 @@ function GraphFlowContent({ showOutput, showSpecEditor, showInputPanel, specRef 
             <div className="graph-column-left">
                 <div className="flex-1 relative flex-row overflow-hidden">
                     {showInputPanel && (
-                        <div className="input-panel-left" style={{ width: leftPanelWidth }}>
+                        <div id="panel-engine-context" className="input-panel-left" style={{ width: leftPanelWidth }}>
                             <CharacterChatInputs
                                 character={character} setCharacter={setCharacter}
                                 chatMeta={chatMeta} setChatMeta={setChatMeta}
@@ -409,8 +431,8 @@ function GraphFlowContent({ showOutput, showSpecEditor, showInputPanel, specRef 
                         </ReactFlow>
 
                         <ChatOverlay
-                            id="graph-chat-input"
-                            session={session}
+                            id="graph-chat-sandbox"
+                            session={session as any}
                             matches={[]}
                             onInputChange={onChatInputChange}
                             highlights={chatHighlights}

@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { MdAutoFixHigh, MdExpandMore, MdExpandLess, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import { Toggle } from '../../../shared/ui/Toggle';
+import { useData } from '../../../context/DataContext';
 
 interface GraphControlPanelProps {
     showMinimap: boolean;
@@ -23,10 +23,11 @@ export function GraphControlPanel({
     hiddenLabels,
     onToggleLabel
 }: GraphControlPanelProps) {
-    const [isExpanded, setIsExpanded] = useState(false);
+    const { isGraphConfigOpen: isExpanded, setIsGraphConfigOpen: setIsExpanded } = useData();
 
     return (
         <div
+            id="graph-config-panel"
             className={`graph-control-panel ${isExpanded ? 'expanded' : ''}`}
             style={{
                 top: showMinimap ? 320 : 10,
@@ -42,6 +43,7 @@ export function GraphControlPanel({
                 <div className="control-panel-body">
                     <div className="arrange-section">
                         <button
+                            id="arrange-button"
                             className={`btn-arrange-top ${isArranging ? 'loading' : ''} ${isArrangeLocked ? 'locked' : ''}`}
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -52,7 +54,7 @@ export function GraphControlPanel({
                             <MdAutoFixHigh className={isArranging ? 'spin' : ''} />
                             {isArranging ? ' Arranging...' : ' Arrange Graph'}
                         </button>
-                        <div className="lock-toggle-inline">
+                        <div id="arrange-lock-toggle" className="lock-toggle-inline">
                             <Toggle
                                 label="Lock"
                                 checked={isArrangeLocked}

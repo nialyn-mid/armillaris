@@ -159,6 +159,7 @@ function App() {
           activeTab={activeTab}
           activeTools={activeTools}
           onToggleTool={toggleTool}
+          onStartTutorial={startTutorial}
         />
       </div>
       <NotificationBar />

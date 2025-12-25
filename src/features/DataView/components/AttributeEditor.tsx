@@ -3,12 +3,12 @@ import { HighlightedTextarea } from '../../../shared/ui/HighlightedTextarea';
 import { useData } from '../../../context/DataContext';
 import type { MetaPropertyType } from '../../../lib/types';
 
-interface PropertyEditorProps {
-    properties: Record<string, any>;
-    onChange: (newProps: Record<string, any>) => void;
+interface AttributeEditorProps {
+    attributes: Record<string, any>;
+    onChange: (newAttrs: Record<string, any>) => void;
 }
 
-export default function PropertyEditor({ properties, onChange }: PropertyEditorProps) {
+export default function AttributeEditor({ attributes, onChange }: AttributeEditorProps) {
     const { metaDefinitions, entries } = useData();
     const rootRef = useRef<HTMLDivElement>(null);
     const [relationSearch, setRelationSearch] = useState<Record<string, string>>({});
@@ -25,7 +25,7 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
 
     const handleChange = (key: string, value: any) => {
         onChange({
-            ...properties,
+            ...attributes,
             [key]: value
         });
     };
@@ -37,19 +37,19 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
     };
 
     const handleArrayChange = (key: string, index: number, value: string) => {
-        const arr = getArray(key, properties[key]);
+        const arr = getArray(key, attributes[key]);
         arr[index] = value;
         handleChange(key, arr);
     };
 
     const handleArrayAdd = (key: string) => {
-        const arr = getArray(key, properties[key]);
+        const arr = getArray(key, attributes[key]);
         arr.push('');
         handleChange(key, arr);
     };
 
     const handleArrayRemove = (key: string, index: number) => {
-        const arr = getArray(key, properties[key]);
+        const arr = getArray(key, attributes[key]);
         arr.splice(index, 1);
         handleChange(key, arr);
         if (editingRelation?.key === key && editingRelation.index === index) {
@@ -58,7 +58,7 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
     };
 
     const handleRelationAdd = (key: string, entryId: string) => {
-        const arr = getArray(key, properties[key]);
+        const arr = getArray(key, attributes[key]);
         if (!arr.includes(entryId)) {
             arr.push(entryId);
             handleChange(key, arr);
@@ -68,7 +68,7 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
     };
 
     const handleRelationReplace = (key: string, index: number, entryId: string) => {
-        const arr = getArray(key, properties[key]);
+        const arr = getArray(key, attributes[key]);
         if (arr[index] !== entryId) {
             if (!arr.includes(entryId) || arr[index] === entryId) {
                 arr[index] = entryId;
@@ -79,7 +79,7 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
         setRelationSearch(prev => ({ ...prev, [key]: '' }));
     };
 
-    const currentMeta = String(properties.Meta || '');
+    const currentMeta = String(attributes.Meta || '');
     const definition = metaDefinitions.find(d => d.name === currentMeta);
 
     let fieldsToRender: { key: string, type?: MetaPropertyType | '', forced?: boolean }[] = [];
@@ -94,7 +94,7 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
             fieldsToRender.push({ key: prop.name, type: prop.type, forced: true });
         });
     } else {
-        Object.entries(properties).forEach(([key, val]) => {
+        Object.entries(attributes).forEach(([key, val]) => {
             if (['Meta', 'Personality', 'Scenario', 'Example Dialogs', 'Keywords'].includes(key)) return;
             fieldsToRender.push({ key, type: Array.isArray(val) ? 'list' : 'string', forced: false });
         });
@@ -151,12 +151,12 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
     );
 
     const renderField = (key: string, forcedType?: MetaPropertyType | '') => {
-        const value = properties[key];
+        const value = attributes[key];
 
         if (key === 'Meta') {
             return (
-                <div key={key} className="property-field" data-key={key}>
-                    <label className="property-field-label">Meta</label>
+                <div key={key} className="attribute-field" data-key={key}>
+                    <label className="attribute-field-label">Meta</label>
                     <select
                         value={currentMeta}
                         onChange={(e) => handleChange('Meta', e.target.value)}
@@ -189,8 +189,8 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
         }
 
         return (
-            <div key={key} className="property-field" data-key={key}>
-                <label className="property-field-label">{key}</label>
+            <div key={key} className="attribute-field" data-key={key}>
+                <label className="attribute-field-label">{key}</label>
 
                 {isMultiline ? (
                     <div className="description-editor-wrapper">
@@ -316,11 +316,11 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
     };
 
     return (
-        <div className="property-editor-container scrollbar-hidden" ref={rootRef}>
+        <div className="attribute-editor-container scrollbar-hidden" ref={rootRef}>
             {fieldsToRender.map(f => renderField(f.key, f.type))}
             {fieldsToRender.length === 0 && (
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic', textAlign: 'center' }}>
-                    No properties to display
+                    No attributes to display
                 </div>
             )}
             <div style={{ height: '50px' }}></div>

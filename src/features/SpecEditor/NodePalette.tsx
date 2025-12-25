@@ -9,9 +9,10 @@ interface NodePaletteProps {
     onDragStart: (event: React.DragEvent, nodeDef: EngineSpecNodeDef, customData?: any) => void;
     width: number;
     setWidth: (w: number) => void;
+    id?: string;
 }
 
-export default function NodePalette({ engineSpec, onDragStart, width, setWidth }: NodePaletteProps) {
+export default function NodePalette({ engineSpec, onDragStart, width, setWidth, id }: NodePaletteProps) {
     const { customNodes, requestDeleteCustomNode } = useCustomNodes();
     const [activeTab, setActiveTab] = useState('Input');
     const [searchQuery, setSearchQuery] = useState('');
@@ -141,7 +142,7 @@ export default function NodePalette({ engineSpec, onDragStart, width, setWidth }
 
 
     return (
-        <div style={{ width: width }} className="node-palette">
+        <div id={id} style={{ width: width }} className="node-palette">
             {/* Palette Resize Handle (Right Side) */}
             <div
                 style={{

@@ -14,9 +14,10 @@ interface RightActivityBarProps {
     activeTab: string;
     activeTools: string[];
     onToggleTool: (toolId: string) => void;
+    onStartTutorial: (tourId: string) => void;
 }
 
-export default function RightActivityBar({ activeTab, activeTools, onToggleTool }: RightActivityBarProps) {
+export default function RightActivityBar({ activeTab, activeTools, onToggleTool, onStartTutorial }: RightActivityBarProps) {
 
     // Tools definition based on View
     const getTools = () => {
@@ -88,8 +89,8 @@ export default function RightActivityBar({ activeTab, activeTools, onToggleTool 
             <div style={{ marginTop: 'auto', marginBottom: '10px' }}>
                 <button
                     id="right-bar-info"
-                    style={btnStyle(activeTools.includes(`info_${activeTab}`))}
-                    onClick={() => onToggleTool(`info_${activeTab}`)}
+                    style={btnStyle(false)}
+                    onClick={() => onStartTutorial(activeTab + '_tutorial')}
                     title="View Information & Tutorial"
                 >
                     <MdInfoOutline />

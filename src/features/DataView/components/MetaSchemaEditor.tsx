@@ -64,7 +64,7 @@ export default function MetaSchemaEditor() {
         if (!currentDef) return;
 
         if (currentDef.properties.some(p => p.name === newPropName)) {
-            alert('Property already exists in this schema.');
+            alert('Attribute already exists in this schema.');
             return;
         }
 
@@ -107,7 +107,7 @@ export default function MetaSchemaEditor() {
 
     const currentDefinition = metaDefinitions.find(d => d.name === selectedMeta);
 
-    // Sort Properties: Normal first, Relations last. Within groups alphabetical.
+    // Sort Attributes: Normal first, Relations last. Within groups alphabetical.
     const sortedProperties = currentDefinition ? [...currentDefinition.properties].sort((a, b) => {
         const isRelA = a.type === 'relation';
         const isRelB = b.type === 'relation';
@@ -180,7 +180,7 @@ export default function MetaSchemaEditor() {
             {selectedMeta && currentDefinition ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, minHeight: 0 }}>
                     <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                        Properties for <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{selectedMeta}</span>
+                        Attributes for <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{selectedMeta}</span>
                     </div>
                     <div style={{ flex: 1, border: '1px solid var(--border-color)', borderRadius: '4px', overflowY: 'auto' }}>
                         <div style={{ padding: '5px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', fontSize: '0.8rem', display: 'flex', fontWeight: 'bold' }}>
@@ -215,7 +215,7 @@ export default function MetaSchemaEditor() {
                         <input
                             value={newPropName}
                             onChange={e => setNewPropName(e.target.value)}
-                            placeholder="New Prop..."
+                            placeholder="New Attribute..."
                             style={{ flex: 1, padding: '4px', minWidth: 0, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                         />
                         <select
@@ -234,7 +234,7 @@ export default function MetaSchemaEditor() {
                 </div>
             ) : (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', border: '1px dashed var(--border-color)', borderRadius: '4px' }}>
-                    Select a type to edit properties
+                    Select a type to edit attributes
                 </div>
             )}
         </div>

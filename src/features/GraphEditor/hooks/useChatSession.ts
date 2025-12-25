@@ -114,6 +114,7 @@ export function useChatSession() {
         setCustomTime,
 
         submitUserMessage,
+        addMessage,
         startEditing,
         saveEdit,
         cancelEdit,

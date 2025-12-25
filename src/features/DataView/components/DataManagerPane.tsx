@@ -77,7 +77,7 @@ export function DataManagerPane({ show }: DataManagerPaneProps) {
     ];
 
     return (
-        <div style={{
+        <div id="panel-data_storage" style={{
             position: 'relative',
             width: `${paneWidth}px`,
             borderLeft: '1px solid var(--border-color)',

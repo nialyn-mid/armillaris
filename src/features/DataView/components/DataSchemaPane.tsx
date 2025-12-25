@@ -37,7 +37,7 @@ export function DataSchemaPane({ showSchema }: DataSchemaPaneProps) {
     if (!showSchema) return null;
 
     return (
-        <div style={{
+        <div id="panel-schema" style={{
             position: 'relative',
             width: `${schemaPanelWidth}px`,
             borderLeft: '1px solid var(--border-color)',

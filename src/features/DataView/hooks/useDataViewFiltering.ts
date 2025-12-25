@@ -1,10 +1,25 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import type { LoreEntry } from '../../../lib/types';
 
-export function useDataViewFiltering(entries: LoreEntry[]) {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | 'size'>('asc');
-    const [filterMeta, setFilterMeta] = useState<string>('all');
+export interface DataFilter {
+    id: string;
+    attribute: string;
+    value: any;
+    type: string;
+}
+
+export interface DataSort {
+    id: string;
+    attribute: string;
+    order: 'asc' | 'desc';
+}
+
+export function useDataViewFiltering(
+    entries: LoreEntry[],
+    filters: DataFilter[],
+    sorts: DataSort[],
+    filterLogic: 'all' | 'any'
+) {
 
     const availableMetas = useMemo(() => {
         const metas = new Set<string>();
@@ -17,43 +32,88 @@ export function useDataViewFiltering(entries: LoreEntry[]) {
     const filteredEntries = useMemo(() => {
         let result = entries;
 
-        // 1. Search
-        if (searchTerm) {
-            const lower = searchTerm.toLowerCase();
-            result = result.filter(e =>
-                e.label.toLowerCase().includes(lower) ||
-                e.id.includes(lower)
-            );
+        // 1. Filtering Logic
+        if (filters.length > 0) {
+            result = result.filter(entry => {
+                const matches = filters.map(f => {
+                    let targetValue: any;
+                    if (f.attribute === 'Label') targetValue = entry.label;
+                    else if (f.attribute === 'ID') targetValue = entry.id;
+                    else targetValue = entry.properties[f.attribute];
+
+                    const filterValue = f.value;
+                    if (filterValue === undefined || filterValue === null || filterValue === '') return true;
+
+                    // Type-based matching
+                    if (f.type === 'number') {
+                        return Number(targetValue) === Number(filterValue);
+                    }
+                    if (f.type === 'boolean') {
+                        return !!targetValue === (filterValue === 'true');
+                    }
+                    if (f.type === 'relation') {
+                        // Match against relation labels if possible
+                        if (Array.isArray(targetValue)) {
+                            return targetValue.some(relId => {
+                                const relEntry = entries.find(e => e.id === relId);
+                                return relEntry?.label.toLowerCase().includes(String(filterValue).toLowerCase());
+                            });
+                        }
+                        const relEntry = entries.find(e => e.id === targetValue);
+                        return relEntry?.label.toLowerCase().includes(String(filterValue).toLowerCase());
+                    }
+                    if (f.type === 'list' || Array.isArray(targetValue)) {
+                        targetValue = Array.isArray(targetValue) ? targetValue.join(', ') : String(targetValue);
+                    }
+
+                    return String(targetValue || '').toLowerCase().includes(String(filterValue).toLowerCase());
+                });
+
+                if (filterLogic === 'all') return matches.every(m => m);
+                return matches.some(m => m);
+            });
         }
 
-        // 2. Filter by Meta
-        if (filterMeta !== 'all') {
-            result = result.filter(e => String(e.properties.Meta) === filterMeta);
-        }
+        // 2. Sorting Logic (Multi-level)
+        if (sorts.length > 0) {
+            result = [...result].sort((a, b) => {
+                for (const s of sorts) {
+                    let valA: any, valB: any;
+                    if (s.attribute === 'Entry Size') {
+                        valA = new TextEncoder().encode(JSON.stringify(a.properties)).length;
+                        valB = new TextEncoder().encode(JSON.stringify(b.properties)).length;
+                    } else if (s.attribute === 'Label') {
+                        valA = a.label.toLowerCase();
+                        valB = b.label.toLowerCase();
+                    } else if (s.attribute === 'ID') {
+                        valA = a.id;
+                        valB = b.id;
+                    } else {
+                        valA = a.properties[s.attribute];
+                        valB = b.properties[s.attribute];
+                    }
 
-        // 3. Sort
-        result = [...result].sort((a, b) => {
-            if (sortOrder === 'size') {
-                const sizeA = new TextEncoder().encode(JSON.stringify(a.properties)).length;
-                const sizeB = new TextEncoder().encode(JSON.stringify(b.properties)).length;
-                return sizeB - sizeA; // Largest first for size sort
-            }
-            const labelA = a.label.toLowerCase();
-            const labelB = b.label.toLowerCase();
-            if (sortOrder === 'asc') return labelA.localeCompare(labelB);
-            return labelB.localeCompare(labelA);
-        });
+                    if (valA === valB) continue;
+
+                    if (typeof valA === 'string' && typeof valB === 'string') {
+                        const cmp = valA.localeCompare(valB);
+                        return s.order === 'asc' ? cmp : -cmp;
+                    }
+
+                    const cmp = valA > valB ? 1 : -1;
+                    return s.order === 'asc' ? cmp : -cmp;
+                }
+                return 0;
+            });
+        } else {
+            // Default sort by label asc
+            result = [...result].sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
+        }
 
         return result;
-    }, [entries, searchTerm, filterMeta, sortOrder]);
+    }, [entries, filters, sorts, filterLogic]);
 
     return {
-        searchTerm,
-        setSearchTerm,
-        sortOrder,
-        setSortOrder,
-        filterMeta,
-        setFilterMeta,
         availableMetas,
         filteredEntries
     };

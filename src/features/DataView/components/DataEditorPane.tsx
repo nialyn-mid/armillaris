@@ -1,5 +1,5 @@
 import type { LoreEntry } from '../../../lib/types';
-import PropertyEditor from './PropertyEditor';
+import AttributeEditor from './AttributeEditor';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { MdInfoOutline } from 'react-icons/md';
 
@@ -8,7 +8,7 @@ interface DataEditorPaneProps {
     editLabel: string;
     setEditLabel: (label: string) => void;
     editProps: Record<string, any>;
-    setEditProps: (props: Record<string, any>) => void;
+    setEditProps: (attrs: Record<string, any>) => void;
     handleDelete: () => void;
     handleReset: () => void;
 }
@@ -28,14 +28,14 @@ export function DataEditorPane({
                 <EmptyState
                     icon={<MdInfoOutline />}
                     message="No Entry Selected"
-                    description="Select an entry from the list to view and edit its properties"
+                    description="Select an entry from the list to view and edit its attributes"
                 />
             </div>
         );
     }
 
     return (
-        <div className="data-editor-pane">
+        <div id="data-editor-pane" className="data-editor-pane">
             <div className="data-editor-header">
                 <div className="data-editor-label-group">
                     <label className="input-label">Label</label>
@@ -68,10 +68,10 @@ export function DataEditorPane({
             </div>
 
             <div className="data-editor-controls">
-                <label className="input-label">Properties</label>
+                <label className="input-label">Attributes</label>
                 <div className="data-editor-scroll scrollbar-hidden">
-                    <PropertyEditor
-                        properties={editProps}
+                    <AttributeEditor
+                        attributes={editProps}
                         onChange={setEditProps}
                     />
                 </div>

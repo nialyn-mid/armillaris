@@ -110,6 +110,7 @@ const SpecNodeEditor = forwardRef<SpecNodeEditorHandle>((_, ref) => {
 
             {/* Left: Node Palette */}
             <NodePalette
+                id="node-palette"
                 engineSpec={engineSpec}
                 onDragStart={onDragStart}
                 width={paletteWidth}
@@ -124,7 +125,7 @@ const SpecNodeEditor = forwardRef<SpecNodeEditorHandle>((_, ref) => {
                 onDragOver={onDragOver}
             >
                 {/* Breadcrumbs Navigation */}
-                <div className="breadcrumbs-header">
+                <div id="behavior-breadcrumbs" className="breadcrumbs-header">
                     <Breadcrumbs
                         path={[{ id: 'root', label: 'Behavior' }, ...viewPath]}
                         onNavigate={navigateTo}
@@ -132,7 +133,7 @@ const SpecNodeEditor = forwardRef<SpecNodeEditorHandle>((_, ref) => {
                     />
                 </div>
 
-                <div className="spec-editor-canvas-wrapper">
+                <div className="spec-editor-canvas-wrapper spec-editor-canvas">
                     <ReactFlow
                         id="spec-node-editor"
                         nodes={nodes || []}
@@ -186,6 +187,7 @@ const SpecNodeEditor = forwardRef<SpecNodeEditorHandle>((_, ref) => {
 
             {/* Right: Spec Manager */}
             <SpecManagerPanel
+                id="behavior-manager"
                 width={managerWidth}
                 setWidth={setManagerWidth}
                 targetSpecName={targetSpecName}
