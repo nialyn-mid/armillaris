@@ -38,7 +38,7 @@ function GraphFlowContent({ showOutput, showSpecEditor, showInputPanel, specRef 
         simulateUsingDevEngine, setDebugNodes, setDebugPorts,
         setSelectedEntryId, setActiveTab,
         isSpecDirty, setPendingTab, setPendingEntryId,
-        activeTools
+        activeTools, reloadNonce
     } = useData();
 
     const {
@@ -205,7 +205,7 @@ function GraphFlowContent({ showOutput, showSpecEditor, showInputPanel, specRef 
         } finally {
             setIsCompiling(false);
         }
-    }, [activeEngine, activeSpec, entries, refreshMeta, minifyEnabled, compressEnabled, mangleEnabled, includeComments, simulateUsingDevEngine]);
+    }, [activeEngine, activeSpec, entries, refreshMeta, minifyEnabled, compressEnabled, mangleEnabled, includeComments, simulateUsingDevEngine, reloadNonce]);
 
     useEffect(() => {
         triggerCompile();

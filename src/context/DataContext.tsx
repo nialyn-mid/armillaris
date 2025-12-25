@@ -61,6 +61,7 @@ interface DataContextType {
   setDebugPorts: (ports: Record<string, Record<string, any>>) => void;
   isSpecDirty: boolean;
   setIsSpecDirty: (dirty: boolean) => void;
+  reloadNonce: number;
 
   // Sidebar Tools / Panels
   activeTools: string[];
@@ -132,17 +133,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setTimeout(() => setNotification(null), 5000);
   };
 
+  const [reloadNonce, setReloadNonce] = useState(0);
   const loreData = useLoreData(showNotification);
   const storage = useDataStorage(loreData.entries, loreData.setEntries, showNotification);
   const compilation = useCompilationSettings();
-  const engine = useEngineState(compilation.setHasDevEngine, compilation.setEngineErrors);
+  const engine = useEngineState(compilation.setHasDevEngine, compilation.setEngineErrors, reloadNonce);
   const ui = useUIState();
 
   const reloadEngine = async () => {
-    if (!engine.activeEngine) return;
-    const current = engine.activeEngine;
-    engine.setActiveEngine('');
-    setTimeout(() => engine.setActiveEngine(current), 10);
+    setReloadNonce(prev => prev + 1);
   };
 
   const loadTutorialData = () => {
@@ -162,6 +161,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       notification,
       showNotification,
       reloadEngine,
+      reloadNonce,
       loadTutorialData,
       debugNodes,
       setDebugNodes,

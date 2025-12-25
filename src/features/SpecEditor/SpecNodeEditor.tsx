@@ -63,7 +63,8 @@ const SpecNodeEditor = forwardRef<SpecNodeEditorHandle>((_, ref) => {
         duplicateSelectedNodes,
         handleCreateNew,
         handleDiscard,
-        deleteSpec
+        deleteSpec,
+        duplicateSpec
     } = useSpecGraph();
 
     // UI state
@@ -192,6 +193,7 @@ const SpecNodeEditor = forwardRef<SpecNodeEditorHandle>((_, ref) => {
                 handleSave={handleSave}
                 handleCreateNew={handleCreateNew}
                 deleteSpec={deleteSpec}
+                duplicateSpec={duplicateSpec}
                 availableSpecs={availableSpecs}
                 activeSpec={activeSpec}
                 setActiveSpec={setActiveSpec}

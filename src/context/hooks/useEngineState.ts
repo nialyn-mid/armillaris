@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 
 export const useEngineState = (
     setHasDevEngine: (has: boolean) => void,
-    setEngineErrors: (errors: any[]) => void
+    setEngineErrors: (errors: any[]) => void,
+    reloadNonce: number = 0
 ) => {
     const [activeEngine, setActiveEngine] = useState<string>(() => localStorage.getItem('active_engine') || 'armillaris_engine');
     const [activeSpec, setActiveSpec] = useState<string>(() => localStorage.getItem('active_spec') || 'default_spec.behavior');
@@ -29,12 +30,17 @@ export const useEngineState = (
 
     const refreshSpecList = useCallback(() => {
         const ipc = (window as any).ipcRenderer;
-        if (!ipc || !activeEngine) return;
+        if (!ipc || !activeEngine) return Promise.resolve([]);
 
-        ipc.invoke('get-specs', activeEngine).then((list: string[]) => {
-            setAvailableSpecs(list);
-        }).catch(console.error);
-    }, [activeEngine]);
+        return ipc.invoke('get-specs', activeEngine).then((list: string[]) => {
+            const filtered = list.filter(s => !s.startsWith('_'));
+            setAvailableSpecs(filtered);
+            return filtered;
+        }).catch((err: any) => {
+            console.error(err);
+            return [];
+        });
+    }, [activeEngine, reloadNonce]);
 
     const deleteSpec = useCallback(async (specName: string): Promise<boolean> => {
         const ipc = (window as any).ipcRenderer;
@@ -68,6 +74,13 @@ export const useEngineState = (
 
         ipc.invoke('get-specs', activeEngine).then((list: string[]) => {
             setAvailableSpecs(list);
+
+            // If the current activeSpec is already valid in this engine, DO NOT reset it.
+            // This prevents flickering when saving a new behavior.
+            if (activeSpec && list.includes(activeSpec)) {
+                return;
+            }
+
             const lastSpec = lastSpecPerEngine[activeEngine];
             if (lastSpec && list.includes(lastSpec)) {
                 setActiveSpec(lastSpec);
@@ -90,7 +103,7 @@ export const useEngineState = (
                 setEngineErrors([]);
             }
         }).catch(console.error);
-    }, [activeEngine]);
+    }, [activeEngine, reloadNonce, activeSpec]);
 
     useEffect(() => {
         if (activeSpec && activeEngine) {

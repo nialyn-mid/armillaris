@@ -140,13 +140,40 @@ export const useSpecGraphLoader = ({
         });
     }, [activeEngine, activeSpec, handleNodeUpdate, handleDuplicateNode, handleDeleteNode, engineSpec, ipc, setNodes, setEdges, onEditGroup, reloadVersion]);
 
-    const handleCreateNew = () => {
-        setNodes([]);
-        setEdges([]);
-        setMasterGraph({ nodes: [], edges: [] });
-        setTargetSpecName('new_behavior');
-        setActiveSpec(''); // Deselect current
-        setIsSpecDirty(false);
+    const handleCreateNew = async () => {
+        try {
+            // Read template
+            const templateName = '_template_behavior.behavior';
+            let templateContent = await ipc.invoke('read-spec', activeEngine, templateName);
+
+            if (!templateContent) {
+                // Fallback if template missing
+                templateContent = JSON.stringify({
+                    nodes: [],
+                    edges: []
+                }, null, 2);
+            }
+
+            let count = 1;
+            let newName = `new_behavior_${count}.behavior`;
+            const currentList = await refreshSpecList();
+            const list = (Array.isArray(currentList) ? currentList : []) as string[];
+
+            while (list.includes(newName)) {
+                count++;
+                newName = `new_behavior_${count}.behavior`;
+            }
+
+            // Save as new
+            await ipc.invoke('save-behavior', activeEngine, newName, templateContent);
+
+            showNotification(`Created ${newName}`, 'success');
+            await refreshSpecList();
+            setActiveSpec(newName);
+            setIsSpecDirty(false);
+        } catch (e: any) {
+            showNotification(`Failed to create behavior: ${e.message}`, 'error');
+        }
     };
 
     const handleDiscard = () => {
@@ -163,6 +190,7 @@ export const useSpecGraphLoader = ({
         let baseName = targetSpecName.trim();
         if (baseName.endsWith('.json')) baseName = baseName.replace('.json', '');
         if (baseName.endsWith('.behavior')) baseName = baseName.replace('.behavior', '');
+        const newFileName = `${baseName}.behavior`;
 
         // Use override if provided (e.g. valid master graph from Facade)
         // Else fall back to current nodes/edges (Root view)
@@ -174,14 +202,36 @@ export const useSpecGraphLoader = ({
         };
 
         try {
-            await ipc.invoke('save-behavior', activeEngine, `${baseName}.behavior`, JSON.stringify(graphState, null, 2));
+            // Renaming Logic
+            if (activeSpec && activeSpec !== newFileName) {
+                await ipc.invoke('rename-behavior', activeEngine, activeSpec, newFileName);
+                showNotification(`Renamed to ${newFileName}`, 'info');
+            }
+
+            await ipc.invoke('save-behavior', activeEngine, newFileName, JSON.stringify(graphState, null, 2));
             showNotification(`Saved ${baseName}`, 'success');
-            refreshSpecList();
-            setActiveSpec(`${baseName}.behavior`);
+            await refreshSpecList();
+            setActiveSpec(newFileName);
             setIsSpecDirty(false);
-            reloadEngine();
+            reloadEngine(); // Re-enabled to trigger simulation re-run
         } catch (e: any) {
             showNotification(`Failed to save behavior: ${e.message}`, 'error');
+        }
+    };
+
+    const duplicateSpec = async (name: string) => {
+        try {
+            const content = await ipc.invoke('read-spec', activeEngine, name);
+            let baseName = name.replace('.behavior', '');
+            const newName = `${baseName}_copy.behavior`;
+
+            await ipc.invoke('save-behavior', activeEngine, newName, content);
+            showNotification(`Duplicated to ${newName}`, 'success');
+            await refreshSpecList();
+            setActiveSpec(newName);
+            reloadEngine(); // Re-enabled to trigger simulation re-run
+        } catch (e: any) {
+            showNotification(`Failed to duplicate behavior: ${e.message}`, 'error');
         }
     };
 
@@ -193,6 +243,7 @@ export const useSpecGraphLoader = ({
         saveSpec,
         handleCreateNew,
         handleDiscard,
-        deleteSpec
+        deleteSpec,
+        duplicateSpec
     };
 };

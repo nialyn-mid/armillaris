@@ -1,4 +1,4 @@
-import { MdAdd, MdDelete } from 'react-icons/md';
+import { MdAdd, MdDelete, MdContentCopy } from 'react-icons/md';
 import { useState } from 'react';
 import ConfirmModal from '../../shared/ui/ConfirmModal';
 
@@ -10,6 +10,7 @@ interface SpecManagerPanelProps {
     handleSave: () => void;
     handleCreateNew: () => void;
     deleteSpec: (name: string) => Promise<boolean>;
+    duplicateSpec: (name: string) => Promise<void>;
     availableSpecs: string[];
     activeSpec: string | null;
     setActiveSpec: (spec: string) => void;
@@ -27,6 +28,7 @@ export default function SpecManagerPanel({
     handleSave,
     handleCreateNew,
     deleteSpec,
+    duplicateSpec,
     availableSpecs,
     activeSpec,
     setActiveSpec,
@@ -37,6 +39,7 @@ export default function SpecManagerPanel({
 }: SpecManagerPanelProps) {
     const [specToDelete, setSpecToDelete] = useState<string | null>(null);
     const [specToSwitchTo, setSpecToSwitchTo] = useState<string | null>(null);
+    const [specToDuplicate, setSpecToDuplicate] = useState<string | null>(null);
 
     const onSelectSpec = (spec: string) => {
         if (isSpecDirty) {
@@ -44,6 +47,22 @@ export default function SpecManagerPanel({
         } else {
             setActiveSpec(spec);
             navigateTo([]); // Reset breadcrumbs on switch
+        }
+    };
+
+    const onDuplicateSpec = (spec: string) => {
+        if (isSpecDirty) {
+            setSpecToDuplicate(spec);
+        } else {
+            duplicateSpec(spec);
+        }
+    };
+
+    const onNewSpec = () => {
+        if (isSpecDirty) {
+            setSpecToSwitchTo('__NEW__');
+        } else {
+            handleCreateNew();
         }
     };
 
@@ -83,7 +102,7 @@ export default function SpecManagerPanel({
             </div>
             <div className='panel-section' style={{ padding: '0px 10px' }}>
                 <button
-                    onClick={handleCreateNew}
+                    onClick={onNewSpec}
                     className="btn-toolbar"
                     title="New Behavior"
                     style={{ marginRight: 'auto', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px' }}
@@ -150,6 +169,24 @@ export default function SpecManagerPanel({
                                     {stripExtension(spec)}
                                 </span>
                                 <div
+                                    onClick={(e) => { e.stopPropagation(); onDuplicateSpec(spec); }}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        padding: '4px',
+                                        borderRadius: '2px',
+                                        transition: 'all 0.2s',
+                                        color: 'var(--text-secondary)',
+                                        marginRight: '2px'
+                                    }}
+                                    onMouseOver={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.1)'; }}
+                                    onMouseOut={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
+                                    title="Duplicate Behavior"
+                                >
+                                    <MdContentCopy size={13} />
+                                </div>
+                                <div
                                     onClick={(e) => { e.stopPropagation(); setSpecToDelete(spec); }}
                                     style={{
                                         display: 'flex',
@@ -190,8 +227,12 @@ export default function SpecManagerPanel({
                             label: 'Discard & Switch',
                             variant: 'danger',
                             onClick: () => {
-                                setActiveSpec(specToSwitchTo);
-                                navigateTo([]);
+                                if (specToSwitchTo === '__NEW__') {
+                                    handleCreateNew();
+                                } else {
+                                    setActiveSpec(specToSwitchTo);
+                                    navigateTo([]);
+                                }
                                 setSpecToSwitchTo(null);
                             }
                         },
@@ -202,6 +243,29 @@ export default function SpecManagerPanel({
                         }
                     ]}
                     onClose={() => setSpecToSwitchTo(null)}
+                />
+            )}
+
+            {specToDuplicate && (
+                <ConfirmModal
+                    title="Unsaved Changes"
+                    message="You have unsaved changes in your current behavior. If you duplicate now, those changes will be deleted and not be included in the duplicate. Continue?"
+                    buttons={[
+                        {
+                            label: 'Duplicate & Discard Changes',
+                            variant: 'danger',
+                            onClick: () => {
+                                duplicateSpec(specToDuplicate);
+                                setSpecToDuplicate(null);
+                            }
+                        },
+                        {
+                            label: 'Cancel',
+                            variant: 'secondary',
+                            onClick: () => setSpecToDuplicate(null)
+                        }
+                    ]}
+                    onClose={() => setSpecToDuplicate(null)}
                 />
             )}
 

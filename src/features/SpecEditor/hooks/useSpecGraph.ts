@@ -72,7 +72,8 @@ export const useSpecGraph = () => {
         saveSpec,
         handleCreateNew,
         handleDiscard,
-        deleteSpec
+        deleteSpec,
+        duplicateSpec
     } = useSpecGraphLoader({
         setNodes,
         setEdges,
@@ -242,6 +243,7 @@ export const useSpecGraph = () => {
         duplicateSelectedNodes,
         handleCreateNew,
         handleDiscard,
-        deleteSpec
+        deleteSpec,
+        duplicateSpec
     };
 };

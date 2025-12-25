@@ -10,6 +10,7 @@ interface PropertyEditorProps {
 
 export default function PropertyEditor({ properties, onChange }: PropertyEditorProps) {
     const { metaDefinitions, entries } = useData();
+    const rootRef = useRef<HTMLDivElement>(null);
     const [relationSearch, setRelationSearch] = useState<Record<string, string>>({});
     const [activeRelField, setActiveRelField] = useState<string | null>(null);
     const [editingRelation, setEditingRelation] = useState<{ key: string, index: number } | null>(null);
@@ -154,7 +155,7 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
 
         if (key === 'Meta') {
             return (
-                <div key={key} className="property-field">
+                <div key={key} className="property-field" data-key={key}>
                     <label className="property-field-label">Meta</label>
                     <select
                         value={currentMeta}
@@ -188,7 +189,7 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
         }
 
         return (
-            <div key={key} className="property-field">
+            <div key={key} className="property-field" data-key={key}>
                 <label className="property-field-label">{key}</label>
 
                 {isMultiline ? (
@@ -275,6 +276,30 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
                                     value={item}
                                     onChange={(e) => handleArrayChange(key, idx, e.target.value)}
                                     className="form-control flex-1"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            const arr = Array.isArray(value) ? value : [value];
+                                            if (idx < arr.length - 1) {
+                                                // Focus next
+                                                const next = e.currentTarget.parentElement?.nextElementSibling?.querySelector('input');
+                                                if (next) (next as HTMLInputElement).focus();
+                                            } else {
+                                                // Add new
+                                                handleArrayAdd(key);
+                                                // Focus after render
+                                                setTimeout(() => {
+                                                    const field = rootRef.current?.querySelector(`.property-field[data-key="${key}"]`);
+                                                    const rows = field?.querySelectorAll('.array-row');
+                                                    const lastInput = rows?.[rows.length - 1]?.querySelector('input');
+                                                    if (lastInput) {
+                                                        (lastInput as HTMLInputElement).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                                                        (lastInput as HTMLInputElement).focus();
+                                                    }
+                                                }, 150);
+                                            }
+                                        }
+                                    }}
                                 />
                                 <button onClick={() => handleArrayRemove(key, idx)} className="btn-remove">
                                     &times;
@@ -291,7 +316,7 @@ export default function PropertyEditor({ properties, onChange }: PropertyEditorP
     };
 
     return (
-        <div className="property-editor-container scrollbar-hidden">
+        <div className="property-editor-container scrollbar-hidden" ref={rootRef}>
             {fieldsToRender.map(f => renderField(f.key, f.type))}
             {fieldsToRender.length === 0 && (
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic', textAlign: 'center' }}>

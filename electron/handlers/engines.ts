@@ -96,6 +96,18 @@ export function registerEngineHandlers() {
         return false;
     });
 
+    ipcMain.handle('rename-behavior', async (_, engineName: string, oldName: string, newName: string) => {
+        const behaviorDir = path.join(ENGINES_DIR, engineName, 'behavior');
+        const oldPath = path.join(behaviorDir, oldName);
+        const newPath = path.join(behaviorDir, newName);
+
+        if (fs.existsSync(oldPath)) {
+            fs.renameSync(oldPath, newPath);
+            return true;
+        }
+        throw new Error('Original behavior file not found');
+    });
+
     ipcMain.handle('read-adapter', async (_, engineName: string) => {
         const adapterPath = path.join(ENGINES_DIR, engineName, 'adapter.js');
         if (fs.existsSync(adapterPath)) return fs.readFileSync(adapterPath, 'utf-8');

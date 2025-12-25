@@ -1,0 +1,667 @@
+{
+  "nodes": [
+    {
+      "id": "a6362734-2edc-4796-bf57-65f449765f5c",
+      "type": "custom",
+      "position": {
+        "x": 1928.9574425022754,
+        "y": -126.02576621814364
+      },
+      "data": {
+        "label": "Activation Output",
+        "def": {
+          "type": "OutputRoot",
+          "label": "Activation Output",
+          "category": "Output",
+          "inputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            },
+            {
+              "id": "order",
+              "label": "Order",
+              "type": "Number"
+            }
+          ],
+          "outputs": [],
+          "properties": [
+            {
+              "name": "order",
+              "label": "Order",
+              "type": "Number",
+              "default": 0
+            }
+          ]
+        },
+        "values": {
+          "order": "100"
+        },
+        "categoryColor": "#d83b01",
+        "pathPrefix": ""
+      },
+      "width": 220,
+      "height": 166,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1928.9574425022754,
+        "y": -126.02576621814364
+      },
+      "dragging": false
+    },
+    {
+      "id": "28efa985-6091-4e91-ba91-a3d4b5e789f2",
+      "type": "Group",
+      "position": {
+        "x": 1922.1688754199608,
+        "y": -338.4834252356992
+      },
+      "data": {
+        "label": "Personality Bookends",
+        "def": {
+          "type": "Group",
+          "label": "Group",
+          "category": "System",
+          "inputs": [],
+          "outputs": [],
+          "properties": []
+        },
+        "values": {},
+        "inputs": [],
+        "outputs": [],
+        "graph": {
+          "nodes": [
+            {
+              "id": "7e3c6873-d30e-4b13-8e91-a938548ac1e9",
+              "type": "GroupInput",
+              "position": {
+                "x": -301.77097475684286,
+                "y": 264.44603630787697
+              },
+              "data": {
+                "label": "Input",
+                "ports": [],
+                "pathPrefix": "28efa985-6091-4e91-ba91-a3d4b5e789f2"
+              },
+              "selected": false,
+              "width": 150,
+              "height": 79,
+              "positionAbsolute": {
+                "x": -301.77097475684286,
+                "y": 264.44603630787697
+              },
+              "dragging": false
+            },
+            {
+              "id": "f44ddfb0-0901-437b-9025-7e51276753d5",
+              "type": "GroupOutput",
+              "position": {
+                "x": 565.6507314269073,
+                "y": 264.44603630787685
+              },
+              "data": {
+                "label": "Output",
+                "ports": [],
+                "pathPrefix": "28efa985-6091-4e91-ba91-a3d4b5e789f2"
+              },
+              "selected": false,
+              "width": 150,
+              "height": 79,
+              "positionAbsolute": {
+                "x": 565.6507314269073,
+                "y": 264.44603630787685
+              },
+              "dragging": false
+            },
+            {
+              "id": "66982f0a-b8ed-4772-a8b8-60e4f77d62ee",
+              "type": "custom",
+              "position": {
+                "x": 237.4968893760656,
+                "y": 390.97827531901254
+              },
+              "data": {
+                "label": "Context Output",
+                "def": {
+                  "type": "ContextRoot",
+                  "label": "Context Output",
+                  "category": "Output",
+                  "inputs": [
+                    {
+                      "id": "personality",
+                      "label": "Personality",
+                      "type": "String"
+                    },
+                    {
+                      "id": "scenario",
+                      "label": "Scenario",
+                      "type": "String"
+                    },
+                    {
+                      "id": "example_dialogs",
+                      "label": "Example Dialogs",
+                      "type": "String"
+                    },
+                    {
+                      "id": "order",
+                      "label": "Order",
+                      "type": "Number"
+                    }
+                  ],
+                  "outputs": [],
+                  "properties": [
+                    {
+                      "name": "order",
+                      "label": "Order",
+                      "type": "Number",
+                      "default": 0
+                    },
+                    {
+                      "name": "personality",
+                      "label": "Personality",
+                      "type": "String",
+                      "default": ""
+                    },
+                    {
+                      "name": "scenario",
+                      "label": "Scenario",
+                      "type": "String",
+                      "default": ""
+                    },
+                    {
+                      "name": "example_dialogs",
+                      "label": "Example Dialogs",
+                      "type": "String",
+                      "default": ""
+                    }
+                  ]
+                },
+                "categoryColor": "#d83b01",
+                "values": {
+                  "order": "1000"
+                },
+                "pathPrefix": "28efa985-6091-4e91-ba91-a3d4b5e789f2",
+                "isDragTarget": false
+              },
+              "width": 220,
+              "height": 353,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 2158.44229619357,
+                "y": 344.20809610889773
+              },
+              "dragging": true
+            },
+            {
+              "id": "70cac306-92b6-438b-bb8e-d34302d91752",
+              "type": "custom",
+              "position": {
+                "x": 233.49688937606606,
+                "y": 10.978275319012539
+              },
+              "data": {
+                "label": "Context Output",
+                "def": {
+                  "type": "ContextRoot",
+                  "label": "Context Output",
+                  "category": "Output",
+                  "inputs": [
+                    {
+                      "id": "personality",
+                      "label": "Personality",
+                      "type": "String"
+                    },
+                    {
+                      "id": "scenario",
+                      "label": "Scenario",
+                      "type": "String"
+                    },
+                    {
+                      "id": "example_dialogs",
+                      "label": "Example Dialogs",
+                      "type": "String"
+                    },
+                    {
+                      "id": "order",
+                      "label": "Order",
+                      "type": "Number"
+                    }
+                  ],
+                  "outputs": [],
+                  "properties": [
+                    {
+                      "name": "order",
+                      "label": "Order",
+                      "type": "Number",
+                      "default": 0
+                    },
+                    {
+                      "name": "personality",
+                      "label": "Personality",
+                      "type": "String",
+                      "default": ""
+                    },
+                    {
+                      "name": "scenario",
+                      "label": "Scenario",
+                      "type": "String",
+                      "default": ""
+                    },
+                    {
+                      "name": "example_dialogs",
+                      "label": "Example Dialogs",
+                      "type": "String",
+                      "default": ""
+                    }
+                  ]
+                },
+                "categoryColor": "#d83b01",
+                "values": {},
+                "pathPrefix": "28efa985-6091-4e91-ba91-a3d4b5e789f2",
+                "isDragTarget": false
+              },
+              "width": 220,
+              "height": 353,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 2154.4422961935707,
+                "y": -35.791903891102265
+              },
+              "dragging": true
+            },
+            {
+              "id": "fcc91441-272d-4619-b0e0-eeb5441631f6",
+              "type": "custom",
+              "position": {
+                "x": -27.778733377747812,
+                "y": 8.110340111347512
+              },
+              "data": {
+                "label": "Custom Value Input",
+                "def": {
+                  "type": "InputSource",
+                  "label": "Custom Value Input",
+                  "category": "Input",
+                  "description": "Provide a single value of a selected type.",
+                  "outputs": [
+                    {
+                      "id": "value",
+                      "label": "Value",
+                      "type": "Value",
+                      "typeTransformation": {
+                        "type": "replace_from_property",
+                        "property_id": "value_type"
+                      }
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "value_type",
+                      "label": "Type",
+                      "type": "select",
+                      "options": [
+                        "String",
+                        "Number",
+                        "Boolean",
+                        "Date"
+                      ],
+                      "default": "String"
+                    },
+                    {
+                      "name": "value",
+                      "label": "Value",
+                      "type": "Value"
+                    }
+                  ]
+                },
+                "categoryColor": "#0078d4",
+                "values": {
+                  "value_type": "String",
+                  "value": "BEGIN LOREBOOK"
+                },
+                "pathPrefix": "28efa985-6091-4e91-ba91-a3d4b5e789f2",
+                "isDragTarget": false
+              },
+              "width": 220,
+              "height": 177,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1893.1666734397568,
+                "y": -38.65983909876729
+              },
+              "dragging": true
+            },
+            {
+              "id": "03b51882-208f-43ad-bdea-05783fc164c5",
+              "type": "custom",
+              "position": {
+                "x": -29.60400212269178,
+                "y": 391.00655915992564
+              },
+              "data": {
+                "label": "Custom Value Input",
+                "def": {
+                  "type": "InputSource",
+                  "label": "Custom Value Input",
+                  "category": "Input",
+                  "description": "Provide a single value of a selected type.",
+                  "outputs": [
+                    {
+                      "id": "value",
+                      "label": "Value",
+                      "type": "Value",
+                      "typeTransformation": {
+                        "type": "replace_from_property",
+                        "property_id": "value_type"
+                      }
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "value_type",
+                      "label": "Type",
+                      "type": "select",
+                      "options": [
+                        "String",
+                        "Number",
+                        "Boolean",
+                        "Date"
+                      ],
+                      "default": "String"
+                    },
+                    {
+                      "name": "value",
+                      "label": "Value",
+                      "type": "Value"
+                    }
+                  ]
+                },
+                "categoryColor": "#0078d4",
+                "values": {
+                  "value_type": "String",
+                  "value": "END LOREBOOK"
+                },
+                "pathPrefix": "28efa985-6091-4e91-ba91-a3d4b5e789f2",
+                "isDragTarget": false
+              },
+              "width": 220,
+              "height": 177,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1891.3414046948128,
+                "y": 344.23637994981084
+              },
+              "dragging": true
+            }
+          ],
+          "edges": [
+            {
+              "source": "fcc91441-272d-4619-b0e0-eeb5441631f6",
+              "sourceHandle": "value",
+              "target": "70cac306-92b6-438b-bb8e-d34302d91752",
+              "targetHandle": "personality",
+              "id": "84681d9e-e13e-4a26-b836-b45b91a5d44c",
+              "selected": false
+            },
+            {
+              "source": "03b51882-208f-43ad-bdea-05783fc164c5",
+              "sourceHandle": "value",
+              "target": "66982f0a-b8ed-4772-a8b8-60e4f77d62ee",
+              "targetHandle": "personality",
+              "id": "ebff53df-8f56-48ab-a0d8-b74733b57d68",
+              "selected": false
+            }
+          ]
+        },
+        "color": "#d83b01",
+        "pathPrefix": "",
+        "isDragTarget": false
+      },
+      "width": 220,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1922.1688754199608,
+        "y": -338.4834252356992
+      },
+      "dragging": false
+    },
+    {
+      "id": "daa40d6e-9082-443f-bed2-7cdc3d260514",
+      "type": "custom",
+      "position": {
+        "x": 597.2907241212881,
+        "y": -131.99104689544515
+      },
+      "data": {
+        "label": "Input Entry List",
+        "def": {
+          "type": "InputSource",
+          "label": "Input Entry List",
+          "category": "Input",
+          "description": "The full list of entries from Data.",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            }
+          ],
+          "properties": []
+        },
+        "categoryColor": "#0078d4",
+        "values": {},
+        "pathPrefix": ""
+      },
+      "width": 220,
+      "height": 84,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 597.2907241212881,
+        "y": -131.99104689544515
+      },
+      "dragging": false
+    },
+    {
+      "id": "3ba14f29-964c-401c-b33f-0195e240ba04",
+      "type": "custom",
+      "position": {
+        "x": 594.9648853571196,
+        "y": -22.3302517394402
+      },
+      "data": {
+        "label": "Input Chat",
+        "def": {
+          "type": "InputSource",
+          "label": "Input Chat",
+          "category": "Input",
+          "description": "All chat fields provided by the system.",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "last_message",
+              "label": "Last Message",
+              "type": "String"
+            },
+            {
+              "id": "last_messages",
+              "label": "Message History",
+              "type": "Message List"
+            },
+            {
+              "id": "first_message_date",
+              "label": "First Message Date",
+              "type": "Date"
+            },
+            {
+              "id": "last_bot_message_date",
+              "label": "Last Bot Message Date",
+              "type": "Date"
+            },
+            {
+              "id": "message_count",
+              "label": "Message Count",
+              "type": "Number"
+            },
+            {
+              "id": "contextLength",
+              "label": "Context Length",
+              "type": "Number"
+            },
+            {
+              "id": "user_name",
+              "label": "User Name",
+              "type": "String"
+            },
+            {
+              "id": "persona_name",
+              "label": "Persona Name",
+              "type": "String"
+            }
+          ],
+          "properties": []
+        },
+        "categoryColor": "#0078d4",
+        "values": {},
+        "pathPrefix": ""
+      },
+      "width": 220,
+      "height": 308,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 594.9648853571196,
+        "y": -22.3302517394402
+      },
+      "dragging": false
+    },
+    {
+      "id": "ed0ea3d3-66c5-4df4-b5a4-56a6d70381b3",
+      "type": "custom",
+      "position": {
+        "x": 850.1426240544642,
+        "y": -115.36380230618033
+      },
+      "data": {
+        "label": "Keyword Filter",
+        "def": {
+          "type": "Filter",
+          "label": "Keyword Filter",
+          "category": "Filter",
+          "description": "Filter entries based on their associated keywords' presence in the input messages.",
+          "inputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            },
+            {
+              "id": "messages",
+              "label": "Messages",
+              "type": "Message List"
+            },
+            {
+              "id": "case_sensitive",
+              "label": "Case Sensitive",
+              "type": "Boolean"
+            },
+            {
+              "id": "wordbreak_sensitive",
+              "label": "Match Inside Word",
+              "type": "Boolean"
+            },
+            {
+              "id": "match_limit",
+              "label": "Match Limit",
+              "type": "Number"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "entries",
+              "label": "Entries",
+              "type": "Entry List"
+            }
+          ],
+          "properties": [
+            {
+              "name": "case_sensitive",
+              "label": "Case Sensitive",
+              "type": "Boolean",
+              "default": false
+            },
+            {
+              "name": "wordbreak_sensitive",
+              "label": "Match Inside Word",
+              "type": "Boolean",
+              "default": false
+            },
+            {
+              "name": "match_limit",
+              "label": "Match Limit Per Message",
+              "type": "Number",
+              "default": 0
+            },
+            {
+              "name": "message_user_type",
+              "label": "Sender Type",
+              "type": "select",
+              "options": [
+                {
+                  "value": "user",
+                  "label": "User"
+                },
+                {
+                  "value": "bot",
+                  "label": "Bot"
+                },
+                {
+                  "value": "all",
+                  "label": "All"
+                }
+              ],
+              "default": "all"
+            }
+          ]
+        },
+        "categoryColor": "#892eb3",
+        "values": {},
+        "pathPrefix": ""
+      },
+      "width": 220,
+      "height": 390,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 850.1426240544642,
+        "y": -115.36380230618033
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "daa40d6e-9082-443f-bed2-7cdc3d260514",
+      "sourceHandle": "entries",
+      "target": "ed0ea3d3-66c5-4df4-b5a4-56a6d70381b3",
+      "targetHandle": "entries",
+      "id": "reactflow__edge-daa40d6e-9082-443f-bed2-7cdc3d260514entries-ed0ea3d3-66c5-4df4-b5a4-56a6d70381b3entries"
+    },
+    {
+      "source": "3ba14f29-964c-401c-b33f-0195e240ba04",
+      "sourceHandle": "last_messages",
+      "target": "ed0ea3d3-66c5-4df4-b5a4-56a6d70381b3",
+      "targetHandle": "messages",
+      "id": "reactflow__edge-3ba14f29-964c-401c-b33f-0195e240ba04last_messages-ed0ea3d3-66c5-4df4-b5a4-56a6d70381b3messages"
+    },
+    {
+      "source": "ed0ea3d3-66c5-4df4-b5a4-56a6d70381b3",
+      "sourceHandle": "entries",
+      "target": "a6362734-2edc-4796-bf57-65f449765f5c",
+      "targetHandle": "entries",
+      "id": "reactflow__edge-ed0ea3d3-66c5-4df4-b5a4-56a6d70381b3entries-a6362734-2edc-4796-bf57-65f449765f5centries"
+    }
+  ],
+  "ver": 1,
+  "description": "Armillaris Node Graph"
+}

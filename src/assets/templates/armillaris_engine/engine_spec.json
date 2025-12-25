@@ -29,6 +29,12 @@
         },
         "Output": {
             "color": "#d83b01"
+        },
+        "Entry": {
+            "color": "#00b894"
+        },
+        "Message": {
+            "color": "#343994"
         }
     },
     "nodes": [
@@ -587,7 +593,7 @@
         {
             "type": "Filter",
             "label": "List Filter",
-            "category": "List",
+            "category": "Filter",
             "description": "Filter a list based on numeric patterns.",
             "inputs": [
                 {
@@ -647,7 +653,7 @@
         {
             "type": "AttributeExtractor",
             "label": "Attribute",
-            "category": "Utility",
+            "category": "Entry",
             "description": "Extract attributes from an entry.",
             "inputs": [
                 {
@@ -687,7 +693,7 @@
         {
             "type": "AttributeExtractor",
             "label": "Attribute List",
-            "category": "Utility",
+            "category": "Entry",
             "description": "Extract attributes from a list of entries.",
             "inputs": [
                 {
@@ -1143,7 +1149,8 @@
                 {
                     "name": "value",
                     "label": "Value",
-                    "type": "Value"
+                    "type": "Value",
+                    "default": "String"
                 }
             ]
         },
